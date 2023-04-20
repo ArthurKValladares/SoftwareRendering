@@ -1,3 +1,0 @@
-C:/Users/Arthur/Documents/projects/SoftwareRendering/build/CMakeFiles/SoftwareRendering.dir
-C:/Users/Arthur/Documents/projects/SoftwareRendering/build/CMakeFiles/ALL_BUILD.dir
-C:/Users/Arthur/Documents/projects/SoftwareRendering/build/CMakeFiles/ZERO_CHECK.dir
