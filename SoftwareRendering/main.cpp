@@ -4,7 +4,6 @@
 #include <stdbool.h>
 #include <assert.h>
 #include <vector>
-#include <thread>
 #include <SDL.h>
 
 
@@ -77,7 +76,7 @@ void ClearSurface(SDL_Surface* surface, Uint8 red, Uint8 green, Uint8 blue) {
     }
 }
 
-void DrawTriangle(std::thread *threads, SDL_Surface* surface, Triangle triangle, Uint8 red, Uint8 green, Uint8 blue) {
+void DrawTriangle(SDL_Surface* surface, Triangle triangle, Uint8 red, Uint8 green, Uint8 blue) {
     const Rect2D bounding_box = ClipRect(surface, TriangleBoundingBox(triangle));
     const Uint32 pixel_color = SDL_MapRGB(surface->format, red, green, blue);
 
@@ -118,8 +117,6 @@ int main(int argc, char* argv[])
     }
     SDL_Surface* surface = SDL_GetWindowSurface(window);
 
-    std::thread threads[SCREEN_HEIGHT];
-
     const float triangle_margin = 0.1;
     const int margin_w = round(surface->w * triangle_margin);
     const int margin_h = round(surface->h * triangle_margin);
@@ -155,7 +152,7 @@ int main(int argc, char* argv[])
 
         std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
         ClearSurface(surface, 255, 0, 0);
-        DrawTriangle(threads, surface, triangle, 0, 255, 0);
+        DrawTriangle(surface, triangle, 0, 255, 0);
         std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
         printf("dt: %ld ms\n", (int) std::chrono::duration_cast<std::chrono::milliseconds> (end - begin).count());
 
