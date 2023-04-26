@@ -4,7 +4,11 @@
 #include <stdbool.h>
 #include <assert.h>
 #include <vector>
+#ifdef __APPLE__
+#include <SDL2/SDL.h>
+#else
 #include <SDL.h>
+#endif
 
 #include "ThreadPool.h"
 
