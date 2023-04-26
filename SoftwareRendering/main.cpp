@@ -6,6 +6,7 @@
 #include <vector>
 #include <SDL.h>
 
+#include "ThreadPool.h"
 
 #define MAX(a,b) ((a) > (b) ? (a) : (b))
 #define MIN(a,b) ((a) < (b) ? (a) : (b))
@@ -76,27 +77,37 @@ void ClearSurface(SDL_Surface* surface, Uint8 red, Uint8 green, Uint8 blue) {
     }
 }
 
-void DrawTriangle(SDL_Surface* surface, Triangle triangle, Uint8 red, Uint8 green, Uint8 blue) {
+void DrawTriangle(ThreadPool& thread_pool, SDL_Surface* surface, Triangle triangle, Uint8 red, Uint8 green, Uint8 blue) {
     const Rect2D bounding_box = ClipRect(surface, TriangleBoundingBox(triangle));
     const Uint32 pixel_color = SDL_MapRGB(surface->format, red, green, blue);
 
-    Point2D point;
-    for (point.y = bounding_box.minY; point.y < bounding_box.maxY; ++point.y) {
-        for (point.x = bounding_box.minX; point.x < bounding_box.maxX; ++point.x) {
-            const int e1 = EdgeFunction(triangle.a, triangle.b, point);
-            const int e2 = EdgeFunction(triangle.b, triangle.c, point);
-            const int e3 = EdgeFunction(triangle.c, triangle.a, point);
+    auto draw_row = [&](int y) {
+        
+    };
 
-            if (e1 >= 0 && e2 >= 0 && e3 >= 0) {
-                Uint32* p = GetPixel(surface, point);
-                *p = pixel_color;
+    for (int y = bounding_box.minY; y < bounding_box.maxY; ++y) {
+        thread_pool.Schedule([=]() {
+            for (int x = bounding_box.minX; x < bounding_box.maxX; ++x) {
+                Point2D point = Point2D{ x,y };
+                const int e1 = EdgeFunction(triangle.a, triangle.b, point);
+                const int e2 = EdgeFunction(triangle.b, triangle.c, point);
+                const int e3 = EdgeFunction(triangle.c, triangle.a, point);
+
+                if (e1 >= 0 && e2 >= 0 && e3 >= 0) {
+                    Uint32* p = GetPixel(surface, point);
+                    *p = pixel_color;
+                }
             }
-        }
+        });
     }
+
+    thread_pool.Wait();
 }
 
 int main(int argc, char* argv[])
 {
+    ThreadPool thread_pool;
+
     // Init
     if (SDL_Init(SDL_INIT_VIDEO) < 0)
     {
@@ -117,7 +128,7 @@ int main(int argc, char* argv[])
     }
     SDL_Surface* surface = SDL_GetWindowSurface(window);
 
-    const float triangle_margin = 0.1;
+    const float triangle_margin = 0.1f;
     const int margin_w = round(surface->w * triangle_margin);
     const int margin_h = round(surface->h * triangle_margin);
 
@@ -152,7 +163,7 @@ int main(int argc, char* argv[])
 
         std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
         ClearSurface(surface, 255, 0, 0);
-        DrawTriangle(surface, triangle, 0, 255, 0);
+        DrawTriangle(thread_pool, surface, triangle, 0, 255, 0);
         std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
         printf("dt: %ld ms\n", (int) std::chrono::duration_cast<std::chrono::milliseconds> (end - begin).count());
 
