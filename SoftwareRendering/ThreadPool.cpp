@@ -1,59 +1,47 @@
 #include "ThreadPool.h"
 
+void ThreadPool::WorkerThread() {
+    while (!m_done) {
+        std::function<void()> task;
+        if (m_work_queue.TryPop(task)) {
+            task();
+        } else {
+            std::this_thread::yield();
+        }
+    }
+}
+
 ThreadPool::ThreadPool() : 
-    m_workers(),
-    m_taskQueue(),
-    m_taskCount(0u),
-    m_mutex(),
-    m_condition(),
-    m_stop(false) 
-{
-    const std::size_t num_threads = std::thread::hardware_concurrency();
-    m_workers.resize(num_threads);
-    for (std::size_t i = 0; i < num_threads; i++) {
-        m_workers.emplace_back([this]() -> void {
-            while (true) {
-                std::function<void()> task;
-                {
-                    std::unique_lock<std::mutex> lock(m_mutex);
-                    m_condition.wait(lock, [this]() -> bool {
-                        return ! m_taskQueue.empty() || m_stop;
-                    });
-
-                    if (m_stop && m_taskQueue.empty()) {
-                        return;
-                    }
-
-                    task = std::move(m_taskQueue.front());
-                    m_taskQueue.pop();
-                }
-                task();
-                m_taskCount--;
-            }
-        });
+    m_joiner(m_threads),
+    m_done(false) {
+    unsigned const thread_count = std::thread::hardware_concurrency();
+    try {
+        for (unsigned i = 0; i < thread_count; ++i) {
+            m_threads.push_back(
+                std::thread(&ThreadPool::WorkerThread, this));
+        }
+    } catch (...) {
+        m_done = true;
+        throw;
     }
 }
 
 ThreadPool::~ThreadPool() {
-    m_stop = true;
-    m_condition.notify_all();
-    for (std::thread& w : m_workers) {
-        w.join();
-    }
+    m_done = true;
 }
 
 
 void ThreadPool::Schedule(const std::function<void()>& task) {
-    {
-        std::unique_lock<std::mutex> lock(m_mutex);
-        m_taskQueue.push(task);
-    }
-    m_taskCount++;
-    m_condition.notify_one();
+    std::packaged_task<void()> p_task(task);
+    std::future<void> res(p_task.get_future());
+    m_work_queue.Push(task);
+    m_futures.push_back(std::move(res));
 }
 
-void ThreadPool::Wait() const {
-    do {
-        std::this_thread::yield();
-    } while (m_taskCount != 0u);
+
+void ThreadPool::Wait() {
+    for (std::future<void>& future : m_futures) {
+        future.wait();
+    }
+    m_futures.clear();
 }

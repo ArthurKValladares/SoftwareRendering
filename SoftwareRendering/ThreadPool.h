@@ -5,20 +5,41 @@
 #include <vector>
 #include <queue>
 #include <thread>
+#include <future>
 
-class ThreadPool {
-public:
+#include "ThreadSafeQueue.h"
+
+struct ThreadJoiner
+{
+    explicit ThreadJoiner(std::vector<std::thread>& threads) 
+        : m_threads{ threads }
+    {}
+
+    ~ThreadJoiner() {
+        for (std::thread& thread : m_threads) {
+            if (thread.joinable()) { 
+                thread.join(); 
+            }
+        }
+    }
+
+private:
+    std::vector<std::thread>& m_threads;
+};
+
+struct ThreadPool {
     ThreadPool();
     ~ThreadPool();
 
     void Schedule(const std::function<void()>&);
-    void Wait() const;
+    void Wait();
 
 private:
-    std::vector<std::thread>            m_workers;
-    std::queue<std::function<void()>>   m_taskQueue;
-    std::atomic_uint                    m_taskCount;
-    std::mutex                          m_mutex;
-    std::condition_variable             m_condition;
-    std::atomic_bool                    m_stop;
+    void WorkerThread();
+
+    ThreadSafeQueue<std::function<void()>> m_work_queue;
+    std::vector<std::thread>               m_threads;
+    ThreadJoiner                           m_joiner;
+    std::atomic_bool                       m_done;
+    std::vector<std::future<void>>         m_futures;
 };

@@ -85,10 +85,6 @@ void DrawTriangle(ThreadPool& thread_pool, SDL_Surface* surface, Triangle triang
     const Rect2D bounding_box = ClipRect(surface, TriangleBoundingBox(triangle));
     const Uint32 pixel_color = SDL_MapRGB(surface->format, red, green, blue);
 
-    auto draw_row = [&](int y) {
-        
-    };
-
     for (int y = bounding_box.minY; y < bounding_box.maxY; ++y) {
         thread_pool.Schedule([=]() {
             for (int x = bounding_box.minX; x < bounding_box.maxX; ++x) {
