@@ -18,8 +18,8 @@
 #define MAX3(a,b, c) MAX(a, MAX(b, c))
 #define MIN3(a,b, c) MIN(a, MIN(b, c))
 
-#define SCREEN_WIDTH    800
-#define SCREEN_HEIGHT   600
+#define SCREEN_WIDTH    1200
+#define SCREEN_HEIGHT   800
 
 struct Point2D {
     int x;
@@ -65,19 +65,21 @@ Uint32* GetPixel(SDL_Surface* surface, Point2D point) {
     return (Uint32*)((Uint8*)surface->pixels + (point.y * surface->pitch) + (point.x * surface->format->BytesPerPixel));
 }
 
-void ClearSurface(SDL_Surface* surface, Uint8 red, Uint8 green, Uint8 blue) {
+void ClearSurface(ThreadPool& thread_pool, SDL_Surface* surface, Uint8 red, Uint8 green, Uint8 blue) {
     const int width = surface->w;
     const int height = surface->h;
     SDL_PixelFormat* pixel_format = surface->format;
     assert(surface->format->BytesPerPixel == 4); // Not supporting non-32-bit pixel formats
     const Uint32 pixel_color = SDL_MapRGB(pixel_format, red, green, blue);
 
-    Point2D point;
-    for (point.y = 0; point.y < height; ++point.y) {
-        for (point.x = 0; point.x < width; ++point.x) {
-            Uint32* p = GetPixel(surface, point);
-            *p = pixel_color;
-        }
+    for (int y = 0; y < height; ++y) {
+        thread_pool.Schedule([=]() {
+            for (int x = 0; x < width; ++x) {
+                Point2D point = Point2D{ x,y };
+                Uint32* p = GetPixel(surface, point);
+                *p = pixel_color;
+            }
+        });
     }
 }
 
@@ -162,10 +164,10 @@ int main(int argc, char* argv[])
         }
 
         std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
-        ClearSurface(surface, 255, 0, 0);
+        ClearSurface(thread_pool, surface, 255, 0, 0);
         DrawTriangle(thread_pool, surface, triangle, 0, 255, 0);
         std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
-        printf("dt: %ld ms\n", (int) std::chrono::duration_cast<std::chrono::milliseconds> (end - begin).count());
+        printf("dt: %ld ms\n", std::chrono::duration_cast<std::chrono::milliseconds> (end - begin).count());
 
         SDL_UnlockSurface(surface);
         SDL_UpdateWindowSurface(window);
