@@ -91,11 +91,11 @@ void DrawTriangle(ThreadPool& thread_pool, SDL_Surface* surface, Triangle triang
         thread_pool.Schedule([=]() {
             for (int x = bounding_box.minX; x < bounding_box.maxX; ++x) {
                 Point2D point = Point2D{ x,y };
-                const int e1 = EdgeFunction(triangle.a, triangle.b, point);
-                const int e2 = EdgeFunction(triangle.b, triangle.c, point);
-                const int e3 = EdgeFunction(triangle.c, triangle.a, point);
+                const int e0 = EdgeFunction(triangle.a, triangle.b, point);
+                const int e1 = EdgeFunction(triangle.b, triangle.c, point);
+                const int e2 = EdgeFunction(triangle.c, triangle.a, point);
 
-                if (e1 >= 0 && e2 >= 0 && e3 >= 0) {
+                if ((e0 | e1 | e2) >= 0) {
                     Uint32* p = GetPixel(surface, point);
                     *p = pixel_color;
                 }
