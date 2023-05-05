@@ -68,9 +68,7 @@ Uint32* GetPixel(SDL_Surface* surface, Point2D point) {
 void ClearSurface(ThreadPool& thread_pool, SDL_Surface* surface, Uint8 red, Uint8 green, Uint8 blue) {
     const int width = surface->w;
     const int height = surface->h;
-    SDL_PixelFormat* pixel_format = surface->format;
-    assert(surface->format->BytesPerPixel == 4); // Not supporting non-32-bit pixel formats
-    const Uint32 pixel_color = SDL_MapRGB(pixel_format, red, green, blue);
+    const Uint32 pixel_color = SDL_MapRGB(surface->format, red, green, blue);
 
     for (int y = 0; y < height; ++y) {
         thread_pool.Schedule([=]() {
@@ -159,6 +157,7 @@ int main(int argc, char* argv[])
         return 0;
     }
     SDL_Surface* surface = SDL_GetWindowSurface(window);
+    assert(surface->format->BytesPerPixel == 4); // Not supporting non-32-bit pixel formats
 
     const float triangle_margin = 0.1f;
     const int margin_w = round(surface->w * triangle_margin);
