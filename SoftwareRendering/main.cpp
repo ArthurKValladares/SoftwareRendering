@@ -87,18 +87,48 @@ void DrawTriangle(ThreadPool& thread_pool, SDL_Surface* surface, Triangle triang
     const Rect2D bounding_box = ClipRect(surface, TriangleBoundingBox(triangle));
     const Uint32 pixel_color = SDL_MapRGB(surface->format, red, green, blue);
 
-    for (int y = bounding_box.minY; y < bounding_box.maxY; ++y) {
-        thread_pool.Schedule([=]() {
-            for (int x = bounding_box.minX; x < bounding_box.maxX; ++x) {
-                Point2D point = Point2D{ x,y };
-                const int e0 = EdgeFunction(triangle.a, triangle.b, point);
-                const int e1 = EdgeFunction(triangle.b, triangle.c, point);
-                const int e2 = EdgeFunction(triangle.c, triangle.a, point);
+    const Point2D min_point = Point2D{ bounding_box.minX,bounding_box.minY };
 
-                if ((e0 | e1 | e2) >= 0) {
+    const int e0 = EdgeFunction(triangle.b, triangle.c, min_point);
+    const int e1 = EdgeFunction(triangle.c, triangle.a, min_point);
+    const int e2 = EdgeFunction(triangle.a, triangle.b, min_point);
+
+    struct EdgeFunctionSteps {
+        int step01;
+        int step12;
+        int step20;
+    };
+
+    EdgeFunctionSteps A{
+        triangle.a.y - triangle.b.y,
+        triangle.b.y - triangle.c.y,
+        triangle.c.y - triangle.a.y
+    };
+
+    EdgeFunctionSteps B{
+        triangle.b.x - triangle.a.x,
+        triangle.c.x - triangle.b.x,
+        triangle.a.x - triangle.c.x
+    };
+
+    for (int y = bounding_box.minY; y <= bounding_box.maxY; ++y) {
+        thread_pool.Schedule([=]() {
+            const int step = y - bounding_box.minY;
+            int _e0 = e0 + B.step12 * step;
+            int _e1 = e1 + B.step20 * step;
+            int _e2 = e2 + B.step01 * step;
+
+            for (int x = bounding_box.minX; x <= bounding_box.maxX; ++x) {
+                Point2D point = Point2D{ x,y };
+
+                if ((_e0 | _e1 | _e2) >= 0) {
                     Uint32* p = GetPixel(surface, point);
                     *p = pixel_color;
                 }
+
+                _e0 += A.step12;
+                _e1 += A.step20;
+                _e2 += A.step01;
             }
         });
     }
