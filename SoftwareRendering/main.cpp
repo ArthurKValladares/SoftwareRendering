@@ -167,7 +167,7 @@ int main(int argc, char* argv[])
         ClearSurface(thread_pool, surface, 255, 0, 0);
         DrawTriangle(thread_pool, surface, triangle, 0, 255, 0);
         std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
-        printf("dt: %ld ms\n", std::chrono::duration_cast<std::chrono::milliseconds> (end - begin).count());
+        printf("dt: %ld ms\n", (long) std::chrono::duration_cast<std::chrono::milliseconds> (end - begin).count());
 
         SDL_UnlockSurface(surface);
         SDL_UpdateWindowSurface(window);
