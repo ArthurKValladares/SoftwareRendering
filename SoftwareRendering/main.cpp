@@ -90,10 +90,10 @@ Uint32* GetPixel(SDL_Surface* surface, Point2D point) {
     return (Uint32*)((Uint8*)surface->pixels + (point.y * surface->pitch) + (point.x * surface->format->BytesPerPixel));
 }
 
-void ClearSurface(ThreadPool& thread_pool, SDL_Surface* surface, Uint8 red, Uint8 green, Uint8 blue) {
+void ClearSurface(ThreadPool& thread_pool, SDL_Surface* surface, Color color) {
     const int width = surface->w;
     const int height = surface->h;
-    const Uint32 pixel_color = SDL_MapRGB(surface->format, red, green, blue);
+    const Uint32 pixel_color = SDL_MapRGB(surface->format, color.red, color.green, color.blue);
 
     for (int y = 0; y < height; ++y) {
         thread_pool.Schedule([=]() {
@@ -104,6 +104,7 @@ void ClearSurface(ThreadPool& thread_pool, SDL_Surface* surface, Uint8 red, Uint
             }
         });
     }
+    thread_pool.Wait();
 }
 
 void DrawTriangle(ThreadPool& thread_pool, SDL_Surface* surface, Triangle triangle) {
@@ -163,7 +164,6 @@ void DrawTriangle(ThreadPool& thread_pool, SDL_Surface* surface, Triangle triang
             }
         });
     }
-
     thread_pool.Wait();
 }
 
@@ -233,7 +233,7 @@ int main(int argc, char* argv[])
         }
 
         std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
-        ClearSurface(thread_pool, surface, 100, 100, 100);
+        ClearSurface(thread_pool, surface, Color{100, 100, 100});
         DrawTriangle(thread_pool, surface, triangle);
         std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
         printf("dt: %ld ms\n", (long) std::chrono::duration_cast<std::chrono::milliseconds> (end - begin).count());
