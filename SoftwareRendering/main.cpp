@@ -33,11 +33,36 @@ struct Rect2D {
     int maxY;
 };
 
+struct Color {
+    Uint8 red;
+    Uint8 green;
+    Uint8 blue;
+};
+
+Color mul(Color c, float s) {
+    return Color {
+        (Uint8) ((float) c.red * s),
+        (Uint8) ((float) c.green * s),
+        (Uint8) ((float) c.blue * s),
+    };
+}
+
+Color add(Color l, Color r) {
+    return Color {
+        (Uint8)((int)l.red + r.red),
+        (Uint8)((int)l.green + r.green),
+        (Uint8)((int)l.blue + r.blue),
+    };
+}
+
 // Assumes counter-clockwise winding order
 struct Triangle {
     Point2D a;
     Point2D b;
     Point2D c;
+    Color ca;
+    Color cb;
+    Color cc;
 };
 
 Rect2D TriangleBoundingBox(Triangle triangle) {
@@ -81,9 +106,8 @@ void ClearSurface(ThreadPool& thread_pool, SDL_Surface* surface, Uint8 red, Uint
     }
 }
 
-void DrawTriangle(ThreadPool& thread_pool, SDL_Surface* surface, Triangle triangle, Uint8 red, Uint8 green, Uint8 blue) {
+void DrawTriangle(ThreadPool& thread_pool, SDL_Surface* surface, Triangle triangle) {
     const Rect2D bounding_box = ClipRect(surface, TriangleBoundingBox(triangle));
-    const Uint32 pixel_color = SDL_MapRGB(surface->format, red, green, blue);
 
     const Point2D min_point = Point2D{ bounding_box.minX,bounding_box.minY };
 
@@ -110,8 +134,8 @@ void DrawTriangle(ThreadPool& thread_pool, SDL_Surface* surface, Triangle triang
     };
 
     for (int y = bounding_box.minY; y <= bounding_box.maxY; ++y) {
-        const int delta_y = y - bounding_box.minY;
         thread_pool.Schedule([=]() {
+            const int delta_y = y - bounding_box.minY;
             for (int x = bounding_box.minX; x <= bounding_box.maxX; ++x) {
                 const int delta_x = x - bounding_box.minX;
                 
@@ -119,8 +143,21 @@ void DrawTriangle(ThreadPool& thread_pool, SDL_Surface* surface, Triangle triang
                 const int _e1 = e1 + B.step20 * delta_y + A.step20 * delta_x;
                 const int _e2 = e2 + B.step01 * delta_y + A.step01 * delta_x;
                 
-                Point2D point = Point2D{ x,y };
                 if ((_e0 | _e1 | _e2) >= 0) {
+                    const int sum = _e0 + _e1 + _e2;
+                    
+                    const float ne0 = (float) _e0 / sum;
+                    const float ne1 = (float) _e1 / sum;
+                    const float ne2 = (float) _e2 / sum;
+                    
+                    const Color wc0 = mul(triangle.ca, ne0);
+                    const Color wc1 = mul(triangle.cb, ne1);
+                    const Color wc2 = mul(triangle.cc, ne2);
+                    
+                    const Color color = add(wc0, add(wc1, wc2));
+                    
+                    const Point2D point = Point2D{ x,y };
+                    const Uint32 pixel_color = SDL_MapRGB(surface->format, color.red, color.green, color.blue);
                     *GetPixel(surface, point) = pixel_color;
                 }
             }
@@ -159,7 +196,14 @@ int main(int argc, char* argv[])
     const int margin_w = round(surface->w * triangle_margin);
     const int margin_h = round(surface->h * triangle_margin);
 
-    const Triangle triangle = Triangle{ Point2D{surface->w - margin_w, margin_h}, Point2D{margin_w, surface->h - margin_h}, Point2D{margin_w, margin_h} };
+    const Triangle triangle = Triangle{
+        Point2D{margin_w, margin_h},
+        Point2D{surface->w - margin_w, margin_h},
+        Point2D{(int)((float)surface->w / 2.0), surface->h - margin_h},
+        Color{255, 0, 0},
+        Color{0, 255, 0},
+        Color{0, 0, 255}
+    };
     // Render loop
     bool quit = false;
     while (!quit)
@@ -189,8 +233,8 @@ int main(int argc, char* argv[])
         }
 
         std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
-        ClearSurface(thread_pool, surface, 255, 0, 0);
-        DrawTriangle(thread_pool, surface, triangle, 0, 255, 0);
+        ClearSurface(thread_pool, surface, 100, 100, 100);
+        DrawTriangle(thread_pool, surface, triangle);
         std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
         printf("dt: %ld ms\n", (long) std::chrono::duration_cast<std::chrono::milliseconds> (end - begin).count());
 
