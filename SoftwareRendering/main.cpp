@@ -110,23 +110,19 @@ void DrawTriangle(ThreadPool& thread_pool, SDL_Surface* surface, Triangle triang
     };
 
     for (int y = bounding_box.minY; y <= bounding_box.maxY; ++y) {
+        const int delta_y = y - bounding_box.minY;
         thread_pool.Schedule([=]() {
-            const int step = y - bounding_box.minY;
-            int _e0 = e0 + B.step12 * step;
-            int _e1 = e1 + B.step20 * step;
-            int _e2 = e2 + B.step01 * step;
-
             for (int x = bounding_box.minX; x <= bounding_box.maxX; ++x) {
+                const int delta_x = x - bounding_box.minX;
+                
+                const int _e0 = e0 + B.step12 * delta_y + A.step12 * delta_x;
+                const int _e1 = e1 + B.step20 * delta_y + A.step20 * delta_x;
+                const int _e2 = e2 + B.step01 * delta_y + A.step01 * delta_x;
+                
                 Point2D point = Point2D{ x,y };
-
                 if ((_e0 | _e1 | _e2) >= 0) {
-                    Uint32* p = GetPixel(surface, point);
-                    *p = pixel_color;
+                    *GetPixel(surface, point) = pixel_color;
                 }
-
-                _e0 += A.step12;
-                _e1 += A.step20;
-                _e2 += A.step01;
             }
         });
     }
