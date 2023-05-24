@@ -4,6 +4,7 @@
 #include <stdbool.h>
 #include <assert.h>
 #include <vector>
+#include <cmath>
 #ifdef __APPLE__
 #include <SDL2/SDL.h>
 #else
@@ -25,6 +26,22 @@ struct Point2D {
     int x;
     int y;
 };
+
+Point2D point_sub(Point2D a, Point2D b) {
+    return Point2D{a.x - b.x, a.y - b.y};
+}
+
+Point2D rotate_point(Point2D point, Point2D pivot, float angle) {
+    const float s = sin(angle);
+    const float c = cos(angle);
+
+    const Point2D p = point_sub(point, pivot);
+
+    const float new_x = p.x * c - p.y * s;
+    const float new_y = p.x * s + p.y * c;
+
+    return Point2D{(int) round(new_x) + pivot.x, (int) round(new_y) + pivot.y};
+}
 
 struct Rect2D {
     int minX;
@@ -64,6 +81,17 @@ struct Triangle {
     Color cb;
     Color cc;
 };
+
+Triangle rotate_triangle(Triangle triangle, Point2D pivot, float angle) {
+    return Triangle{
+        rotate_point(triangle.a, pivot, angle),
+        rotate_point(triangle.b, pivot, angle),
+        rotate_point(triangle.c, pivot, angle),
+        triangle.ca,
+        triangle.cb,
+        triangle.cc
+    };
+}
 
 Rect2D TriangleBoundingBox(Triangle triangle) {
     const int minY = MIN3(triangle.a.y, triangle.b.y, triangle.c.y);
@@ -204,6 +232,9 @@ int main(int argc, char* argv[])
         Color{0, 255, 0},
         Color{0, 0, 255}
     };
+
+    std::chrono::steady_clock::time_point render_begin = std::chrono::steady_clock::now();
+
     // Render loop
     bool quit = false;
     while (!quit)
@@ -232,11 +263,17 @@ int main(int argc, char* argv[])
             return 0;
         }
 
+        const long elapsed_start = (long) std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - render_begin).count();
+        const Triangle rotated_triangle = rotate_triangle(
+            triangle, 
+            Point2D{ surface->w / 2, surface->h / 2 },
+            ((float) elapsed_start) / 1000.0
+        );
+
         std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
         ClearSurface(thread_pool, surface, Color{100, 100, 100});
-        DrawTriangle(thread_pool, surface, triangle);
-        std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
-        printf("dt: %ld ms\n", (long) std::chrono::duration_cast<std::chrono::milliseconds> (end - begin).count());
+        DrawTriangle(thread_pool, surface, rotated_triangle);
+        printf("dt: %ld ms\n", (long) std::chrono::duration_cast<std::chrono::milliseconds> (std::chrono::steady_clock::now() - begin).count());
 
         SDL_UnlockSurface(surface);
         SDL_UpdateWindowSurface(window);
