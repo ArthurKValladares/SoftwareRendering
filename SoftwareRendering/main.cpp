@@ -135,7 +135,7 @@ void ClearSurface(ThreadPool& thread_pool, SDL_Surface* surface, Color color) {
     thread_pool.Wait();
 }
 
-void DrawTriangle(ThreadPool& thread_pool, SDL_Surface* surface, Triangle triangle) {
+void DrawTriangle(ThreadPool& thread_pool, SDL_Surface* surface, const Triangle &triangle) {
     const Rect2D bounding_box = ClipRect(surface, TriangleBoundingBox(triangle));
 
     const Point2D min_point = Point2D{ bounding_box.minX,bounding_box.minY };
@@ -195,6 +195,16 @@ void DrawTriangle(ThreadPool& thread_pool, SDL_Surface* surface, Triangle triang
     thread_pool.Wait();
 }
 
+struct Mesh {
+    std::vector<Triangle> triangles;
+};
+
+void DrawMesh(ThreadPool& thread_pool, SDL_Surface* surface, const Mesh& mesh) {
+    for (const Triangle &triangle : mesh.triangles) {
+        DrawTriangle(thread_pool, surface, triangle);
+    }
+}
+
 int main(int argc, char* argv[])
 {
     ThreadPool thread_pool;
@@ -224,13 +234,25 @@ int main(int argc, char* argv[])
     const int margin_w = round(surface->w * triangle_margin);
     const int margin_h = round(surface->h * triangle_margin);
 
-    const Triangle triangle = Triangle{
-        Point2D{margin_w, margin_h},
-        Point2D{surface->w - margin_w, margin_h},
-        Point2D{(int)((float)surface->w / 2.0), surface->h - margin_h},
-        Color{255, 0, 0},
-        Color{0, 255, 0},
-        Color{0, 0, 255}
+    const Mesh mesh = {
+        {
+            Triangle{
+                Point2D{margin_w, margin_h},
+                Point2D{surface->w - margin_w, margin_h},
+                Point2D{surface->w - margin_w, surface->h - margin_h},
+                Color{255, 0, 0},
+                Color{0, 255, 0},
+                Color{0, 0, 255}
+            },
+            Triangle{
+                Point2D{margin_w, margin_h},
+                Point2D{surface->w - margin_w, surface->h - margin_h},
+                Point2D{margin_w, surface->h - margin_h},
+                Color{255, 0, 0},
+                Color{0, 255, 0},
+                Color{0, 0, 255}
+            }
+        }
     };
 
     std::chrono::steady_clock::time_point render_begin = std::chrono::steady_clock::now();
@@ -264,15 +286,17 @@ int main(int argc, char* argv[])
         }
 
         const long elapsed_start = (long) std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - render_begin).count();
+        /*
         const Triangle rotated_triangle = rotate_triangle(
-            triangle, 
+            rigth_triangle, 
             Point2D{ surface->w / 2, surface->h / 2 },
             ((float) elapsed_start) / 1000.0
         );
-
+        DrawTriangle(thread_pool, surface, rotated_triangle);
+        */
         std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
         ClearSurface(thread_pool, surface, Color{100, 100, 100});
-        DrawTriangle(thread_pool, surface, rotated_triangle);
+        DrawMesh(thread_pool, surface, mesh);
         printf("dt: %ld ms\n", (long) std::chrono::duration_cast<std::chrono::milliseconds> (std::chrono::steady_clock::now() - begin).count());
 
         SDL_UnlockSurface(surface);
