@@ -31,7 +31,7 @@ struct ThreadPool {
     ThreadPool();
     ~ThreadPool();
 
-    void Schedule(const std::function<void()>&);
+    void Schedule(const std::function<void()>);
     void Wait();
 
 private:

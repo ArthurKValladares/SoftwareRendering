@@ -34,6 +34,7 @@ struct ThreadSafeQueue {
         return true;
     }
 
+    
     bool Empty() const {
         return m_queue.empty();
     }

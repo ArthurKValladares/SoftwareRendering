@@ -1,4 +1,5 @@
 #include "ThreadPool.h"
+#include <memory>
 
 void ThreadPool::WorkerThread() {
     while (!m_done) {
@@ -31,10 +32,11 @@ ThreadPool::~ThreadPool() {
 }
 
 
-void ThreadPool::Schedule(const std::function<void()>& task) {
-    std::packaged_task<void()> p_task(task);
-    std::future<void> res(p_task.get_future());
-    m_work_queue.Push(task);
+void ThreadPool::Schedule(const std::function<void()> task) {
+    // TODO: Get rid of `make_shared` hack when the compiler supports it
+    auto p_task = std::make_shared<std::packaged_task<void()>>(std::bind(std::move(task)));
+    std::future<void> res(p_task->get_future());
+    m_work_queue.Push([p_task](){ (*p_task)(); });
     m_futures.push_back(std::move(res));
 }
 
