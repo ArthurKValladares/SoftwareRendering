@@ -214,6 +214,14 @@ DrawMesh(ThreadPool &thread_pool, SDL_Surface *surface, const Mesh &mesh) {
     }
 }
 
+Mesh
+RotateMesh(Mesh mesh, Point2D pivot, float angle) {
+    for (Triangle &triangle : mesh.triangles) {
+        triangle = rotate_triangle(triangle, pivot, angle);
+    }
+    return mesh;
+}
+
 int
 main(int argc, char *argv[]) {
     ThreadPool thread_pool;
@@ -246,11 +254,11 @@ main(int argc, char *argv[]) {
         {Triangle{Point2D{margin_w, margin_h},
                   Point2D{surface->w - margin_w, margin_h},
                   Point2D{surface->w - margin_w, surface->h - margin_h},
-                  Color{255, 0, 0}, Color{0, 255, 0}, Color{0, 0, 255}},
+                  Color{255, 0, 0}, Color{0, 0, 0}, Color{0, 255, 0}},
          Triangle{Point2D{margin_w, margin_h},
                   Point2D{surface->w - margin_w, surface->h - margin_h},
                   Point2D{margin_w, surface->h - margin_h}, Color{255, 0, 0},
-                  Color{0, 255, 0}, Color{0, 0, 255}}}};
+                  Color{0, 255, 0}, Color{255, 255, 0}}}};
 
     std::chrono::steady_clock::time_point render_begin =
         std::chrono::steady_clock::now();
@@ -297,7 +305,10 @@ main(int argc, char *argv[]) {
         std::chrono::steady_clock::time_point begin =
             std::chrono::steady_clock::now();
         ClearSurface(thread_pool, surface, Color{100, 100, 100});
-        DrawMesh(thread_pool, surface, mesh);
+        const Mesh rotated_mesh =
+            RotateMesh(mesh, Point2D{surface->w / 2, surface->h / 2},
+                       ((float) elapsed_start) / 1000.0);
+        DrawMesh(thread_pool, surface, rotated_mesh);
         printf("dt: %ld ms\n",
                (long) std::chrono::duration_cast<std::chrono::milliseconds>(
                    std::chrono::steady_clock::now() - begin)
