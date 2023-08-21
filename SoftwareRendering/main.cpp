@@ -1,6 +1,8 @@
 #include <assert.h>
 #include <chrono>
 #include <cmath>
+#include <filesystem>
+#include <iostream>
 #include <stdbool.h>
 #include <stdio.h>
 #include <vector>
@@ -225,6 +227,18 @@ RotateMesh(Mesh mesh, Point2D pivot, float angle) {
 
 int
 main(int argc, char *argv[]) {
+    std::string path = ".";
+    for (const auto &entry : std::filesystem::directory_iterator(path))
+        std::cout << entry.path() << std::endl;
+
+    int width, height, channels;
+    unsigned char *img =
+        stbi_load("/Users/arthurvalladares/Documents/projects/SoftwareRendering/vendor/baba.jpeg", &width, &height, &channels, 0);
+    if (img == NULL) {
+        printf("Error in loading the image\n");
+        exit(1);
+    }
+    
     ThreadPool thread_pool;
 
     // Init
@@ -261,13 +275,6 @@ main(int argc, char *argv[]) {
                   Point2D{margin_w, surface->h - margin_h}, Color{255, 0, 0},
                   Color{0, 255, 0}, Color{255, 255, 0}}}};
 
-    int width, height, channels;
-    unsigned char *img =
-        stbi_load("baba.jpeg", &width, &height, &channels, 0);
-    if (img == NULL) {
-        printf("Error in loading the image\n");
-        exit(1);
-    }
 
     std::chrono::steady_clock::time_point render_begin =
         std::chrono::steady_clock::now();
@@ -303,14 +310,7 @@ main(int argc, char *argv[]) {
             (long) std::chrono::duration_cast<std::chrono::milliseconds>(
                 std::chrono::steady_clock::now() - render_begin)
                 .count();
-        /*
-        const Triangle rotated_triangle = rotate_triangle(
-            rigth_triangle,
-            Point2D{ surface->w / 2, surface->h / 2 },
-            ((float) elapsed_start) / 1000.0
-        );
-        DrawTriangle(thread_pool, surface, rotated_triangle);
-        */
+
         std::chrono::steady_clock::time_point begin =
             std::chrono::steady_clock::now();
         ClearSurface(thread_pool, surface, Color{100, 100, 100});
