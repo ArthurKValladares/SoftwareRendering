@@ -11,6 +11,7 @@
 #endif
 
 #include "ThreadPool.h"
+#include "defs.h"
 
 #define MAX(a, b) ((a) > (b) ? (a) : (b))
 #define MIN(a, b) ((a) < (b) ? (a) : (b))
@@ -259,6 +260,14 @@ main(int argc, char *argv[]) {
                   Point2D{surface->w - margin_w, surface->h - margin_h},
                   Point2D{margin_w, surface->h - margin_h}, Color{255, 0, 0},
                   Color{0, 255, 0}, Color{255, 255, 0}}}};
+
+    int width, height, channels;
+    unsigned char *img =
+        stbi_load("baba.jpeg", &width, &height, &channels, 0);
+    if (img == NULL) {
+        printf("Error in loading the image\n");
+        exit(1);
+    }
 
     std::chrono::steady_clock::time_point render_begin =
         std::chrono::steady_clock::now();
