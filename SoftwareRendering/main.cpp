@@ -227,10 +227,7 @@ RotateMesh(Mesh mesh, Point2D pivot, float angle) {
 
 int
 main(int argc, char *argv[]) {
-    std::string path = ".";
-    for (const auto &entry : std::filesystem::directory_iterator(path))
-        std::cout << entry.path() << std::endl;
-
+    /*
     int width, height, channels;
     unsigned char *img =
         stbi_load("/Users/arthurvalladares/Documents/projects/SoftwareRendering/vendor/baba.jpeg", &width, &height, &channels, 0);
@@ -238,6 +235,7 @@ main(int argc, char *argv[]) {
         printf("Error in loading the image\n");
         exit(1);
     }
+    */
     
     ThreadPool thread_pool;
 
