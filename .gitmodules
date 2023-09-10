@@ -1,0 +1,3 @@
+[submodule "ConcurrencyPrimitives"]
+	path = ConcurrencyPrimitives
+	url = https://github.com/ArthurKValladares/ConcurrencyPrimitives.git
