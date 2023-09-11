@@ -12,6 +12,7 @@
 		938077162AAE7A62006EEADC /* ThreadPool.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 938077152AAE7A62006EEADC /* ThreadPool.cpp */; };
 		938077182AAE7ADA006EEADC /* ThreadPool.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = 938077172AAE7ADA006EEADC /* ThreadPool.h */; };
 		9380771A2AAE7AEA006EEADC /* stb_image.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = 938077192AAE7AEA006EEADC /* stb_image.h */; };
+		938077202AAEAE53006EEADC /* test.jpg in CopyFiles */ = {isa = PBXBuildFile; fileRef = 9380771B2AAE978E006EEADC /* test.jpg */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -26,6 +27,16 @@
 			);
 			runOnlyForDeploymentPostprocessing = 1;
 		};
+		9380771F2AAEAE4E006EEADC /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 7;
+			files = (
+				938077202AAEAE53006EEADC /* test.jpg in CopyFiles */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
@@ -36,6 +47,7 @@
 		938077152AAE7A62006EEADC /* ThreadPool.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = ThreadPool.cpp; path = ../../ConcurrencyPrimitives/src/ThreadPool.cpp; sourceTree = "<group>"; };
 		938077172AAE7ADA006EEADC /* ThreadPool.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = ThreadPool.h; path = ../../ConcurrencyPrimitives/src/ThreadPool.h; sourceTree = "<group>"; };
 		938077192AAE7AEA006EEADC /* stb_image.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = stb_image.h; path = ../../vendor/STB/stb_image.h; sourceTree = "<group>"; };
+		9380771B2AAE978E006EEADC /* test.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; name = test.jpg; path = ../../assets/test.jpg; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -53,6 +65,7 @@
 		938076FC2AAE798B006EEADC = {
 			isa = PBXGroup;
 			children = (
+				9380771B2AAE978E006EEADC /* test.jpg */,
 				938077192AAE7AEA006EEADC /* stb_image.h */,
 				938077172AAE7ADA006EEADC /* ThreadPool.h */,
 				938077152AAE7A62006EEADC /* ThreadPool.cpp */,
@@ -97,6 +110,7 @@
 				938077012AAE798B006EEADC /* Sources */,
 				938077022AAE798B006EEADC /* Frameworks */,
 				938077032AAE798B006EEADC /* CopyFiles */,
+				9380771F2AAEAE4E006EEADC /* CopyFiles */,
 			);
 			buildRules = (
 			);

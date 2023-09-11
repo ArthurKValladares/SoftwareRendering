@@ -229,7 +229,7 @@ int
 main(int argc, char *argv[]) {
     int width, height, channels;
     unsigned char *img =
-        stbi_load("/Users/arthurvalladares/Documents/projects/SoftwareRendering/vendor/baba.jpeg", &width, &height, &channels, 0);
+        stbi_load("test.jpg", &width, &height, &channels, 0);
     if (img == NULL) {
         printf("Error in loading the image\n");
         exit(1);
