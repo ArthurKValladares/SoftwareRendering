@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		931B50D22AB2729400845796 /* texture.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 931B50D12AB2729400845796 /* texture.cpp */; };
+		931B50D62AB2745C00845796 /* point.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 931B50D42AB2745C00845796 /* point.cpp */; };
 		938077122AAE7A2F006EEADC /* SDL2.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 938077112AAE7A2F006EEADC /* SDL2.framework */; };
 		938077142AAE7A4B006EEADC /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 938077132AAE7A4B006EEADC /* main.cpp */; };
 		938077162AAE7A62006EEADC /* ThreadPool.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 938077152AAE7A62006EEADC /* ThreadPool.cpp */; };
@@ -43,6 +44,8 @@
 /* Begin PBXFileReference section */
 		931B50D02AB2724D00845796 /* texture.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = texture.h; sourceTree = "<group>"; };
 		931B50D12AB2729400845796 /* texture.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = texture.cpp; sourceTree = "<group>"; };
+		931B50D42AB2745C00845796 /* point.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = point.cpp; sourceTree = "<group>"; };
+		931B50D52AB2745C00845796 /* point.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = point.hpp; sourceTree = "<group>"; };
 		938077052AAE798B006EEADC /* SoftwareRendering */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = SoftwareRendering; sourceTree = BUILT_PRODUCTS_DIR; };
 		9380770F2AAE79A6006EEADC /* src */ = {isa = PBXFileReference; lastKnownFileType = folder; name = src; path = ../../../src; sourceTree = "<group>"; };
 		938077112AAE7A2F006EEADC /* SDL2.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SDL2.framework; path = ../../../../../../../Library/Frameworks/SDL2.framework; sourceTree = "<group>"; };
@@ -68,6 +71,8 @@
 		938076FC2AAE798B006EEADC = {
 			isa = PBXGroup;
 			children = (
+				931B50D42AB2745C00845796 /* point.cpp */,
+				931B50D52AB2745C00845796 /* point.hpp */,
 				931B50D12AB2729400845796 /* texture.cpp */,
 				931B50D02AB2724D00845796 /* texture.h */,
 				9380771B2AAE978E006EEADC /* test.jpg */,
@@ -163,6 +168,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				931B50D62AB2745C00845796 /* point.cpp in Sources */,
 				931B50D22AB2729400845796 /* texture.cpp in Sources */,
 				938077162AAE7A62006EEADC /* ThreadPool.cpp in Sources */,
 				938077142AAE7A4B006EEADC /* main.cpp in Sources */,
