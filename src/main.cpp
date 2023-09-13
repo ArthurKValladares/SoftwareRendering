@@ -13,7 +13,7 @@
 #endif
 
 #include "ThreadPool.h"
-#include "defs.h"
+#include "texture.h"
 
 #define MAX(a, b) ((a) > (b) ? (a) : (b))
 #define MIN(a, b) ((a) < (b) ? (a) : (b))
@@ -134,21 +134,6 @@ void ClearSurface(ThreadPool &thread_pool, SDL_Surface *surface, Color color) {
         });
     }
     thread_pool.Wait();
-}
-
-struct Texture {
-    int width, height, channels;
-    unsigned char *img;
-};
-
-Texture create_texture(std::string_view path) {
-    int width, height, channels;
-    unsigned char *img = stbi_load("test.jpg", &width, &height, &channels, 0);
-    if (img == NULL) {
-        printf("Error in loading the image\n");
-        exit(1);
-    }
-    return Texture{width, height, channels, img};
 }
 
 Color get_pixel(const Texture& texture, Uint32 width, Uint32 height) {
