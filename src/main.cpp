@@ -136,7 +136,31 @@ void ClearSurface(ThreadPool &thread_pool, SDL_Surface *surface, Color color) {
     thread_pool.Wait();
 }
 
-void DrawTriangle(ThreadPool &thread_pool, SDL_Surface *surface, const Triangle &triangle) {
+struct Texture {
+    int width, height, channels;
+    unsigned char *img;
+};
+
+Texture create_texture(std::string_view path) {
+    int width, height, channels;
+    unsigned char *img = stbi_load("test.jpg", &width, &height, &channels, 0);
+    if (img == NULL) {
+        printf("Error in loading the image\n");
+        exit(1);
+    }
+    return Texture{width, height, channels, img};
+}
+
+Color get_pixel(const Texture& texture, Uint32 width, Uint32 height) {
+    const Uint32 stride = texture.width * texture.channels;
+    const Uint32 start = height * stride + width * texture.channels;
+    const Uint8 red = texture.img[start];
+    const Uint8 green = texture.img[start + 1];
+    const Uint8 blue = texture.img[start + 2];
+    return Color{red, green, blue};
+}
+
+void DrawTriangle(ThreadPool &thread_pool, SDL_Surface *surface, const Triangle &triangle, const Texture &texture) {
     const Rect2D bounding_box =
         ClipRect(surface, TriangleBoundingBox(triangle));
 
@@ -183,9 +207,14 @@ void DrawTriangle(ThreadPool &thread_pool, SDL_Surface *surface, const Triangle 
 
                     const Color color = add(wc0, add(wc1, wc2));
 
+                    const Uint32 u = round(texture.width * (color.red / 255.0));
+                    const Uint32 v = round(texture.height * (color.green / 255.0));
+                    
+                    const Color texture_pixel = get_pixel(texture, u, v);
+                    
                     const Point2D point = Point2D{x, y};
                     const Uint32 pixel_color = SDL_MapRGB(
-                        surface->format, color.red, color.green, color.blue);
+                        surface->format, texture_pixel.red, texture_pixel.green, texture_pixel.blue);
                     *GetPixel(surface, point) = pixel_color;
                 }
             }
@@ -196,11 +225,12 @@ void DrawTriangle(ThreadPool &thread_pool, SDL_Surface *surface, const Triangle 
 
 struct Mesh {
     std::vector<Triangle> triangles;
+    Texture texture;
 };
 
 void DrawMesh(ThreadPool &thread_pool, SDL_Surface *surface, const Mesh &mesh) {
     for (const Triangle &triangle : mesh.triangles) {
-        DrawTriangle(thread_pool, surface, triangle);
+        DrawTriangle(thread_pool, surface, triangle, mesh.texture);
     }
 }
 
@@ -209,21 +239,6 @@ Mesh RotateMesh(Mesh mesh, Point2D pivot, float angle) {
         triangle = rotate_triangle(triangle, pivot, angle);
     }
     return mesh;
-}
-
-struct Texture {
-    int width, height, channels;
-    unsigned char *img;
-};
-
-Texture create_texture(std::string_view path) {
-    int width, height, channels;
-    unsigned char *img = stbi_load("test.jpg", &width, &height, &channels, 0);
-    if (img == NULL) {
-        printf("Error in loading the image\n");
-        exit(1);
-    }
-    return Texture{width, height, channels, img};
 }
 
 int main(int argc, char *argv[]) {
@@ -256,14 +271,19 @@ int main(int argc, char *argv[]) {
     const int margin_h = round(surface->h * triangle_margin);
 
     const Mesh mesh = {
-        {Triangle{Point2D{margin_w, margin_h},
+        {
+            Triangle{Point2D{margin_w, margin_h},
                   Point2D{surface->w - margin_w, margin_h},
                   Point2D{surface->w - margin_w, surface->h - margin_h},
                   Color{255, 0, 0}, Color{0, 0, 0}, Color{0, 255, 0}},
-         Triangle{Point2D{margin_w, margin_h},
+            Triangle{Point2D{margin_w, margin_h},
                   Point2D{surface->w - margin_w, surface->h - margin_h},
                   Point2D{margin_w, surface->h - margin_h}, Color{255, 0, 0},
-                  Color{0, 255, 0}, Color{255, 255, 0}}}};
+                  Color{0, 255, 0}, Color{255, 255, 0}}
+            
+        },
+        texture
+    };
 
 
     std::chrono::steady_clock::time_point render_begin =
