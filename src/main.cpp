@@ -16,22 +16,11 @@
 #include "point.hpp"
 #include "texture.h"
 #include "color.hpp"
-
-#define MAX(a, b) ((a) > (b) ? (a) : (b))
-#define MIN(a, b) ((a) < (b) ? (a) : (b))
-
-#define MAX3(a, b, c) MAX(a, MAX(b, c))
-#define MIN3(a, b, c) MIN(a, MIN(b, c))
+#include "rect.hpp"
+#include "defs.h"
 
 #define SCREEN_WIDTH  1200
 #define SCREEN_HEIGHT 800
-
-struct Rect2D {
-    int minX;
-    int minY;
-    int maxX;
-    int maxY;
-};
 
 // Assumes counter-clockwise winding order
 struct Triangle {
@@ -57,14 +46,6 @@ Rect2D TriangleBoundingBox(Triangle triangle) {
     const int minX = MIN3(triangle.a.x, triangle.b.x, triangle.c.x);
     const int maxX = MAX3(triangle.a.x, triangle.b.x, triangle.c.x);
     const int maxY = MAX3(triangle.a.y, triangle.b.y, triangle.c.y);
-    return Rect2D{minX, minY, maxX, maxY};
-}
-
-Rect2D ClipRect(SDL_Surface *surface, Rect2D rect) {
-    const int minX = MAX(rect.minX, 0);
-    const int minY = MAX(rect.minY, 0);
-    const int maxX = MIN(rect.maxX, surface->w - 1);
-    const int maxY = MIN(rect.maxY, surface->h - 1);
     return Rect2D{minX, minY, maxX, maxY};
 }
 
@@ -105,8 +86,7 @@ Color get_pixel(const Texture& texture, Uint32 width, Uint32 height) {
 }
 
 void DrawTriangle(ThreadPool &thread_pool, SDL_Surface *surface, const Triangle &triangle, const Texture &texture) {
-    const Rect2D bounding_box =
-        ClipRect(surface, TriangleBoundingBox(triangle));
+    const Rect2D bounding_box = ClipRect(surface->w, surface->h, TriangleBoundingBox(triangle));
 
     const Point2D min_point = Point2D{bounding_box.minX, bounding_box.minY};
 
