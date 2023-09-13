@@ -18,36 +18,10 @@
 #include "color.hpp"
 #include "rect.hpp"
 #include "defs.h"
+#include "triangle.hpp"
 
 #define SCREEN_WIDTH  1200
 #define SCREEN_HEIGHT 800
-
-// Assumes counter-clockwise winding order
-struct Triangle {
-    Point2D a;
-    Point2D b;
-    Point2D c;
-    Color ca;
-    Color cb;
-    Color cc;
-};
-
-Triangle rotate_triangle(Triangle triangle, Point2D pivot, float angle) {
-    return Triangle{rotate_point(triangle.a, pivot, angle),
-                    rotate_point(triangle.b, pivot, angle),
-                    rotate_point(triangle.c, pivot, angle),
-                    triangle.ca,
-                    triangle.cb,
-                    triangle.cc};
-}
-
-Rect2D TriangleBoundingBox(Triangle triangle) {
-    const int minY = MIN3(triangle.a.y, triangle.b.y, triangle.c.y);
-    const int minX = MIN3(triangle.a.x, triangle.b.x, triangle.c.x);
-    const int maxX = MAX3(triangle.a.x, triangle.b.x, triangle.c.x);
-    const int maxY = MAX3(triangle.a.y, triangle.b.y, triangle.c.y);
-    return Rect2D{minX, minY, maxX, maxY};
-}
 
 int EdgeFunction(const Point2D &a, const Point2D &b, const Point2D &c) {
     return (b.x - a.x) * (c.y - a.y) - (b.y - a.y) * (c.x - a.x);
