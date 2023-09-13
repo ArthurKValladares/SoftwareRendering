@@ -15,6 +15,7 @@
 #include "ThreadPool.h"
 #include "point.hpp"
 #include "texture.h"
+#include "color.hpp"
 
 #define MAX(a, b) ((a) > (b) ? (a) : (b))
 #define MIN(a, b) ((a) < (b) ? (a) : (b))
@@ -31,28 +32,6 @@ struct Rect2D {
     int maxX;
     int maxY;
 };
-
-struct Color {
-    Uint8 red;
-    Uint8 green;
-    Uint8 blue;
-};
-
-Color mul(Color c, float s) {
-    return Color{
-        (Uint8) ((float) c.red * s),
-        (Uint8) ((float) c.green * s),
-        (Uint8) ((float) c.blue * s),
-    };
-}
-
-Color add(Color l, Color r) {
-    return Color{
-        (Uint8) ((int) l.red + r.red),
-        (Uint8) ((int) l.green + r.green),
-        (Uint8) ((int) l.blue + r.blue),
-    };
-}
 
 // Assumes counter-clockwise winding order
 struct Triangle {
