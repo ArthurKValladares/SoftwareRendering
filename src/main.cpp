@@ -29,13 +29,11 @@ struct Point2D {
     int y;
 };
 
-Point2D
-point_sub(Point2D a, Point2D b) {
+Point2D point_sub(Point2D a, Point2D b) {
     return Point2D{a.x - b.x, a.y - b.y};
 }
 
-Point2D
-rotate_point(Point2D point, Point2D pivot, float angle) {
+Point2D rotate_point(Point2D point, Point2D pivot, float angle) {
     const float s = sin(angle);
     const float c = cos(angle);
 
@@ -60,8 +58,7 @@ struct Color {
     Uint8 blue;
 };
 
-Color
-mul(Color c, float s) {
+Color mul(Color c, float s) {
     return Color{
         (Uint8) ((float) c.red * s),
         (Uint8) ((float) c.green * s),
@@ -69,8 +66,7 @@ mul(Color c, float s) {
     };
 }
 
-Color
-add(Color l, Color r) {
+Color add(Color l, Color r) {
     return Color{
         (Uint8) ((int) l.red + r.red),
         (Uint8) ((int) l.green + r.green),
@@ -88,8 +84,7 @@ struct Triangle {
     Color cc;
 };
 
-Triangle
-rotate_triangle(Triangle triangle, Point2D pivot, float angle) {
+Triangle rotate_triangle(Triangle triangle, Point2D pivot, float angle) {
     return Triangle{rotate_point(triangle.a, pivot, angle),
                     rotate_point(triangle.b, pivot, angle),
                     rotate_point(triangle.c, pivot, angle),
@@ -98,8 +93,7 @@ rotate_triangle(Triangle triangle, Point2D pivot, float angle) {
                     triangle.cc};
 }
 
-Rect2D
-TriangleBoundingBox(Triangle triangle) {
+Rect2D TriangleBoundingBox(Triangle triangle) {
     const int minY = MIN3(triangle.a.y, triangle.b.y, triangle.c.y);
     const int minX = MIN3(triangle.a.x, triangle.b.x, triangle.c.x);
     const int maxX = MAX3(triangle.a.x, triangle.b.x, triangle.c.x);
@@ -107,8 +101,7 @@ TriangleBoundingBox(Triangle triangle) {
     return Rect2D{minX, minY, maxX, maxY};
 }
 
-Rect2D
-ClipRect(SDL_Surface *surface, Rect2D rect) {
+Rect2D ClipRect(SDL_Surface *surface, Rect2D rect) {
     const int minX = MAX(rect.minX, 0);
     const int minY = MAX(rect.minY, 0);
     const int maxX = MIN(rect.maxX, surface->w - 1);
@@ -116,19 +109,16 @@ ClipRect(SDL_Surface *surface, Rect2D rect) {
     return Rect2D{minX, minY, maxX, maxY};
 }
 
-int
-EdgeFunction(const Point2D &a, const Point2D &b, const Point2D &c) {
+int EdgeFunction(const Point2D &a, const Point2D &b, const Point2D &c) {
     return (b.x - a.x) * (c.y - a.y) - (b.y - a.y) * (c.x - a.x);
 }
 
-Uint32 *
-GetPixel(SDL_Surface *surface, Point2D point) {
+Uint32* GetPixel(SDL_Surface *surface, Point2D point) {
     return (Uint32 *) ((Uint8 *) surface->pixels + (point.y * surface->pitch) +
                        (point.x * surface->format->BytesPerPixel));
 }
 
-void
-ClearSurface(ThreadPool &thread_pool, SDL_Surface *surface, Color color) {
+void ClearSurface(ThreadPool &thread_pool, SDL_Surface *surface, Color color) {
     const int width = surface->w;
     const int height = surface->h;
     const Uint32 pixel_color =
@@ -146,9 +136,7 @@ ClearSurface(ThreadPool &thread_pool, SDL_Surface *surface, Color color) {
     thread_pool.Wait();
 }
 
-void
-DrawTriangle(ThreadPool &thread_pool, SDL_Surface *surface,
-             const Triangle &triangle) {
+void DrawTriangle(ThreadPool &thread_pool, SDL_Surface *surface, const Triangle &triangle) {
     const Rect2D bounding_box =
         ClipRect(surface, TriangleBoundingBox(triangle));
 
@@ -210,30 +198,36 @@ struct Mesh {
     std::vector<Triangle> triangles;
 };
 
-void
-DrawMesh(ThreadPool &thread_pool, SDL_Surface *surface, const Mesh &mesh) {
+void DrawMesh(ThreadPool &thread_pool, SDL_Surface *surface, const Mesh &mesh) {
     for (const Triangle &triangle : mesh.triangles) {
         DrawTriangle(thread_pool, surface, triangle);
     }
 }
 
-Mesh
-RotateMesh(Mesh mesh, Point2D pivot, float angle) {
+Mesh RotateMesh(Mesh mesh, Point2D pivot, float angle) {
     for (Triangle &triangle : mesh.triangles) {
         triangle = rotate_triangle(triangle, pivot, angle);
     }
     return mesh;
 }
 
-int
-main(int argc, char *argv[]) {
+struct Texture {
     int width, height, channels;
-    unsigned char *img =
-        stbi_load("test.jpg", &width, &height, &channels, 0);
+    unsigned char *img;
+};
+
+Texture create_texture(std::string_view path) {
+    int width, height, channels;
+    unsigned char *img = stbi_load("test.jpg", &width, &height, &channels, 0);
     if (img == NULL) {
         printf("Error in loading the image\n");
         exit(1);
     }
+    return Texture{width, height, channels, img};
+}
+
+int main(int argc, char *argv[]) {
+    const Texture texture = create_texture("test.jpg");
     
     ThreadPool thread_pool;
 
@@ -307,17 +301,17 @@ main(int argc, char *argv[]) {
                 std::chrono::steady_clock::now() - render_begin)
                 .count();
 
-        std::chrono::steady_clock::time_point begin =
-            std::chrono::steady_clock::now();
+        const std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
+        
         ClearSurface(thread_pool, surface, Color{100, 100, 100});
+        
         const Mesh rotated_mesh =
             RotateMesh(mesh, Point2D{surface->w / 2, surface->h / 2},
                        ((float) elapsed_start) / 1000.0);
         DrawMesh(thread_pool, surface, rotated_mesh);
-        printf("dt: %ld ms\n",
-               (long) std::chrono::duration_cast<std::chrono::milliseconds>(
-                   std::chrono::steady_clock::now() - begin)
-                   .count());
+        
+        const std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
+        printf("dt: %ld ms\n", (long) std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count());
 
         SDL_UnlockSurface(surface);
         SDL_UpdateWindowSurface(window);
