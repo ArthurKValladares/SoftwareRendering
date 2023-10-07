@@ -1,3 +1,6 @@
 [submodule "ConcurrencyPrimitives"]
 	path = ConcurrencyPrimitives
 	url = https://github.com/ArthurKValladares/ConcurrencyPrimitives.git
+[submodule "vendor/sse2neon"]
+	path = vendor/sse2neon
+	url = https://github.com/DLTcollab/sse2neon.git
