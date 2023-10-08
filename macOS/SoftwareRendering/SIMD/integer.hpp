@@ -6,6 +6,7 @@
 
 struct Vec4i32 {
     Vec4i32(i32 a, i32 b, i32 c, i32 d);
+    Vec4i32(i32 a);
     Vec4i32(__m128i a);
     
     Vec4i32 operator+(const Vec4i32& rhs) const;

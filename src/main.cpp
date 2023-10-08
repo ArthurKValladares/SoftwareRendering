@@ -20,6 +20,7 @@
 #include "defs.h"
 #include "triangle.hpp"
 
+// TODO: Make sure these are always multiples of 4
 #define SCREEN_WIDTH  1200
 #define SCREEN_HEIGHT 800
 
@@ -61,61 +62,19 @@ Color get_pixel(const Texture& texture, Uint32 width, Uint32 height) {
 
 void DrawTriangle(ThreadPool &thread_pool, SDL_Surface *surface, const Triangle &triangle, const Texture &texture) {
     const Rect2D bounding_box = ClipRect(surface->w, surface->h, TriangleBoundingBox(triangle));
-
-    const Point2D min_point = Point2D{bounding_box.minX, bounding_box.minY};
-
-    const int edge_fn_min_0 = EdgeFunction(triangle.b, triangle.c, min_point);
-    const int edge_fn_min_1 = EdgeFunction(triangle.c, triangle.a, min_point);
-    const int edge_fn_min_2 = EdgeFunction(triangle.a, triangle.b, min_point);
-
-    struct EdgeFunctionSteps {
-        int step01;
-        int step12;
-        int step20;
-    };
-
-    EdgeFunctionSteps edge_fn_steps_y{
-        triangle.a.y - triangle.b.y,
-        triangle.b.y - triangle.c.y,
-        triangle.c.y - triangle.a.y
-    };
-
-    EdgeFunctionSteps edge_fn_steps_x{
-        triangle.b.x - triangle.a.x,
-        triangle.c.x - triangle.b.x,
-        triangle.a.x - triangle.c.x
-    };
-
+    
     for (int y = bounding_box.minY; y <= bounding_box.maxY; ++y) {
         thread_pool.Schedule([=]() {
-            const int delta_y = y - bounding_box.minY;
             for (int x = bounding_box.minX; x <= bounding_box.maxX; ++x) {
-                const int delta_x = x - bounding_box.minX;
-
-                const int edge_0 = edge_fn_min_0 + (edge_fn_steps_x.step12 * delta_y) + (edge_fn_steps_y.step12 * delta_x);
-                const int edge_1 = edge_fn_min_1 + (edge_fn_steps_x.step20 * delta_y) + (edge_fn_steps_y.step20 * delta_x);
-                const int edge_2 = edge_fn_min_2 + (edge_fn_steps_x.step01 * delta_y) + (edge_fn_steps_y.step01 * delta_x);
+                const Point2D p = Point2D(x, y);
+                
+                const int edge_0 = EdgeFunction(triangle.b, triangle.c, p);
+                const int edge_1 = EdgeFunction(triangle.c, triangle.a, p);
+                const int edge_2 = EdgeFunction(triangle.a, triangle.b, p);
 
                 if ((edge_0 | edge_1 | edge_2) >= 0) {
-                    const int sum = edge_0 + edge_1 + edge_2;
-                    const float barycentric_0 = (float) edge_0 / sum;
-                    const float barycentric_1 = (float) edge_1 / sum;
-                    const float barycentric_2 = (float) edge_2 / sum;
-
-                    const Color wc0 = mul(triangle.ca, barycentric_0);
-                    const Color wc1 = mul(triangle.cb, barycentric_1);
-                    const Color wc2 = mul(triangle.cc, barycentric_2);
-                    const Color color = add(wc0, add(wc1, wc2));
-
-                    const Uint32 u = round(texture.width * (color.red / 255.0));
-                    const Uint32 v = round(texture.height * (color.green / 255.0));
-                    
-                    const Color texture_pixel = get_pixel(texture, u, v);
-                    
-                    const Point2D point = Point2D{x, y};
-                    const Uint32 pixel_color = SDL_MapRGB(
-                        surface->format, texture_pixel.red, texture_pixel.green, texture_pixel.blue);
-                    *GetPixel(surface, point) = pixel_color;
+                    const Uint32 pixel_color = SDL_MapRGB(surface->format, 255, 0, 0);
+                    *GetPixel(surface, p) = pixel_color;
                 }
             }
         });
