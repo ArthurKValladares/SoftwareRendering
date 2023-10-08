@@ -64,9 +64,9 @@ void DrawTriangle(ThreadPool &thread_pool, SDL_Surface *surface, const Triangle 
 
     const Point2D min_point = Point2D{bounding_box.minX, bounding_box.minY};
 
-    const int e0 = EdgeFunction(triangle.b, triangle.c, min_point);
-    const int e1 = EdgeFunction(triangle.c, triangle.a, min_point);
-    const int e2 = EdgeFunction(triangle.a, triangle.b, min_point);
+    const int edge_fn_min_0 = EdgeFunction(triangle.b, triangle.c, min_point);
+    const int edge_fn_min_1 = EdgeFunction(triangle.c, triangle.a, min_point);
+    const int edge_fn_min_2 = EdgeFunction(triangle.a, triangle.b, min_point);
 
     struct EdgeFunctionSteps {
         int step01;
@@ -74,13 +74,17 @@ void DrawTriangle(ThreadPool &thread_pool, SDL_Surface *surface, const Triangle 
         int step20;
     };
 
-    EdgeFunctionSteps A{triangle.a.y - triangle.b.y,
-                        triangle.b.y - triangle.c.y,
-                        triangle.c.y - triangle.a.y};
+    EdgeFunctionSteps edge_fn_steps_y{
+        triangle.a.y - triangle.b.y,
+        triangle.b.y - triangle.c.y,
+        triangle.c.y - triangle.a.y
+    };
 
-    EdgeFunctionSteps B{triangle.b.x - triangle.a.x,
-                        triangle.c.x - triangle.b.x,
-                        triangle.a.x - triangle.c.x};
+    EdgeFunctionSteps edge_fn_steps_x{
+        triangle.b.x - triangle.a.x,
+        triangle.c.x - triangle.b.x,
+        triangle.a.x - triangle.c.x
+    };
 
     for (int y = bounding_box.minY; y <= bounding_box.maxY; ++y) {
         thread_pool.Schedule([=]() {
@@ -88,21 +92,19 @@ void DrawTriangle(ThreadPool &thread_pool, SDL_Surface *surface, const Triangle 
             for (int x = bounding_box.minX; x <= bounding_box.maxX; ++x) {
                 const int delta_x = x - bounding_box.minX;
 
-                const int _e0 = e0 + B.step12 * delta_y + A.step12 * delta_x;
-                const int _e1 = e1 + B.step20 * delta_y + A.step20 * delta_x;
-                const int _e2 = e2 + B.step01 * delta_y + A.step01 * delta_x;
+                const int edge_0 = edge_fn_min_0 + (edge_fn_steps_x.step12 * delta_y) + (edge_fn_steps_y.step12 * delta_x);
+                const int edge_1 = edge_fn_min_1 + (edge_fn_steps_x.step20 * delta_y) + (edge_fn_steps_y.step20 * delta_x);
+                const int edge_2 = edge_fn_min_2 + (edge_fn_steps_x.step01 * delta_y) + (edge_fn_steps_y.step01 * delta_x);
 
-                if ((_e0 | _e1 | _e2) >= 0) {
-                    const int sum = _e0 + _e1 + _e2;
+                if ((edge_0 | edge_1 | edge_2) >= 0) {
+                    const int sum = edge_0 + edge_1 + edge_2;
+                    const float barycentric_0 = (float) edge_0 / sum;
+                    const float barycentric_1 = (float) edge_1 / sum;
+                    const float barycentric_2 = (float) edge_2 / sum;
 
-                    const float ne0 = (float) _e0 / sum;
-                    const float ne1 = (float) _e1 / sum;
-                    const float ne2 = (float) _e2 / sum;
-
-                    const Color wc0 = mul(triangle.ca, ne0);
-                    const Color wc1 = mul(triangle.cb, ne1);
-                    const Color wc2 = mul(triangle.cc, ne2);
-
+                    const Color wc0 = mul(triangle.ca, barycentric_0);
+                    const Color wc1 = mul(triangle.cb, barycentric_1);
+                    const Color wc2 = mul(triangle.cc, barycentric_2);
                     const Color color = add(wc0, add(wc1, wc2));
 
                     const Uint32 u = round(texture.width * (color.red / 255.0));
