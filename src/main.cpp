@@ -19,14 +19,11 @@
 #include "rect.hpp"
 #include "defs.h"
 #include "triangle.hpp"
+#include "edge_function.hpp"
 
 // TODO: Make sure these are always multiples of 4
 #define SCREEN_WIDTH  1200
 #define SCREEN_HEIGHT 800
-
-int EdgeFunction(const Point2D &a, const Point2D &b, const Point2D &c) {
-    return (b.x - a.x) * (c.y - a.y) - (b.y - a.y) * (c.x - a.x);
-}
 
 Uint32* GetPixel(SDL_Surface *surface, Point2D point) {
     return (Uint32 *) ((Uint8 *) surface->pixels + (point.y * surface->pitch) +
@@ -60,22 +57,63 @@ Color get_pixel(const Texture& texture, Uint32 width, Uint32 height) {
     return Color{red, green, blue};
 }
 
+void RenderPixels(SDL_Surface *surface, const Point2D &origin_point, Vec4i32 mask) {
+    // TODO: Will be passed in to this function later, either from texture or user
+    const Uint32 pixel_color = SDL_MapRGB(surface->format, 255, 0, 0);
+    
+    i32 ret[4];
+    mask.store(ret);
+    
+    if (ret[0]) {
+        const Point2D p = origin_point;
+        *GetPixel(surface, p) = pixel_color;
+    }
+    if (ret[1]) {
+        const Point2D p = origin_point + Point2D(1, 0);
+        *GetPixel(surface, p) = pixel_color;
+    }
+    if (ret[2]) {
+        const Point2D p = origin_point + Point2D(2, 0);
+        *GetPixel(surface, p) = pixel_color;
+    }
+    if (ret[3]) {
+        const Point2D p = origin_point + Point2D(3, 0);
+        *GetPixel(surface, p) = pixel_color;
+    }
+}
+
 void DrawTriangle(ThreadPool &thread_pool, SDL_Surface *surface, const Triangle &triangle, const Texture &texture) {
     const Rect2D bounding_box = ClipRect(surface->w, surface->h, TriangleBoundingBox(triangle));
+    const Point2D min_point = Point2D{bounding_box.minX, bounding_box.minY};
     
-    for (int y = bounding_box.minY; y <= bounding_box.maxY; ++y) {
+    EdgeFunction e01, e12, e20;
+    
+    const Vec4i32 w0_init = e12.Init(triangle.v1, triangle.v2, min_point);
+    const Vec4i32 w1_init = e20.Init(triangle.v2, triangle.v0, min_point);
+    const Vec4i32 w2_init = e01.Init(triangle.v0, triangle.v1, min_point);
+    
+    for (int y = bounding_box.minY; y <= bounding_box.maxY; y += EdgeFunction::step_increment_y) {
+        const Vec4i32 delta_y = Vec4i32(y - bounding_box.minY);
+        
+        const Vec4i32 w0_row = w0_init + delta_y * e12.step_size_y;
+        const Vec4i32 w1_row = w1_init + delta_y * e20.step_size_y;
+        const Vec4i32 w2_row = w2_init + delta_y * e01.step_size_y;
+        
         thread_pool.Schedule([=]() {
-            for (int x = bounding_box.minX; x <= bounding_box.maxX; ++x) {
-                const Point2D p = Point2D(x, y);
+            Vec4i32 w0 = w0_row;
+            Vec4i32 w1 = w1_row;
+            Vec4i32 w2 = w2_row;
+            
+            for (int x = bounding_box.minX; x <= bounding_box.maxX; x += EdgeFunction::step_increment_x) {
+                const Vec4i32 mask = w0 | w1 | w2;
                 
-                const int edge_0 = EdgeFunction(triangle.b, triangle.c, p);
-                const int edge_1 = EdgeFunction(triangle.c, triangle.a, p);
-                const int edge_2 = EdgeFunction(triangle.a, triangle.b, p);
-
-                if ((edge_0 | edge_1 | edge_2) >= 0) {
-                    const Uint32 pixel_color = SDL_MapRGB(surface->format, 255, 0, 0);
-                    *GetPixel(surface, p) = pixel_color;
+                if (mask >= 0) {
+                    RenderPixels(surface, Point2D(x, y), mask);
                 }
+                
+                w0 += e12.step_size_x;
+                w1 += e20.step_size_x;
+                w2 += e01.step_size_x;
             }
         });
     }

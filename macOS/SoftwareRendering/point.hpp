@@ -6,11 +6,13 @@ struct Point2D {
         : x(x)
         , y(y) {}
     
+    Point2D operator+(const Point2D& rhs) const;
+    Point2D operator-(const Point2D& rhs) const;
+    
     int x;
     int y;
 };
 
-Point2D point_sub(Point2D a, Point2D b);
 Point2D rotate_point(Point2D point, Point2D pivot, float angle);
 
 #endif

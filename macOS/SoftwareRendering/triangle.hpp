@@ -7,9 +7,9 @@
 
 // Assumes counter-clockwise winding order
 struct Triangle {
-    Point2D a;
-    Point2D b;
-    Point2D c;
+    Point2D v0;
+    Point2D v1;
+    Point2D v2;
     Color ca;
     Color cb;
     Color cc;

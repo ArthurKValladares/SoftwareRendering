@@ -13,6 +13,7 @@
 		931B50DC2AB2766D00845796 /* rect.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 931B50DA2AB2766D00845796 /* rect.cpp */; };
 		931B50E02AB2777F00845796 /* triangle.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 931B50DE2AB2777F00845796 /* triangle.cpp */; };
 		93203F7A2AD124C200EE0B31 /* integer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 93203F782AD124C200EE0B31 /* integer.cpp */; };
+		9339E3F32AD37A8E0058CB01 /* edge_function.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 9339E3F12AD37A8E0058CB01 /* edge_function.cpp */; };
 		938077122AAE7A2F006EEADC /* SDL2.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 938077112AAE7A2F006EEADC /* SDL2.framework */; };
 		938077142AAE7A4B006EEADC /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 938077132AAE7A4B006EEADC /* main.cpp */; };
 		938077162AAE7A62006EEADC /* ThreadPool.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 938077152AAE7A62006EEADC /* ThreadPool.cpp */; };
@@ -60,6 +61,8 @@
 		93203F762AD1247500EE0B31 /* sse2neon.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = sse2neon.h; path = ../../vendor/sse2neon/sse2neon.h; sourceTree = "<group>"; };
 		93203F782AD124C200EE0B31 /* integer.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = integer.cpp; sourceTree = "<group>"; };
 		93203F792AD124C200EE0B31 /* integer.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = integer.hpp; sourceTree = "<group>"; };
+		9339E3F12AD37A8E0058CB01 /* edge_function.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = edge_function.cpp; sourceTree = "<group>"; };
+		9339E3F22AD37A8E0058CB01 /* edge_function.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = edge_function.hpp; sourceTree = "<group>"; };
 		938077052AAE798B006EEADC /* SoftwareRendering */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = SoftwareRendering; sourceTree = BUILT_PRODUCTS_DIR; };
 		9380770F2AAE79A6006EEADC /* src */ = {isa = PBXFileReference; lastKnownFileType = folder; name = src; path = ../../../src; sourceTree = "<group>"; };
 		938077112AAE7A2F006EEADC /* SDL2.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SDL2.framework; path = ../../../../../../../Library/Frameworks/SDL2.framework; sourceTree = "<group>"; };
@@ -94,6 +97,8 @@
 		938076FC2AAE798B006EEADC = {
 			isa = PBXGroup;
 			children = (
+				9339E3F12AD37A8E0058CB01 /* edge_function.cpp */,
+				9339E3F22AD37A8E0058CB01 /* edge_function.hpp */,
 				93203F772AD1248D00EE0B31 /* SIMD */,
 				93203F762AD1247500EE0B31 /* sse2neon.h */,
 				931B50DE2AB2777F00845796 /* triangle.cpp */,
@@ -200,6 +205,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				9339E3F32AD37A8E0058CB01 /* edge_function.cpp in Sources */,
 				931B50D92AB2750000845796 /* color.cpp in Sources */,
 				931B50D62AB2745C00845796 /* point.cpp in Sources */,
 				93203F7A2AD124C200EE0B31 /* integer.cpp in Sources */,
