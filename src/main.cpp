@@ -36,12 +36,15 @@ void ClearSurface(ThreadPool &thread_pool, SDL_Surface *surface, Color color) {
     const Uint32 pixel_color =
         SDL_MapRGB(surface->format, color.red, color.green, color.blue);
 
-    for (int y = 0; y < height; ++y) {
+    for (int y = 0; y < height; y += EdgeFunction::step_increment_y) {
         thread_pool.Schedule([=]() {
-            for (int x = 0; x < width; ++x) {
+            for (int x = 0; x < width; x += EdgeFunction::step_increment_x) {
                 Point2D point = Point2D{x, y};
-                Uint32 *p = GetPixel(surface, point);
-                *p = pixel_color;
+                
+                *GetPixel(surface, point) = pixel_color;
+                *GetPixel(surface, point + Point2D(1, 0)) = pixel_color;
+                *GetPixel(surface, point + Point2D(2, 0)) = pixel_color;
+                *GetPixel(surface, point + Point2D(3, 0)) = pixel_color;
             }
         });
     }
