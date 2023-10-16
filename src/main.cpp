@@ -111,7 +111,7 @@ void DrawTriangle(ThreadPool &thread_pool, SDL_Surface *surface, const Triangle 
             for (int x = bounding_box.minX; x <= bounding_box.maxX; x += EdgeFunction::step_increment_x) {
                 const Vec4i32 mask = w0 | w1 | w2;
                 
-                if (mask >= 0) {
+                if (mask.any_gte(0)) {
                     RenderPixels(surface, Point2D(x, y), mask);
                 }
                 
@@ -167,7 +167,7 @@ int main(int argc, char *argv[]) {
     assert(surface->format->BytesPerPixel ==
            4);   // Not supporting non-32-bit pixel formats
 
-    const float triangle_margin = 0.3f;
+    const float triangle_margin = 0.2f;
     const int margin_w = round(surface->w * triangle_margin);
     const int margin_h = round(surface->h * triangle_margin);
 
@@ -187,6 +187,7 @@ int main(int argc, char *argv[]) {
     };
 
     // Render loop
+    const float rotate_delta = 0.03;
     float rotate_angle = 0.0;
     bool quit = false;
     while (!quit) {
@@ -200,7 +201,7 @@ int main(int argc, char *argv[]) {
                             break;
                         }
                         case SDLK_r: {
-                            rotate_angle += 0.01;
+                            rotate_angle += rotate_delta;
                         }
                         default: {
                             break;

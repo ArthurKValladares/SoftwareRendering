@@ -12,6 +12,8 @@ struct Vec4i32 {
     
     void store(i32* dest) const;
     
+    bool any_gte(i32 val) const;
+    
     Vec4i32 operator+(const Vec4i32& rhs) const;
     Vec4i32 operator-(const Vec4i32& rhs) const;
     Vec4i32 operator*(const Vec4i32& rhs) const;

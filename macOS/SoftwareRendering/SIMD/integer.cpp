@@ -18,6 +18,16 @@ void Vec4i32::store(i32* dest) const {
     _mm_storeu_si128((__m128i*) dest, _mi);
 }
 
+bool Vec4i32::any_gte(i32 val) const {
+    // TODO: There's probably a SIMD version of this
+    i32 test[4];
+    this->store(test);
+    return test[0] >= val ||
+           test[1] >= val ||
+           test[2] >= val ||
+           test[3] >= val;
+}
+
 Vec4i32 Vec4i32::operator+(const Vec4i32&rhs) const {
     return Vec4i32(_mm_add_epi32(_mi, rhs._mi));
 }
