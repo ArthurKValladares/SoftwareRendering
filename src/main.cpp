@@ -92,7 +92,6 @@ void DrawTriangle(ThreadPool &thread_pool, SDL_Surface *surface, const Triangle 
     const Point2D min_point = Point2D{bounding_box.minX, bounding_box.minY};
     
     EdgeFunction e01, e12, e20;
-    
     const Vec4i32 w0_init = e12.Init(triangle.v1, triangle.v2, min_point);
     const Vec4i32 w1_init = e20.Init(triangle.v2, triangle.v0, min_point);
     const Vec4i32 w2_init = e01.Init(triangle.v0, triangle.v1, min_point);
@@ -100,9 +99,9 @@ void DrawTriangle(ThreadPool &thread_pool, SDL_Surface *surface, const Triangle 
     for (int y = bounding_box.minY; y <= bounding_box.maxY; y += EdgeFunction::step_increment_y) {
         const Vec4i32 delta_y = Vec4i32(y - bounding_box.minY);
         
-        const Vec4i32 w0_row = w0_init + delta_y * e12.step_size_y;
-        const Vec4i32 w1_row = w1_init + delta_y * e20.step_size_y;
-        const Vec4i32 w2_row = w2_init + delta_y * e01.step_size_y;
+        const Vec4i32 w0_row = w0_init + e12.step_size_y * delta_y;
+        const Vec4i32 w1_row = w1_init + e20.step_size_y * delta_y;
+        const Vec4i32 w2_row = w2_init + e01.step_size_y * delta_y;
         
         thread_pool.Schedule([=]() {
             Vec4i32 w0 = w0_row;
@@ -168,7 +167,7 @@ int main(int argc, char *argv[]) {
     assert(surface->format->BytesPerPixel ==
            4);   // Not supporting non-32-bit pixel formats
 
-    const float triangle_margin = 0.1f;
+    const float triangle_margin = 0.3f;
     const int margin_w = round(surface->w * triangle_margin);
     const int margin_h = round(surface->h * triangle_margin);
 
