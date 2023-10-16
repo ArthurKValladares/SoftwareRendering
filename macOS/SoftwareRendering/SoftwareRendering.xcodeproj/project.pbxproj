@@ -71,6 +71,7 @@
 		938077172AAE7ADA006EEADC /* ThreadPool.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = ThreadPool.h; path = ../../ConcurrencyPrimitives/src/ThreadPool.h; sourceTree = "<group>"; };
 		938077192AAE7AEA006EEADC /* stb_image.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = stb_image.h; path = ../../vendor/STB/stb_image.h; sourceTree = "<group>"; };
 		9380771B2AAE978E006EEADC /* test.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; name = test.jpg; path = ../../assets/test.jpg; sourceTree = "<group>"; };
+		93908E8E2ADD8E1900DDA114 /* BS_thread_pool.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; name = BS_thread_pool.hpp; path = "../../vendor/thread-pool/include/BS_thread_pool.hpp"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -116,6 +117,7 @@
 				938077192AAE7AEA006EEADC /* stb_image.h */,
 				938077172AAE7ADA006EEADC /* ThreadPool.h */,
 				938077152AAE7A62006EEADC /* ThreadPool.cpp */,
+				93908E8E2ADD8E1900DDA114 /* BS_thread_pool.hpp */,
 				938077132AAE7A4B006EEADC /* main.cpp */,
 				938077072AAE798B006EEADC /* SoftwareRendering */,
 				938077062AAE798B006EEADC /* Products */,
