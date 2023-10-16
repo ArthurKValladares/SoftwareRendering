@@ -67,6 +67,8 @@ void RenderPixels(SDL_Surface *surface, const Point2D &origin_point, Vec4i32 mas
     i32 ret[4];
     mask.store(ret);
     
+    
+    // TODO: Might have to do bounds checks on the surface here
     if (ret[0]) {
         const Point2D p = origin_point;
         *GetPixel(surface, p) = pixel_color;
@@ -185,30 +187,35 @@ int main(int argc, char *argv[]) {
         texture
     };
 
-
-    std::chrono::steady_clock::time_point render_begin =
-        std::chrono::steady_clock::now();
-
     // Render loop
+    float rotate_angle = 0.0;
     bool quit = false;
     while (!quit) {
         SDL_Event e;
         while (SDL_PollEvent(&e)) {
             switch (e.type) {
-            case SDL_KEYDOWN:
-                switch (e.key.keysym.sym) {
-                case SDLK_ESCAPE:
-                    quit = true;
-                    break;
-                default:
+                case SDL_KEYDOWN: {
+                    switch (e.key.keysym.sym) {
+                        case SDLK_ESCAPE: {
+                            quit = true;
+                            break;
+                        }
+                        case SDLK_r: {
+                            rotate_angle += 0.01;
+                        }
+                        default: {
+                            break;
+                        }
+                    }
                     break;
                 }
-                break;
-            case SDL_QUIT:
-                quit = true;
-                break;
-            default:
-                break;
+                case SDL_QUIT: {
+                    quit = true;
+                    break;
+                }
+                default: {
+                    break;
+                }
             }
         }
         if (SDL_LockSurface(surface) < 0) {
@@ -216,18 +223,13 @@ int main(int argc, char *argv[]) {
             return 0;
         }
 
-        const long elapsed_start =
-            (long) std::chrono::duration_cast<std::chrono::milliseconds>(
-                std::chrono::steady_clock::now() - render_begin)
-                .count();
-
         const std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
         
         ClearSurface(thread_pool, surface, Color{100, 100, 100});
         
         const Mesh rotated_mesh =
             RotateMesh(mesh, Point2D{surface->w / 2, surface->h / 2},
-                       ((float) elapsed_start) / 1000.0);
+                       rotate_angle);
         DrawMesh(thread_pool, surface, rotated_mesh);
         
         const std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
