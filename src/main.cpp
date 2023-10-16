@@ -21,7 +21,7 @@
 #include "triangle.hpp"
 #include "edge_function.hpp"
 
-// TODO: Make sure these are always multiples of 4
+#define SIMD true
 #define SCREEN_WIDTH  1200
 #define SCREEN_HEIGHT 800
 
@@ -124,6 +124,52 @@ void DrawTriangle(ThreadPool &thread_pool, SDL_Surface *surface, const Triangle 
     thread_pool.Wait();
 }
 
+void DrawTriangleSingle(ThreadPool &thread_pool, SDL_Surface *surface, const Triangle &triangle, const Texture &texture) {
+    const Rect2D bounding_box = ClipRect(surface->w, surface->h, TriangleBoundingBox(triangle));
+    const Point2D min_point = Point2D{bounding_box.minX, bounding_box.minY};
+    
+    const i32 A01  = triangle.v0.y - triangle.v1.y;
+    const i32 A12  = triangle.v1.y - triangle.v2.y;
+    const i32 A20  = triangle.v2.y - triangle.v0.y;
+    
+    const i32 B01  = triangle.v1.x - triangle.v0.x;
+    const i32 B12  = triangle.v2.x - triangle.v1.x;
+    const i32 B20  = triangle.v0.x - triangle.v2.x;
+    
+    const auto edge_function = [](const Point2D& a, const Point2D& b, const Point2D& c) {
+        return (b.x-a.x)*(c.y-a.y) - (b.y-a.y)*(c.x-a.x);
+    };
+    const i32 w0_init = edge_function(triangle.v1, triangle.v2, min_point);
+    const i32 w1_init = edge_function(triangle.v2, triangle.v0, min_point);
+    const i32 w2_init = edge_function(triangle.v0, triangle.v1, min_point);
+    
+    for (int y = bounding_box.minY; y <= bounding_box.maxY; y += 1) {
+        const i32 delta_y = y - bounding_box.minY;
+        
+        const i32 w0_row = w0_init + B12 * delta_y;
+        const i32 w1_row = w1_init + B20 * delta_y;
+        const i32 w2_row = w2_init + B01 * delta_y;
+        
+        thread_pool.Schedule([=]() {
+            i32 w0 = w0_row;
+            i32 w1 = w1_row;
+            i32 w2 = w2_row;
+            
+            for (int x = bounding_box.minX; x <= bounding_box.maxX; x += 1) {
+                const i32 mask = w0 | w1 | w2;
+                
+                if (mask >= 0) {
+                    RenderPixels(surface, Point2D(x, y), mask);
+                }
+                
+                w0 += A12;
+                w1 += A20;
+                w2 += A01;
+            }
+        });
+    }
+    thread_pool.Wait();
+}
 struct Mesh {
     std::vector<Triangle> triangles;
     Texture texture;
@@ -131,7 +177,11 @@ struct Mesh {
 
 void DrawMesh(ThreadPool &thread_pool, SDL_Surface *surface, const Mesh &mesh) {
     for (const Triangle &triangle : mesh.triangles) {
+#if SIMD
         DrawTriangle(thread_pool, surface, triangle, mesh.texture);
+#else
+        DrawTriangleSingle(thread_pool, surface, triangle, mesh.texture);
+#endif
     }
 }
 
