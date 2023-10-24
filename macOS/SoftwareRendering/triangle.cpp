@@ -6,9 +6,9 @@ Triangle rotate_triangle(Triangle triangle, Point2D pivot, float angle) {
         rotate_point(triangle.v0, pivot, angle),
         rotate_point(triangle.v1, pivot, angle),
         rotate_point(triangle.v2, pivot, angle),
-        triangle.ca,
-        triangle.cb,
-        triangle.cc
+        triangle.c0,
+        triangle.c1,
+        triangle.c2
     };
 }
 

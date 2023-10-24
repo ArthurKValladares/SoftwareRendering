@@ -10,9 +10,9 @@ struct Triangle {
     Point2D v0;
     Point2D v1;
     Point2D v2;
-    Color ca;
-    Color cb;
-    Color cc;
+    Color c0;
+    Color c1;
+    Color c2;
 };
 
 Triangle rotate_triangle(Triangle triangle, Point2D pivot, float angle);
