@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<VariablesViewState
+   version = "1.0">
+   <ContextStates>
+      <ContextState
+         contextName = "RenderPixels(SDL_Surface*, Point2D const&amp;, Vec4i32, Texture const&amp;, Vec4i32, Vec4i32):main.cpp">
+         <PersistentStrings>
+            <PersistentString
+               value = "reds">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+   </ContextStates>
+</VariablesViewState>

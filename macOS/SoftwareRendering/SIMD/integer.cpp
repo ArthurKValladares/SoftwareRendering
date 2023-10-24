@@ -14,6 +14,10 @@ Vec4i32::Vec4i32(__m128i a) {
     _mi = a;
 }
 
+Vec4f32 Vec4i32::to_float() const {
+    return Vec4f32(_mm_cvtepi32_ps(_mi));
+}
+
 void Vec4i32::store(i32* dest) const {
     _mm_storeu_si128((__m128i*) dest, _mi);
 }

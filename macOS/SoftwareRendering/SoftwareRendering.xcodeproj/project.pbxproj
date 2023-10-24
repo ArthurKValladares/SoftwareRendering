@@ -20,6 +20,7 @@
 		938077182AAE7ADA006EEADC /* ThreadPool.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = 938077172AAE7ADA006EEADC /* ThreadPool.h */; };
 		9380771A2AAE7AEA006EEADC /* stb_image.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = 938077192AAE7AEA006EEADC /* stb_image.h */; };
 		938077202AAEAE53006EEADC /* test.jpg in CopyFiles */ = {isa = PBXBuildFile; fileRef = 9380771B2AAE978E006EEADC /* test.jpg */; };
+		93908E9D2AE7583800DDA114 /* vec4f32.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 93908E9B2AE7583800DDA114 /* vec4f32.cpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -72,6 +73,8 @@
 		938077192AAE7AEA006EEADC /* stb_image.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = stb_image.h; path = ../../vendor/STB/stb_image.h; sourceTree = "<group>"; };
 		9380771B2AAE978E006EEADC /* test.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; name = test.jpg; path = ../../assets/test.jpg; sourceTree = "<group>"; };
 		93908E8E2ADD8E1900DDA114 /* BS_thread_pool.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; name = BS_thread_pool.hpp; path = "../../vendor/thread-pool/include/BS_thread_pool.hpp"; sourceTree = "<group>"; };
+		93908E9B2AE7583800DDA114 /* vec4f32.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = vec4f32.cpp; sourceTree = "<group>"; };
+		93908E9C2AE7583800DDA114 /* vec4f32.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = vec4f32.hpp; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -91,6 +94,8 @@
 			children = (
 				93203F782AD124C200EE0B31 /* integer.cpp */,
 				93203F792AD124C200EE0B31 /* integer.hpp */,
+				93908E9B2AE7583800DDA114 /* vec4f32.cpp */,
+				93908E9C2AE7583800DDA114 /* vec4f32.hpp */,
 			);
 			path = SIMD;
 			sourceTree = "<group>";
@@ -214,6 +219,7 @@
 				931B50E02AB2777F00845796 /* triangle.cpp in Sources */,
 				931B50D22AB2729400845796 /* texture.cpp in Sources */,
 				938077162AAE7A62006EEADC /* ThreadPool.cpp in Sources */,
+				93908E9D2AE7583800DDA114 /* vec4f32.cpp in Sources */,
 				938077142AAE7A4B006EEADC /* main.cpp in Sources */,
 				931B50DC2AB2766D00845796 /* rect.cpp in Sources */,
 			);

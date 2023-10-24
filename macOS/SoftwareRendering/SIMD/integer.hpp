@@ -3,12 +3,15 @@
 
 #include "defs.h"
 #include "sse2neon.h"
+#include "vec4f32.hpp"
 
 struct Vec4i32 {
     Vec4i32();
     Vec4i32(i32 a, i32 b, i32 c, i32 d);
     Vec4i32(i32 a);
     Vec4i32(__m128i a);
+    
+    Vec4f32 to_float() const;
     
     void store(i32* dest) const;
     

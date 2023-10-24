@@ -60,9 +60,12 @@ Color get_pixel(const Texture& texture, Uint32 width, Uint32 height) {
     return Color{red, green, blue};
 }
 
-void RenderPixels(SDL_Surface *surface, const Point2D &origin_point, Vec4i32 mask) {
-    // TODO: Will be passed in to this function later, either from texture or user
-    const Uint32 pixel_color = SDL_MapRGB(surface->format, 255, 0, 0);
+// TODO: Blue
+void RenderPixels(SDL_Surface *surface, const Point2D &origin_point, Vec4i32 mask, Vec4f32 red, Vec4f32 green) {
+    float reds[4];
+    red.store(reds);
+    float greens[4];
+    green.store(greens);
     
     i32 ret[4];
     mask.store(ret);
@@ -71,18 +74,22 @@ void RenderPixels(SDL_Surface *surface, const Point2D &origin_point, Vec4i32 mas
     // TODO: Might have to do bounds checks on the surface here
     if (ret[0]) {
         const Point2D p = origin_point;
+        const Uint32 pixel_color = SDL_MapRGB(surface->format, round(reds[0]), round(greens[0]), 0);
         *GetPixel(surface, p) = pixel_color;
     }
     if (ret[1]) {
         const Point2D p = origin_point + Point2D(1, 0);
+        const Uint32 pixel_color = SDL_MapRGB(surface->format, round(reds[1]), round(greens[1]), 0);
         *GetPixel(surface, p) = pixel_color;
     }
     if (ret[2]) {
         const Point2D p = origin_point + Point2D(2, 0);
+        const Uint32 pixel_color = SDL_MapRGB(surface->format, round(reds[2]), round(greens[2]), 0);
         *GetPixel(surface, p) = pixel_color;
     }
     if (ret[3]) {
         const Point2D p = origin_point + Point2D(3, 0);
+        const Uint32 pixel_color = SDL_MapRGB(surface->format, round(reds[3]), round(greens[3]), 0);
         *GetPixel(surface, p) = pixel_color;
     }
 }
@@ -90,6 +97,10 @@ void RenderPixels(SDL_Surface *surface, const Point2D &origin_point, Vec4i32 mas
 void DrawTriangle(ThreadPool &thread_pool, SDL_Surface *surface, const Triangle &triangle, const Texture &texture) {
     const Rect2D bounding_box = ClipRect(surface->w, surface->h, TriangleBoundingBox(triangle));
     const Point2D min_point = Point2D{bounding_box.minX, bounding_box.minY};
+    
+    const float c0_red = triangle.c0.red, c0_green = triangle.c0.green;
+    const float c1_red = triangle.c1.red, c1_green = triangle.c1.green;
+    const float c2_red = triangle.c2.red, c2_green = triangle.c2.green;
     
     EdgeFunction e01, e12, e20;
     const Vec4i32 w0_init = e12.Init(triangle.v1, triangle.v2, min_point);
@@ -112,7 +123,20 @@ void DrawTriangle(ThreadPool &thread_pool, SDL_Surface *surface, const Triangle 
                 const Vec4i32 mask = w0 | w1 | w2;
                 
                 if (mask.any_gte(0)) {
-                    RenderPixels(surface, Point2D(x, y), mask);
+                    const Vec4f32 sum = (w0 + w1 + w2).to_float();
+                    
+                    const Vec4f32 b0 = w0.to_float() / sum;
+                    const Vec4f32 b1 = w1.to_float() / sum;
+                    const Vec4f32 b2 = w2.to_float() / sum;
+                    
+                    const Vec4f32 red_0 = Vec4f32(c0_red) * b0, green_0 = Vec4f32(c0_green) * b0;
+                    const Vec4f32 red_1 = Vec4f32(c1_red) * b1, green_1 = Vec4f32(c1_green) * b1;
+                    const Vec4f32 red_2 = Vec4f32(c2_red) * b2, green_2 = Vec4f32(c2_green) * b2;
+                    
+                    const Vec4f32 red   = red_0 + red_1 + red_2;
+                    const Vec4f32 green = green_0 + green_1 + green_2;
+                    
+                    RenderPixels(surface, Point2D(x, y), mask, red, green);
                 }
                 
                 w0 += e12.step_size_x;
@@ -159,7 +183,20 @@ void DrawTriangleSingle(ThreadPool &thread_pool, SDL_Surface *surface, const Tri
                 const i32 mask = w0 | w1 | w2;
                 
                 if (mask >= 0) {
-                    RenderPixels(surface, Point2D(x, y), mask);
+                    const i32 sum = w0 + w1 + w2;
+                    
+                    const float b0 = (float) w0 / sum;
+                    const float b1 = (float) w1 / sum;
+                    const float b2 = (float) w2 / sum;
+
+                    const Color c0 = triangle.c0 * b0;
+                    const Color c1 = triangle.c1 * b1;
+                    const Color c2 = triangle.c2 * b2;
+                    const Color color = c0 + c1 + c2;
+
+                    const Point2D point = Point2D{x, y};
+                    const Uint32 pixel_color = SDL_MapRGB(surface->format, color.red, color.green, 0);
+                    *GetPixel(surface, point) = pixel_color;
                 }
                 
                 w0 += A12;

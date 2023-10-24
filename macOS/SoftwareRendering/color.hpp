@@ -12,7 +12,4 @@ struct Color {
     Color operator+(const Color& rhs) const;
 };
 
-Color mul(Color c, float s);
-Color add(Color l, Color r);
-
 #endif
