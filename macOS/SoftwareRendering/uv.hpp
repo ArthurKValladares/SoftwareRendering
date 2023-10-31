@@ -5,5 +5,7 @@
 struct UV {
     float u;
     float v;
+    
+    UV operator*(float s) const;
 };
 
