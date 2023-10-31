@@ -3,4 +3,70 @@
    uuid = "31645826-5D92-4EC2-ABBD-F81889467A3A"
    type = "1"
    version = "2.0">
+   <Breakpoints>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            uuid = "2F95E026-1349-4CB2-97CC-4ECDF344B528"
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "SIMD/vec4f32.cpp"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "18"
+            endingLineNumber = "18"
+            landmarkName = "Vec4f32::operator+(rhs)"
+            landmarkType = "7">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            uuid = "CAABA111-FA07-4611-864C-1C404A3F9CD8"
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "../../src/main.cpp"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "126"
+            endingLineNumber = "126"
+            landmarkName = "DrawTriangle(thread_pool, surface, triangle, texture)"
+            landmarkType = "9">
+            <Locations>
+               <Location
+                  uuid = "CAABA111-FA07-4611-864C-1C404A3F9CD8 - 89b32048e36b5b8c"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "DrawTriangle(ThreadPool&amp;, SDL_Surface*, Triangle const&amp;, Texture const&amp;)"
+                  moduleName = "SoftwareRendering"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/arthurvalladares/Documents/projects/SoftwareRendering/src/main.cpp"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "126"
+                  endingLineNumber = "126"
+                  offsetFromSymbolStart = "684">
+               </Location>
+               <Location
+                  uuid = "CAABA111-FA07-4611-864C-1C404A3F9CD8 - 75d515ed8fc0538e"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "DrawTriangle(ThreadPool&amp;, SDL_Surface*, Triangle const&amp;, Texture const&amp;)::$_2::operator()() const"
+                  moduleName = "SoftwareRendering"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/arthurvalladares/Documents/projects/SoftwareRendering/src/main.cpp"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "127"
+                  endingLineNumber = "127"
+                  offsetFromSymbolStart = "28">
+               </Location>
+            </Locations>
+         </BreakpointContent>
+      </BreakpointProxy>
+   </Breakpoints>
 </Bucket>
