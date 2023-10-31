@@ -12,7 +12,6 @@
 		931B50D92AB2750000845796 /* color.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 931B50D72AB2750000845796 /* color.cpp */; };
 		931B50DC2AB2766D00845796 /* rect.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 931B50DA2AB2766D00845796 /* rect.cpp */; };
 		931B50E02AB2777F00845796 /* triangle.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 931B50DE2AB2777F00845796 /* triangle.cpp */; };
-		93203F7A2AD124C200EE0B31 /* integer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 93203F782AD124C200EE0B31 /* integer.cpp */; };
 		9339E3F32AD37A8E0058CB01 /* edge_function.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 9339E3F12AD37A8E0058CB01 /* edge_function.cpp */; };
 		938077122AAE7A2F006EEADC /* SDL2.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 938077112AAE7A2F006EEADC /* SDL2.framework */; };
 		938077142AAE7A4B006EEADC /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 938077132AAE7A4B006EEADC /* main.cpp */; };
@@ -22,6 +21,7 @@
 		938077202AAEAE53006EEADC /* test.jpg in CopyFiles */ = {isa = PBXBuildFile; fileRef = 9380771B2AAE978E006EEADC /* test.jpg */; };
 		93908E9D2AE7583800DDA114 /* vec4f32.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 93908E9B2AE7583800DDA114 /* vec4f32.cpp */; };
 		939FF3D22AF0873B007C1DF2 /* uv.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 939FF3D02AF0873B007C1DF2 /* uv.cpp */; };
+		939FF3D52AF0ADE1007C1DF2 /* vec4i32.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 939FF3D42AF0ADE1007C1DF2 /* vec4i32.cpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -61,8 +61,6 @@
 		931B50DE2AB2777F00845796 /* triangle.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = triangle.cpp; sourceTree = "<group>"; };
 		931B50DF2AB2777F00845796 /* triangle.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = triangle.hpp; sourceTree = "<group>"; };
 		93203F762AD1247500EE0B31 /* sse2neon.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = sse2neon.h; path = ../../vendor/sse2neon/sse2neon.h; sourceTree = "<group>"; };
-		93203F782AD124C200EE0B31 /* integer.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = integer.cpp; sourceTree = "<group>"; };
-		93203F792AD124C200EE0B31 /* integer.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = integer.hpp; sourceTree = "<group>"; };
 		9339E3F12AD37A8E0058CB01 /* edge_function.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = edge_function.cpp; sourceTree = "<group>"; };
 		9339E3F22AD37A8E0058CB01 /* edge_function.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = edge_function.hpp; sourceTree = "<group>"; };
 		938077052AAE798B006EEADC /* SoftwareRendering */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = SoftwareRendering; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -78,6 +76,8 @@
 		93908E9C2AE7583800DDA114 /* vec4f32.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = vec4f32.hpp; sourceTree = "<group>"; };
 		939FF3D02AF0873B007C1DF2 /* uv.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = uv.cpp; sourceTree = "<group>"; };
 		939FF3D12AF0873B007C1DF2 /* uv.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = uv.hpp; sourceTree = "<group>"; };
+		939FF3D42AF0ADE1007C1DF2 /* vec4i32.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = vec4i32.cpp; sourceTree = "<group>"; };
+		939FF3D62AF0AE0A007C1DF2 /* vec4i32.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = vec4i32.hpp; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -95,8 +95,8 @@
 		93203F772AD1248D00EE0B31 /* SIMD */ = {
 			isa = PBXGroup;
 			children = (
-				93203F782AD124C200EE0B31 /* integer.cpp */,
-				93203F792AD124C200EE0B31 /* integer.hpp */,
+				939FF3D62AF0AE0A007C1DF2 /* vec4i32.hpp */,
+				939FF3D42AF0ADE1007C1DF2 /* vec4i32.cpp */,
 				93908E9B2AE7583800DDA114 /* vec4f32.cpp */,
 				93908E9C2AE7583800DDA114 /* vec4f32.hpp */,
 			);
@@ -220,11 +220,11 @@
 				9339E3F32AD37A8E0058CB01 /* edge_function.cpp in Sources */,
 				931B50D92AB2750000845796 /* color.cpp in Sources */,
 				931B50D62AB2745C00845796 /* point.cpp in Sources */,
-				93203F7A2AD124C200EE0B31 /* integer.cpp in Sources */,
 				939FF3D22AF0873B007C1DF2 /* uv.cpp in Sources */,
 				931B50E02AB2777F00845796 /* triangle.cpp in Sources */,
 				931B50D22AB2729400845796 /* texture.cpp in Sources */,
 				938077162AAE7A62006EEADC /* ThreadPool.cpp in Sources */,
+				939FF3D52AF0ADE1007C1DF2 /* vec4i32.cpp in Sources */,
 				93908E9D2AE7583800DDA114 /* vec4f32.cpp in Sources */,
 				938077142AAE7A4B006EEADC /* main.cpp in Sources */,
 				931B50DC2AB2766D00845796 /* rect.cpp in Sources */,

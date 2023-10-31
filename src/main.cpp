@@ -83,22 +83,22 @@ void RenderPixels(SDL_Surface *surface, const Point2D &origin_point, Vec4i32 mas
     mask.store(ret);
     if (ret[0]) {
         const Point2D p = origin_point;
-        const Color color = texture.get_pixel_uv(us[0], vs[0]);
+        const Color color = texture.get_pixel_uv(us[3], vs[3]);
         *GetPixel(surface, p) = SDL_MapRGB(surface->format, color.red, color.green, color.blue);
     }
     if (ret[1]) {
         const Point2D p = origin_point + Point2D(1, 0);
-        const Color color = texture.get_pixel_uv(us[1], vs[1]);
+        const Color color = texture.get_pixel_uv(us[2], vs[2]);
         *GetPixel(surface, p) = SDL_MapRGB(surface->format, color.red, color.green, color.blue);
     }
     if (ret[2]) {
         const Point2D p = origin_point + Point2D(2, 0);
-        const Color color = texture.get_pixel_uv(us[2], vs[2]);
+        const Color color = texture.get_pixel_uv(us[1], vs[1]);
         *GetPixel(surface, p) = SDL_MapRGB(surface->format, color.red, color.green, color.blue);
     }
     if (ret[3]) {
         const Point2D p = origin_point + Point2D(3, 0);
-        const Color color = texture.get_pixel_uv(us[3], vs[3]);
+        const Color color = texture.get_pixel_uv(us[0], vs[0]);
         *GetPixel(surface, p) = SDL_MapRGB(surface->format, color.red, color.green, color.blue);
     }
 }

@@ -2,7 +2,7 @@
 #define edge_function_hpp
 
 #include "defs.h"
-#include "integer.hpp"
+#include "vec4i32.hpp"
 #include "point.hpp"
 
 struct EdgeFunction {

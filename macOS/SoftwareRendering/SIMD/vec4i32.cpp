@@ -1,4 +1,4 @@
-#include "integer.hpp"
+#include "vec4i32.hpp"
 
 Vec4i32::Vec4i32() {}
 
