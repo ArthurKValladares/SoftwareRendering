@@ -117,11 +117,11 @@ void DrawTriangle(ThreadPool &thread_pool, SDL_Surface *surface, const Triangle 
     const Vec4i32 w2_init = e01.Init(triangle.v0, triangle.v1, min_point);
     
     for (int y = bounding_box.minY; y <= bounding_box.maxY; y += EdgeFunction::step_increment_y) {
-        const float delta_y = y - bounding_box.minY;
+        const Vec4i32 delta_y = Vec4i32(y - bounding_box.minY);
         
-        const Vec4i32 w0_row = w0_init + Vec4i32(e12.step_size_y * delta_y);
-        const Vec4i32 w1_row = w1_init + Vec4i32(e20.step_size_y * delta_y);
-        const Vec4i32 w2_row = w2_init + Vec4i32(e01.step_size_y * delta_y);
+        const Vec4i32 w0_row = w0_init + e12.step_size_y * delta_y;
+        const Vec4i32 w1_row = w1_init + e20.step_size_y * delta_y;
+        const Vec4i32 w2_row = w2_init + e01.step_size_y * delta_y;
         
         thread_pool.Schedule([=]() {
             Vec4i32 w0 = w0_row;
