@@ -20,6 +20,7 @@
 #include "defs.h"
 #include "triangle.hpp"
 #include "edge_function.hpp"
+#include "uv.hpp"
 
 #define SIMD true
 #define SCREEN_WIDTH  1200
@@ -51,46 +52,34 @@ void ClearSurface(ThreadPool &thread_pool, SDL_Surface *surface, Color color) {
     thread_pool.Wait();
 }
 
-Color get_pixel(const Texture& texture, Uint32 width, Uint32 height) {
-    const Uint32 stride = texture.width * texture.channels;
-    const Uint32 start = height * stride + width * texture.channels;
-    const Uint8 red = texture.img[start];
-    const Uint8 green = texture.img[start + 1];
-    const Uint8 blue = texture.img[start + 2];
-    return Color{red, green, blue};
-}
-
-// TODO: Blue
-void RenderPixels(SDL_Surface *surface, const Point2D &origin_point, Vec4i32 mask, Vec4f32 red, Vec4f32 green) {
-    float reds[4];
-    red.store(reds);
-    float greens[4];
-    green.store(greens);
-    
-    i32 ret[4];
-    mask.store(ret);
-    
+void RenderPixels(SDL_Surface *surface, const Point2D &origin_point, Vec4i32 mask, Vec4f32 u, Vec4f32 v, const Texture &texture) {
+    float us[4];
+    u.store(us);
+    float vs[4];
+    v.store(vs);
     
     // TODO: Might have to do bounds checks on the surface here
+    i32 ret[4];
+    mask.store(ret);
     if (ret[0]) {
         const Point2D p = origin_point;
-        const Uint32 pixel_color = SDL_MapRGB(surface->format, round(reds[0]), round(greens[0]), 0);
-        *GetPixel(surface, p) = pixel_color;
+        const Color color = texture.get_pixel_uv(us[0], vs[0]);
+        *GetPixel(surface, p) = SDL_MapRGB(surface->format, color.red, color.green, color.blue);
     }
     if (ret[1]) {
         const Point2D p = origin_point + Point2D(1, 0);
-        const Uint32 pixel_color = SDL_MapRGB(surface->format, round(reds[1]), round(greens[1]), 0);
-        *GetPixel(surface, p) = pixel_color;
+        const Color color = texture.get_pixel_uv(us[1], vs[1]);
+        *GetPixel(surface, p) = SDL_MapRGB(surface->format, color.red, color.green, color.blue);
     }
     if (ret[2]) {
         const Point2D p = origin_point + Point2D(2, 0);
-        const Uint32 pixel_color = SDL_MapRGB(surface->format, round(reds[2]), round(greens[2]), 0);
-        *GetPixel(surface, p) = pixel_color;
+        const Color color = texture.get_pixel_uv(us[2], vs[2]);
+        *GetPixel(surface, p) = SDL_MapRGB(surface->format, color.red, color.green, color.blue);
     }
     if (ret[3]) {
         const Point2D p = origin_point + Point2D(3, 0);
-        const Uint32 pixel_color = SDL_MapRGB(surface->format, round(reds[3]), round(greens[3]), 0);
-        *GetPixel(surface, p) = pixel_color;
+        const Color color = texture.get_pixel_uv(us[3], vs[3]);
+        *GetPixel(surface, p) = SDL_MapRGB(surface->format, color.red, color.green, color.blue);
     }
 }
 
@@ -98,9 +87,9 @@ void DrawTriangle(ThreadPool &thread_pool, SDL_Surface *surface, const Triangle 
     const Rect2D bounding_box = ClipRect(surface->w, surface->h, TriangleBoundingBox(triangle));
     const Point2D min_point = Point2D{bounding_box.minX, bounding_box.minY};
     
-    const float c0_red = triangle.c0.red, c0_green = triangle.c0.green;
-    const float c1_red = triangle.c1.red, c1_green = triangle.c1.green;
-    const float c2_red = triangle.c2.red, c2_green = triangle.c2.green;
+    const float c0_u = triangle.u0.u, c0_v = triangle.u0.v;
+    const float c1_u = triangle.u1.u, c1_v = triangle.u1.v;
+    const float c2_u = triangle.u2.u, c2_v = triangle.u2.v;
     
     EdgeFunction e01, e12, e20;
     const Vec4i32 w0_init = e12.Init(triangle.v1, triangle.v2, min_point);
@@ -129,14 +118,14 @@ void DrawTriangle(ThreadPool &thread_pool, SDL_Surface *surface, const Triangle 
                     const Vec4f32 b1 = w1.to_float() / sum;
                     const Vec4f32 b2 = w2.to_float() / sum;
                     
-                    const Vec4f32 red_0 = Vec4f32(c0_red) * b0, green_0 = Vec4f32(c0_green) * b0;
-                    const Vec4f32 red_1 = Vec4f32(c1_red) * b1, green_1 = Vec4f32(c1_green) * b1;
-                    const Vec4f32 red_2 = Vec4f32(c2_red) * b2, green_2 = Vec4f32(c2_green) * b2;
+                    const Vec4f32 u_0 = Vec4f32(c0_u) * b0, v_0 = Vec4f32(c0_v) * b0;
+                    const Vec4f32 u_1 = Vec4f32(c1_u) * b1, v_1 = Vec4f32(c1_v) * b1;
+                    const Vec4f32 u_2 = Vec4f32(c2_u) * b2, v_2 = Vec4f32(c2_v) * b2;
                     
-                    const Vec4f32 red   = red_0 + red_1 + red_2;
-                    const Vec4f32 green = green_0 + green_1 + green_2;
+                    const Vec4f32 u = u_0 + u_1 + u_2;
+                    const Vec4f32 v = v_0 + v_1 + v_2;
                     
-                    RenderPixels(surface, Point2D(x, y), mask, red, green);
+                    RenderPixels(surface, Point2D(x, y), mask, u, v, texture);
                 }
                 
                 w0 += e12.step_size_x;
@@ -230,7 +219,7 @@ Mesh RotateMesh(Mesh mesh, Point2D pivot, float angle) {
 }
 
 int main(int argc, char *argv[]) {
-    const Texture texture = create_texture("test.jpg");
+    const Texture texture = Texture("test.jpg");
     
     ThreadPool thread_pool;
 
@@ -253,22 +242,36 @@ int main(int argc, char *argv[]) {
     SDL_Surface *surface = SDL_GetWindowSurface(window);
     assert(surface->format->BytesPerPixel ==
            4);   // Not supporting non-32-bit pixel formats
-
+    
     const float triangle_margin = 0.2f;
     const int margin_w = round(surface->w * triangle_margin);
     const int margin_h = round(surface->h * triangle_margin);
 
     const Mesh mesh = {
         {
-            Triangle{Point2D{margin_w, margin_h},
-                  Point2D{surface->w - margin_w, margin_h},
-                  Point2D{surface->w - margin_w, surface->h - margin_h},
-                  Color{255, 0, 0}, Color{0, 0, 0}, Color{0, 255, 0}},
-            Triangle{Point2D{margin_w, margin_h},
-                  Point2D{surface->w - margin_w, surface->h - margin_h},
-                  Point2D{margin_w, surface->h - margin_h}, Color{255, 0, 0},
-                  Color{0, 255, 0}, Color{255, 255, 0}}
-            
+            Triangle{
+                Point2D{margin_w, margin_h},
+                Point2D{surface->w - margin_w, margin_h},
+                Point2D{surface->w - margin_w, surface->h - margin_h},
+                Color{255, 0, 0},
+                Color{0, 0, 0},
+                Color{0, 255, 0},
+                UV{1.0, 0.0},
+                UV{0.0, 0.0},
+                UV{0.0, 1.0},
+                
+            },
+            Triangle{
+                Point2D{margin_w, margin_h},
+                Point2D{surface->w - margin_w, surface->h - margin_h},
+                Point2D{margin_w, surface->h - margin_h},
+                Color{255, 0, 0},
+                Color{0, 255, 0},
+                Color{255, 255, 0},
+                UV{1.0, 0.0},
+                UV{0.0, 1.0},
+                UV{1.0, 1.0}
+            }
         },
         texture
     };
@@ -309,7 +312,7 @@ int main(int argc, char *argv[]) {
             printf("Could not lock SDL surface");
             return 0;
         }
-
+        
         const std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
         
         ClearSurface(thread_pool, surface, Color{100, 100, 100});

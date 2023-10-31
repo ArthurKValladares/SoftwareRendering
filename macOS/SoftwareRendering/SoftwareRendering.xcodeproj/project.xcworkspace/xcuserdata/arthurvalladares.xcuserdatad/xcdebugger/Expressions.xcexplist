@@ -3,12 +3,23 @@
    version = "1.0">
    <ContextStates>
       <ContextState
+         contextName = "main:main.cpp">
+         <PersistentStrings>
+            <PersistentString
+               value = "mesh">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
          contextName = "RenderPixels(SDL_Surface*, Point2D const&amp;, Vec4i32, Texture const&amp;, Vec4i32, Vec4i32):main.cpp">
          <PersistentStrings>
             <PersistentString
                value = "reds">
             </PersistentString>
          </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "DrawTriangle(ThreadPool&amp;, SDL_Surface*, Triangle const&amp;, Texture const&amp;):main.cpp">
       </ContextState>
    </ContextStates>
 </VariablesViewState>

@@ -21,6 +21,7 @@
 		9380771A2AAE7AEA006EEADC /* stb_image.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = 938077192AAE7AEA006EEADC /* stb_image.h */; };
 		938077202AAEAE53006EEADC /* test.jpg in CopyFiles */ = {isa = PBXBuildFile; fileRef = 9380771B2AAE978E006EEADC /* test.jpg */; };
 		93908E9D2AE7583800DDA114 /* vec4f32.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 93908E9B2AE7583800DDA114 /* vec4f32.cpp */; };
+		939FF3D22AF0873B007C1DF2 /* uv.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 939FF3D02AF0873B007C1DF2 /* uv.cpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -75,6 +76,8 @@
 		93908E8E2ADD8E1900DDA114 /* BS_thread_pool.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; name = BS_thread_pool.hpp; path = "../../vendor/thread-pool/include/BS_thread_pool.hpp"; sourceTree = "<group>"; };
 		93908E9B2AE7583800DDA114 /* vec4f32.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = vec4f32.cpp; sourceTree = "<group>"; };
 		93908E9C2AE7583800DDA114 /* vec4f32.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = vec4f32.hpp; sourceTree = "<group>"; };
+		939FF3D02AF0873B007C1DF2 /* uv.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = uv.cpp; sourceTree = "<group>"; };
+		939FF3D12AF0873B007C1DF2 /* uv.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = uv.hpp; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -103,6 +106,8 @@
 		938076FC2AAE798B006EEADC = {
 			isa = PBXGroup;
 			children = (
+				939FF3D02AF0873B007C1DF2 /* uv.cpp */,
+				939FF3D12AF0873B007C1DF2 /* uv.hpp */,
 				9339E3F12AD37A8E0058CB01 /* edge_function.cpp */,
 				9339E3F22AD37A8E0058CB01 /* edge_function.hpp */,
 				93203F772AD1248D00EE0B31 /* SIMD */,
@@ -216,6 +221,7 @@
 				931B50D92AB2750000845796 /* color.cpp in Sources */,
 				931B50D62AB2745C00845796 /* point.cpp in Sources */,
 				93203F7A2AD124C200EE0B31 /* integer.cpp in Sources */,
+				939FF3D22AF0873B007C1DF2 /* uv.cpp in Sources */,
 				931B50E02AB2777F00845796 /* triangle.cpp in Sources */,
 				931B50D22AB2729400845796 /* texture.cpp in Sources */,
 				938077162AAE7A62006EEADC /* ThreadPool.cpp in Sources */,

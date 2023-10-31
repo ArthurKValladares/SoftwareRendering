@@ -3,6 +3,7 @@
 
 #include "point.hpp"
 #include "color.hpp"
+#include "uv.hpp"
 #include "rect.hpp"
 
 // Assumes counter-clockwise winding order
@@ -13,6 +14,9 @@ struct Triangle {
     Color c0;
     Color c1;
     Color c2;
+    UV u0;
+    UV u1;
+    UV u2;
 };
 
 Triangle rotate_triangle(Triangle triangle, Point2D pivot, float angle);

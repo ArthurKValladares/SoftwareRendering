@@ -8,7 +8,10 @@ Triangle rotate_triangle(Triangle triangle, Point2D pivot, float angle) {
         rotate_point(triangle.v2, pivot, angle),
         triangle.c0,
         triangle.c1,
-        triangle.c2
+        triangle.c2,
+        triangle.u0,
+        triangle.u1,
+        triangle.u2,
     };
 }
 
