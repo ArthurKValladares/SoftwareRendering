@@ -17,9 +17,9 @@ struct Triangle {
     UV u0;
     UV u1;
     UV u2;
+    
+    Triangle rotated(Point2D pivot, float angle) const;
+    Rect2D bounding_box() const;
 };
-
-Triangle rotate_triangle(Triangle triangle, Point2D pivot, float angle);
-Rect2D TriangleBoundingBox(Triangle triangle);
 
 #endif

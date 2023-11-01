@@ -1,24 +1,26 @@
 #include "triangle.hpp"
 #include "defs.h"
+#include "vec4i32.hpp"
+#include "edge_function.hpp"
 
-Triangle rotate_triangle(Triangle triangle, Point2D pivot, float angle) {
+Triangle Triangle::rotated(Point2D pivot, float angle) const {
     return Triangle{
-        rotate_point(triangle.v0, pivot, angle),
-        rotate_point(triangle.v1, pivot, angle),
-        rotate_point(triangle.v2, pivot, angle),
-        triangle.c0,
-        triangle.c1,
-        triangle.c2,
-        triangle.u0,
-        triangle.u1,
-        triangle.u2,
+        rotate_point(v0, pivot, angle),
+        rotate_point(v1, pivot, angle),
+        rotate_point(v2, pivot, angle),
+        c0,
+        c1,
+        c2,
+        u0,
+        u1,
+        u2,
     };
 }
 
-Rect2D TriangleBoundingBox(Triangle triangle) {
-    const int minY = MIN3(triangle.v0.y, triangle.v1.y, triangle.v2.y);
-    const int minX = MIN3(triangle.v0.x, triangle.v1.x, triangle.v2.x);
-    const int maxX = MAX3(triangle.v0.x, triangle.v1.x, triangle.v2.x);
-    const int maxY = MAX3(triangle.v0.y, triangle.v1.y, triangle.v2.y);
+Rect2D Triangle::bounding_box() const {
+    const int minY = MIN3(v0.y, v1.y, v2.y);
+    const int minX = MIN3(v0.x, v1.x, v2.x);
+    const int maxX = MAX3(v0.x, v1.x, v2.x);
+    const int maxY = MAX3(v0.y, v1.y, v2.y);
     return Rect2D{minX, minY, maxX, maxY};
 }

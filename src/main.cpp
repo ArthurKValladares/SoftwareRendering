@@ -6,11 +6,6 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include <vector>
-#ifdef __APPLE__
-#include <SDL2/SDL.h>
-#else
-#include <SDL.h>
-#endif
 
 #include "ThreadPool.h"
 #include "point.hpp"
@@ -21,6 +16,8 @@
 #include "triangle.hpp"
 #include "edge_function.hpp"
 #include "uv.hpp"
+#include "mesh.hpp"
+#include "line.hpp"
 
 #define SIMD true
 #define SCREEN_WIDTH  1200
@@ -104,7 +101,7 @@ void RenderPixels(SDL_Surface *surface, const Point2D &origin_point, Vec4i32 mas
 }
 
 void DrawTriangle(ThreadPool &thread_pool, SDL_Surface *surface, const Triangle &triangle, const Texture &texture) {
-    const Rect2D bounding_box = ClipRect(surface->w, surface->h, TriangleBoundingBox(triangle));
+    const Rect2D bounding_box = ClipRect(surface->w, surface->h, triangle.bounding_box());
     const Point2D min_point = Point2D{bounding_box.minX, bounding_box.minY};
     
     const float c0_u = triangle.u0.u, c0_v = triangle.u0.v;
@@ -158,7 +155,7 @@ void DrawTriangle(ThreadPool &thread_pool, SDL_Surface *surface, const Triangle 
 }
 
 void DrawTriangleSingle(ThreadPool &thread_pool, SDL_Surface *surface, const Triangle &triangle, const Texture &texture) {
-    const Rect2D bounding_box = ClipRect(surface->w, surface->h, TriangleBoundingBox(triangle));
+    const Rect2D bounding_box = ClipRect(surface->w, surface->h, triangle.bounding_box());
     const Point2D min_point = Point2D{bounding_box.minX, bounding_box.minY};
     
     const i32 A01  = triangle.v0.y - triangle.v1.y;
@@ -224,26 +221,73 @@ void DrawTriangleSingle(ThreadPool &thread_pool, SDL_Surface *surface, const Tri
     }
     thread_pool.Wait();
 }
-struct Mesh {
-    std::vector<Triangle> triangles;
-    Texture texture;
-};
 
-void DrawMesh(ThreadPool &thread_pool, SDL_Surface *surface, const Mesh &mesh) {
-    for (const Triangle &triangle : mesh.triangles) {
-#if SIMD
-        DrawTriangle(thread_pool, surface, triangle, mesh.texture);
-#else
-        DrawTriangleSingle(thread_pool, surface, triangle, mesh.texture);
-#endif
+void DrawLineSingle(ThreadPool &thread_pool, SDL_Surface *surface, const Line2D &line, const Color color) {
+    const auto mapped_color = SDL_MapRGB(surface->format, color.red, color.green, color.blue);
+    
+    // TODO: This is very sloppy, will write something real later
+    Point2D p0 = line.p0;
+    Point2D p1 = line.p1;
+    
+    const i32 dx = p1.x - p0.x;
+    const i32 dy = p1.y - p0.y;
+    
+    if (abs(dx) > abs(dy)) {
+        if (p0.x > p1.x) {
+            std::swap(p0, p1);
+        }
+        
+        const float slope = dy / (float) dx;
+        float y = p0.y;
+        for (u32 x = p0.x; x <= p1.x; ++x) {
+            const Point2D point = Point2D(x, round(y));
+            *GetPixel(surface, point) = mapped_color;
+            y += slope;
+        }
+    } else {
+        if (p0.y > p1.y) {
+            std::swap(p0, p1);
+        }
+        
+        const float slope = dx / (float) dy;
+        float x = p0.x;
+        for (u32 y = p0.y; y <= p1.y; ++y) {
+            const Point2D point = Point2D(round(x), y);
+            *GetPixel(surface, point) = mapped_color;
+            x += slope;
+        }
     }
 }
 
-Mesh RotateMesh(Mesh mesh, Point2D pivot, float angle) {
-    for (Triangle &triangle : mesh.triangles) {
-        triangle = rotate_triangle(triangle, pivot, angle);
+void DrawMesh(ThreadPool &thread_pool, SDL_Surface *surface, const Mesh &mesh, bool wireframe) {
+    for (const Triangle &triangle : mesh.triangles) {
+#if SIMD
+        if (!wireframe) {
+            DrawTriangle(thread_pool, surface, triangle, mesh.texture);
+        } else {
+            const Color wireframe_color = Color{255, 0, 0};
+            const Line2D line0 = Line2D{triangle.v0, triangle.v1};
+            const Line2D line1 = Line2D{triangle.v1, triangle.v2};
+            const Line2D line2 = Line2D{triangle.v2, triangle.v0};
+            // TODO: SIMD Version
+            DrawLineSingle(thread_pool, surface, line0, wireframe_color);
+            DrawLineSingle(thread_pool, surface, line1, wireframe_color);
+            DrawLineSingle(thread_pool, surface, line2, wireframe_color);
+        }
+#else
+        if (!wireframe) {
+            DrawTriangleSingle(thread_pool, surface, triangle, mesh.texture);
+        } else {
+            const Color wireframe_color = Color{255, 0, 0};
+            const Line2D line0 = Line2D{triangle.v0, triangle.v1};
+            const Line2D line1 = Line2D{triangle.v1, triangle.v2};
+            const Line2D line2 = Line2D{triangle.v2, triangle.v0};
+            DrawLineSingle(thread_pool, surface, line0, wireframe_color);
+            DrawLineSingle(thread_pool, surface, line1, wireframe_color);
+            DrawLineSingle(thread_pool, surface, line2, wireframe_color);
+        }
+#endif
     }
-    return mesh;
 }
 
 int main(int argc, char *argv[]) {
@@ -307,6 +351,7 @@ int main(int argc, char *argv[]) {
     // Render loop
     const float rotate_delta = 0.03;
     float rotate_angle = 0.0;
+    bool wireframe = false;
     bool quit = false;
     while (!quit) {
         SDL_Event e;
@@ -320,6 +365,11 @@ int main(int argc, char *argv[]) {
                         }
                         case SDLK_r: {
                             rotate_angle += rotate_delta;
+                            break;
+                        }
+                        case SDLK_f: {
+                            wireframe = !wireframe;
+                            break;
                         }
                         default: {
                             break;
@@ -350,9 +400,9 @@ int main(int argc, char *argv[]) {
 #endif
         
         const Mesh rotated_mesh =
-            RotateMesh(mesh, Point2D{surface->w / 2, surface->h / 2},
+            mesh.rotated(Point2D{surface->w / 2, surface->h / 2},
                        rotate_angle);
-        DrawMesh(thread_pool, surface, rotated_mesh);
+        DrawMesh(thread_pool, surface, rotated_mesh, wireframe);
         
         const std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
         printf("dt: %ld ms\n", (long) std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count());

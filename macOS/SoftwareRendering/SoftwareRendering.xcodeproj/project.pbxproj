@@ -22,6 +22,8 @@
 		93908E9D2AE7583800DDA114 /* vec4f32.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 93908E9B2AE7583800DDA114 /* vec4f32.cpp */; };
 		939FF3D22AF0873B007C1DF2 /* uv.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 939FF3D02AF0873B007C1DF2 /* uv.cpp */; };
 		939FF3D52AF0ADE1007C1DF2 /* vec4i32.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 939FF3D42AF0ADE1007C1DF2 /* vec4i32.cpp */; };
+		939FF3D92AF1EBEF007C1DF2 /* line.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 939FF3D72AF1EBEF007C1DF2 /* line.cpp */; };
+		939FF3DC2AF1EE7C007C1DF2 /* mesh.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 939FF3DA2AF1EE7C007C1DF2 /* mesh.cpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -78,6 +80,10 @@
 		939FF3D12AF0873B007C1DF2 /* uv.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = uv.hpp; sourceTree = "<group>"; };
 		939FF3D42AF0ADE1007C1DF2 /* vec4i32.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = vec4i32.cpp; sourceTree = "<group>"; };
 		939FF3D62AF0AE0A007C1DF2 /* vec4i32.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = vec4i32.hpp; sourceTree = "<group>"; };
+		939FF3D72AF1EBEF007C1DF2 /* line.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = line.cpp; sourceTree = "<group>"; };
+		939FF3D82AF1EBEF007C1DF2 /* line.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = line.hpp; sourceTree = "<group>"; };
+		939FF3DA2AF1EE7C007C1DF2 /* mesh.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = mesh.cpp; sourceTree = "<group>"; };
+		939FF3DB2AF1EE7C007C1DF2 /* mesh.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = mesh.hpp; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -106,6 +112,10 @@
 		938076FC2AAE798B006EEADC = {
 			isa = PBXGroup;
 			children = (
+				939FF3DA2AF1EE7C007C1DF2 /* mesh.cpp */,
+				939FF3DB2AF1EE7C007C1DF2 /* mesh.hpp */,
+				939FF3D72AF1EBEF007C1DF2 /* line.cpp */,
+				939FF3D82AF1EBEF007C1DF2 /* line.hpp */,
 				939FF3D02AF0873B007C1DF2 /* uv.cpp */,
 				939FF3D12AF0873B007C1DF2 /* uv.hpp */,
 				9339E3F12AD37A8E0058CB01 /* edge_function.cpp */,
@@ -222,10 +232,12 @@
 				931B50D62AB2745C00845796 /* point.cpp in Sources */,
 				939FF3D22AF0873B007C1DF2 /* uv.cpp in Sources */,
 				931B50E02AB2777F00845796 /* triangle.cpp in Sources */,
+				939FF3D92AF1EBEF007C1DF2 /* line.cpp in Sources */,
 				931B50D22AB2729400845796 /* texture.cpp in Sources */,
 				938077162AAE7A62006EEADC /* ThreadPool.cpp in Sources */,
 				939FF3D52AF0ADE1007C1DF2 /* vec4i32.cpp in Sources */,
 				93908E9D2AE7583800DDA114 /* vec4f32.cpp in Sources */,
+				939FF3DC2AF1EE7C007C1DF2 /* mesh.cpp in Sources */,
 				938077142AAE7A4B006EEADC /* main.cpp in Sources */,
 				931B50DC2AB2766D00845796 /* rect.cpp in Sources */,
 			);

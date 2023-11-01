@@ -3,6 +3,20 @@
    version = "1.0">
    <ContextStates>
       <ContextState
+         contextName = "DrawLineSingle(ThreadPool&amp;, SDL_Surface*, Line2D const&amp;, Color):main.cpp">
+         <PersistentStrings>
+            <PersistentString
+               value = "line">
+            </PersistentString>
+            <PersistentString
+               value = "y1 - y0">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "DrawTriangle(ThreadPool&amp;, SDL_Surface*, Triangle const&amp;, Texture const&amp;):main.cpp">
+      </ContextState>
+      <ContextState
          contextName = "main:main.cpp">
          <PersistentStrings>
             <PersistentString
@@ -17,9 +31,6 @@
                value = "reds">
             </PersistentString>
          </PersistentStrings>
-      </ContextState>
-      <ContextState
-         contextName = "DrawTriangle(ThreadPool&amp;, SDL_Surface*, Triangle const&amp;, Texture const&amp;):main.cpp">
       </ContextState>
    </ContextStates>
 </VariablesViewState>
