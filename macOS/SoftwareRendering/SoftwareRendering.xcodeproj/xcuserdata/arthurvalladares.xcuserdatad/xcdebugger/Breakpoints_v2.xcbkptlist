@@ -62,9 +62,9 @@
             filePath = "../../src/main.cpp"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "237"
-            endingLineNumber = "237"
-            landmarkName = "DrawLineSingle(thread_pool, surface, line, color)"
+            startingLineNumber = "235"
+            endingLineNumber = "235"
+            landmarkName = "DrawLineSingle(thread_pool, surface, line, mapped_color)"
             landmarkType = "9">
          </BreakpointContent>
       </BreakpointProxy>

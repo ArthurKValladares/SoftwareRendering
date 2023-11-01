@@ -222,9 +222,7 @@ void DrawTriangleSingle(ThreadPool &thread_pool, SDL_Surface *surface, const Tri
     thread_pool.Wait();
 }
 
-void DrawLineSingle(ThreadPool &thread_pool, SDL_Surface *surface, const Line2D &line, const Color color) {
-    const auto mapped_color = SDL_MapRGB(surface->format, color.red, color.green, color.blue);
-    
+void DrawLineSingle(SDL_Surface *surface, const Line2D &line, const Uint32 mapped_color) {
     // TODO: This is very sloppy, will write something real later
     Point2D p0 = line.p0;
     Point2D p1 = line.p1;
@@ -266,25 +264,27 @@ void DrawMesh(ThreadPool &thread_pool, SDL_Surface *surface, const Mesh &mesh, b
             DrawTriangle(thread_pool, surface, triangle, mesh.texture);
         } else {
             const Color wireframe_color = Color{255, 0, 0};
+            const auto mapped_color = SDL_MapRGB(surface->format, wireframe_color.red, wireframe_color.green, wireframe_color.blue);
             const Line2D line0 = Line2D{triangle.v0, triangle.v1};
             const Line2D line1 = Line2D{triangle.v1, triangle.v2};
             const Line2D line2 = Line2D{triangle.v2, triangle.v0};
             // TODO: SIMD Version
-            DrawLineSingle(thread_pool, surface, line0, wireframe_color);
-            DrawLineSingle(thread_pool, surface, line1, wireframe_color);
-            DrawLineSingle(thread_pool, surface, line2, wireframe_color);
+            DrawLineSingle(surface, line0, mapped_color);
+            DrawLineSingle(surface, line1, mapped_color);
+            DrawLineSingle(surface, line2, mapped_color);
         }
 #else
         if (!wireframe) {
             DrawTriangleSingle(thread_pool, surface, triangle, mesh.texture);
         } else {
             const Color wireframe_color = Color{255, 0, 0};
+            const auto mapped_color = SDL_MapRGB(surface->format, wireframe_color.red, wireframe_color.green, wireframe_color.blue);
             const Line2D line0 = Line2D{triangle.v0, triangle.v1};
             const Line2D line1 = Line2D{triangle.v1, triangle.v2};
             const Line2D line2 = Line2D{triangle.v2, triangle.v0};
-            DrawLineSingle(thread_pool, surface, line0, wireframe_color);
-            DrawLineSingle(thread_pool, surface, line1, wireframe_color);
-            DrawLineSingle(thread_pool, surface, line2, wireframe_color);
+            DrawLineSingle(surface, line0, mapped_color);
+            DrawLineSingle(surface, line1, mapped_color);
+            DrawLineSingle(surface, line2, mapped_color);
         }
 #endif
     }
