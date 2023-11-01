@@ -249,7 +249,7 @@ void DrawLineSingle(SDL_Surface *surface, const Line2D &line, const Uint32 mappe
         
         const float slope = dx / (float) dy;
         float x = p0.x;
-        for (u32 y = p0.y; y <= p1.y; ++y) {
+        for (i32 y = p0.y; y <= p1.y; ++y) {
             const Point2D point = Point2D(round(x), y);
             *GetPixel(surface, point) = mapped_color;
             x += slope;
