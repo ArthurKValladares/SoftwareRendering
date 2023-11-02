@@ -6,6 +6,7 @@
 struct Vec4f32 {
     Vec4f32();
     Vec4f32(float val);
+    Vec4f32(float a, float b, float c, float d);
     Vec4f32(__m128 a);
     
     void store(float* dest) const;

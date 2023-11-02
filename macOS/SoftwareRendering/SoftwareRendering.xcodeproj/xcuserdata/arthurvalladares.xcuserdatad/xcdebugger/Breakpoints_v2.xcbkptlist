@@ -14,8 +14,8 @@
             filePath = "SIMD/vec4f32.cpp"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "18"
-            endingLineNumber = "18"
+            startingLineNumber = "22"
+            endingLineNumber = "22"
             landmarkName = "Vec4f32::operator+(rhs)"
             landmarkType = "7">
          </BreakpointContent>
@@ -46,8 +46,8 @@
             filePath = "../../src/main.cpp"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "245"
-            endingLineNumber = "245"
+            startingLineNumber = "291"
+            endingLineNumber = "291"
             landmarkName = "DrawLineSingle(surface, line, mapped_color)"
             landmarkType = "9">
          </BreakpointContent>
@@ -62,8 +62,8 @@
             filePath = "../../src/main.cpp"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "274"
-            endingLineNumber = "274"
+            startingLineNumber = "319"
+            endingLineNumber = "319"
             landmarkName = "DrawMesh(thread_pool, surface, mesh, wireframe)"
             landmarkType = "9">
          </BreakpointContent>

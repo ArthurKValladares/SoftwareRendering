@@ -19,7 +19,7 @@
 #include "mesh.hpp"
 #include "line.hpp"
 
-#define SIMD true
+#define SIMD false
 #define SCREEN_WIDTH  1200
 #define SCREEN_HEIGHT 800
 
@@ -222,6 +222,52 @@ void DrawTriangleSingle(ThreadPool &thread_pool, SDL_Surface *surface, const Tri
     thread_pool.Wait();
 }
 
+// NOTE: I don't think this SIMD version is really worth it tbh,
+// but I wanted to do it for completeness sake
+void DrawLine(SDL_Surface *surface, const Line2D &line, const Uint32 mapped_color) {
+    // TODO: This is very sloppy, will write something real later
+    Point2D p0 = line.p0;
+    Point2D p1 = line.p1;
+    
+    const i32 dx = p1.x - p0.x;
+    const i32 dy = p1.y - p0.y;
+    
+    // TODO: I need to handle the case where we have less than 4 points in the line at the end correctly
+    if (abs(dx) > abs(dy)) {
+        if (p0.x > p1.x) {
+            std::swap(p0, p1);
+        }
+        
+        const float slope = dy / (float) dx;
+        for (u32 x = p0.x; x <= p1.x; x += 4) {
+            const u32 x_delta = x - p0.x;
+            const Vec4f32 y = Vec4f32(p0.y) + Vec4f32(slope) * Vec4f32(x_delta, x_delta + 1, x_delta + 2, x_delta + 3);
+            float ys[4];
+            y.store(ys);
+            *GetPixel(surface, Point2D(x, round(ys[3]))) = mapped_color;
+            *GetPixel(surface, Point2D(x + 1, round(ys[2]))) = mapped_color;
+            *GetPixel(surface, Point2D(x + 2, round(ys[1]))) = mapped_color;
+            *GetPixel(surface, Point2D(x + 3, round(ys[0]))) = mapped_color;
+        }
+    } else {
+        if (p0.y > p1.y) {
+            std::swap(p0, p1);
+        }
+        
+        const float slope = dx / (float) dy;
+        for (i32 y = p0.y; y <= p1.y; y += 4) {
+            const u32 y_delta = y - p0.y;
+            const Vec4f32 x = Vec4f32(p0.x) + Vec4f32(slope) * Vec4f32(y_delta, y_delta + 1, y_delta + 2, y_delta + 3);
+            float xs[4];
+            x.store(xs);
+            *GetPixel(surface, Point2D(round(xs[3]), y)) = mapped_color;
+            *GetPixel(surface, Point2D(round(xs[2]), y + 1)) = mapped_color;
+            *GetPixel(surface, Point2D(round(xs[1]), y + 2)) = mapped_color;
+            *GetPixel(surface, Point2D(round(xs[0]), y + 3)) = mapped_color;
+        }
+    }
+}
+
 void DrawLineSingle(SDL_Surface *surface, const Line2D &line, const Uint32 mapped_color) {
     // TODO: This is very sloppy, will write something real later
     Point2D p0 = line.p0;
@@ -268,10 +314,9 @@ void DrawMesh(ThreadPool &thread_pool, SDL_Surface *surface, const Mesh &mesh, b
             const Line2D line0 = Line2D{triangle.v0, triangle.v1};
             const Line2D line1 = Line2D{triangle.v1, triangle.v2};
             const Line2D line2 = Line2D{triangle.v2, triangle.v0};
-            // TODO: SIMD Version
-            DrawLineSingle(surface, line0, mapped_color);
-            DrawLineSingle(surface, line1, mapped_color);
-            DrawLineSingle(surface, line2, mapped_color);
+            DrawLine(surface, line0, mapped_color);
+            DrawLine(surface, line1, mapped_color);
+            DrawLine(surface, line2, mapped_color);
         }
 #else
         if (!wireframe) {
