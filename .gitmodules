@@ -1,5 +1,5 @@
-[submodule "ConcurrencyPrimitives"]
-	path = ConcurrencyPrimitives
+[submodule "vendor/ConcurrencyPrimitives"]
+	path = vendor/ConcurrencyPrimitives
 	url = https://github.com/ArthurKValladares/ConcurrencyPrimitives.git
 [submodule "vendor/sse2neon"]
 	path = vendor/sse2neon
