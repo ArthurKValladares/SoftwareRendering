@@ -2,8 +2,12 @@
 #define integer_hpp
 
 #include "defs.h"
+#ifdef __ARM_NEON
 #include "sse2neon.h"
-#include "vec4f32.hpp"
+#else
+#include <emmintrin.h>
+#endif
+#include "SIMD/vec4f32.hpp"
 
 struct Vec4i32 {
     Vec4i32();

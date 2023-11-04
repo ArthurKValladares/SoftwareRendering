@@ -6,9 +6,11 @@ set(project_root ${CMAKE_SOURCE_DIR})
 
 include_directories(
     ${project_root}/src/
+    ${project_root}/vendor/STB
     ${project_root}/vendor/SDL/include
     ${project_root}/vendor/sse2neon/
     ${project_root}/vendor/thread-pool/include
+    ${project_root}/vendor/ConcurrencyPrimitives/src
 )
 
 add_executable(${PROJECT_NAME} 
@@ -31,5 +33,3 @@ set_target_properties(${PROJECT_NAME} PROPERTIES
     CXX_STANDARD 17
     CXX_STANDARD_REQUIRED YES
 )
-
-target_compile_options(${PROJECT_NAME} PRIVATE -Wall -Wextra -Wpedantic -Werror)

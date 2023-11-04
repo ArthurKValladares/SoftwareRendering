@@ -1,7 +1,11 @@
 #pragma once
 
 #include "defs.h"
+#ifdef __ARM_NEON
 #include "sse2neon.h"
+#else
+#include <emmintrin.h>
+#endif
 
 struct Vec4f32 {
     Vec4f32();

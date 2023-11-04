@@ -71,7 +71,7 @@ bool Vec4i32::operator>(const Vec4i32& rhs) const {
     return !_mm_testz_si128(i, i);
 }
 bool Vec4i32::operator<(const Vec4i32& rhs) const {
-    const __m128 i = _mm_cmplt_epi32(_mi, rhs._mi);
+    const __m128i i = _mm_cmplt_epi32(_mi, rhs._mi);
     return !_mm_testz_si128(i, i);
 }
 bool Vec4i32::operator>=(const Vec4i32& rhs) const {
