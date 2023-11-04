@@ -19,6 +19,18 @@ Color Texture::get_pixel_xy(u32 x, u32 y) const {
     return Color{red, green, blue};
 }
 
+float clamp(float v, float lo, float hi) {
+    const float t = v < lo
+        ? lo
+        : v;
+    return t > hi
+        ? hi
+        : t;
+}
+
 Color Texture::get_pixel_uv(float u, float v) const {
-    return this->get_pixel_xy(round(u * m_width), round(v * m_height));
+    // TODO: A `clamp` function
+    float c_u = clamp(u, 0.0, 1.0);
+    float c_v = clamp(v, 0.0, 1.0);
+    return this->get_pixel_xy(round(c_u * m_width), round(c_v * m_height));
 }

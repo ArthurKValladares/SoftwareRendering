@@ -19,7 +19,7 @@
 #include "mesh.hpp"
 #include "line.hpp"
 
-#define SIMD false
+#define SIMD true
 #define SCREEN_WIDTH  1200
 #define SCREEN_HEIGHT 800
 
