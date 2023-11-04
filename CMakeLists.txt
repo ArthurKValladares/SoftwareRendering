@@ -27,6 +27,8 @@ add_executable(${PROJECT_NAME}
     # SIMD
     ${project_root}/src/SIMD/vec4f32.cpp
     ${project_root}/src/SIMD/vec4i32.cpp
+    # ConcurrencyPrimitives
+    ${project_root}/vendor/ConcurrencyPrimitives/src/ThreadPool.cpp
 )
 
 set_target_properties(${PROJECT_NAME} PROPERTIES
