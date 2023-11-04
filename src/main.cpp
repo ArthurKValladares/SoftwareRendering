@@ -336,7 +336,7 @@ void DrawMesh(ThreadPool &thread_pool, SDL_Surface *surface, const Mesh &mesh, b
 }
 
 int main(int argc, char *argv[]) {
-    const Texture texture = Texture("test.jpg");
+    const Texture texture = Texture("../assets/test.jpg");
     
     ThreadPool thread_pool;
 
