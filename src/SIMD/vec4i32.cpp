@@ -18,18 +18,24 @@ Vec4f32 Vec4i32::to_float() const {
     return Vec4f32(_mm_cvtepi32_ps(_mi));
 }
 
-void Vec4i32::store(i32* dest) const {
-    _mm_storeu_si128((__m128i*) dest, _mi);
+i32 Vec4i32::x() const {
+    return _xyzw[0];
+}
+i32 Vec4i32::y() const {
+    return _xyzw[1];
+}
+i32 Vec4i32::z() const {
+    return _xyzw[2];
+}
+i32 Vec4i32::w() const {
+    return _xyzw[3];
 }
 
 bool Vec4i32::any_gte(i32 val) const {
-    // TODO: There's probably a SIMD version of this
-    i32 test[4];
-    this->store(test);
-    return test[0] >= val ||
-           test[1] >= val ||
-           test[2] >= val ||
-           test[3] >= val;
+    return this->x() >= val ||
+           this->y() >= val ||
+           this->z() >= val ||
+           this->w() >= val;
 }
 
 Vec4i32 Vec4i32::operator+(const Vec4i32&rhs) const {

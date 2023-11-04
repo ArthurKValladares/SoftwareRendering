@@ -17,8 +17,11 @@ struct Vec4i32 {
     
     Vec4f32 to_float() const;
     
-    void store(i32* dest) const;
-    
+    i32 x() const;
+	i32 y() const;
+	i32 z() const;
+	i32 w() const;
+
     bool any_gte(i32 val) const;
     
     Vec4i32 operator+(const Vec4i32& rhs) const;
@@ -39,7 +42,10 @@ struct Vec4i32 {
     bool operator>=(const Vec4i32& rhs) const;
     bool operator<=(const Vec4i32& rhs) const;
 private:
-    __m128i _mi;
+    union {
+        __m128i _mi;
+        i32 _xyzw[4];
+    };
 };
 
 #endif

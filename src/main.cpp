@@ -70,32 +70,24 @@ void ClearSurfaceSingle(ThreadPool &thread_pool, SDL_Surface *surface, Color col
 }
 
 void RenderPixels(SDL_Surface *surface, const Point2D &origin_point, Vec4i32 mask, Vec4f32 u, Vec4f32 v, const Texture &texture) {
-    float us[4];
-    u.store(us);
-    float vs[4];
-    v.store(vs);
-    
-    // TODO: Might have to do bounds checks on the surface here
-    i32 ret[4];
-    mask.store(ret);
-    if (ret[0]) {
+    if (mask.x()) {
         const Point2D p = origin_point;
-        const Color color = texture.get_pixel_uv(us[3], vs[3]);
+        const Color color = texture.get_pixel_uv(u.w(), v.w());
         *GetPixel(surface, p) = SDL_MapRGB(surface->format, color.red, color.green, color.blue);
     }
-    if (ret[1]) {
+    if (mask.y()) {
         const Point2D p = origin_point + Point2D(1, 0);
-        const Color color = texture.get_pixel_uv(us[2], vs[2]);
+        const Color color = texture.get_pixel_uv(u.z(), v.z());
         *GetPixel(surface, p) = SDL_MapRGB(surface->format, color.red, color.green, color.blue);
     }
-    if (ret[2]) {
+    if (mask.z()) {
         const Point2D p = origin_point + Point2D(2, 0);
-        const Color color = texture.get_pixel_uv(us[1], vs[1]);
+        const Color color = texture.get_pixel_uv(u.y(), v.y());
         *GetPixel(surface, p) = SDL_MapRGB(surface->format, color.red, color.green, color.blue);
     }
-    if (ret[3]) {
+    if (mask.w()) {
         const Point2D p = origin_point + Point2D(3, 0);
-        const Color color = texture.get_pixel_uv(us[0], vs[0]);
+        const Color color = texture.get_pixel_uv(u.x(), v.x());
         *GetPixel(surface, p) = SDL_MapRGB(surface->format, color.red, color.green, color.blue);
     }
 }
@@ -242,12 +234,10 @@ void DrawLine(SDL_Surface *surface, const Line2D &line, const Uint32 mapped_colo
         for (u32 x = p0.x; x <= p1.x; x += 4) {
             const u32 x_delta = x - p0.x;
             const Vec4f32 y = Vec4f32(p0.y) + Vec4f32(slope) * Vec4f32(x_delta, x_delta + 1, x_delta + 2, x_delta + 3);
-            float ys[4];
-            y.store(ys);
-            *GetPixel(surface, Point2D(x, round(ys[3]))) = mapped_color;
-            *GetPixel(surface, Point2D(x + 1, round(ys[2]))) = mapped_color;
-            *GetPixel(surface, Point2D(x + 2, round(ys[1]))) = mapped_color;
-            *GetPixel(surface, Point2D(x + 3, round(ys[0]))) = mapped_color;
+            *GetPixel(surface, Point2D(x, round(y.w()))) = mapped_color;
+            *GetPixel(surface, Point2D(x + 1, round(y.z()))) = mapped_color;
+            *GetPixel(surface, Point2D(x + 2, round(y.y()))) = mapped_color;
+            *GetPixel(surface, Point2D(x + 3, round(y.x()))) = mapped_color;
         }
     } else {
         if (p0.y > p1.y) {
@@ -258,12 +248,10 @@ void DrawLine(SDL_Surface *surface, const Line2D &line, const Uint32 mapped_colo
         for (i32 y = p0.y; y <= p1.y; y += 4) {
             const u32 y_delta = y - p0.y;
             const Vec4f32 x = Vec4f32(p0.x) + Vec4f32(slope) * Vec4f32(y_delta, y_delta + 1, y_delta + 2, y_delta + 3);
-            float xs[4];
-            x.store(xs);
-            *GetPixel(surface, Point2D(round(xs[3]), y)) = mapped_color;
-            *GetPixel(surface, Point2D(round(xs[2]), y + 1)) = mapped_color;
-            *GetPixel(surface, Point2D(round(xs[1]), y + 2)) = mapped_color;
-            *GetPixel(surface, Point2D(round(xs[0]), y + 3)) = mapped_color;
+            *GetPixel(surface, Point2D(round(x.w()), y)) = mapped_color;
+            *GetPixel(surface, Point2D(round(x.z()), y + 1)) = mapped_color;
+            *GetPixel(surface, Point2D(round(x.y()), y + 2)) = mapped_color;
+            *GetPixel(surface, Point2D(round(x.x()), y + 3)) = mapped_color;
         }
     }
 }
