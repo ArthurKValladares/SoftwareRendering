@@ -24,15 +24,20 @@
 #define SCREEN_WIDTH  1200
 #define SCREEN_HEIGHT 800
 
-Uint32* GetPixel(SDL_Surface *surface, Point2D point) {
-    return (Uint32 *) ((Uint8 *) surface->pixels + (point.y * surface->pitch) +
-                       (point.x * surface->format->BytesPerPixel));
+Vec4i32 GetPixelOffsets(SDL_Surface* surface, Vec4i32 xs, Vec4i32 ys) {
+    return ys * Vec4i32(surface->pitch) + xs * Vec4i32(surface->format->BytesPerPixel);
 }
 
-// NOTE: No overflow protection here
-Vec4i32* GetPixels(SDL_Surface *surface, Point2D start_point) {
-    return (Vec4i32 *) ((Uint8 *) surface->pixels + (start_point.y * surface->pitch) +
-                       (start_point.x * surface->format->BytesPerPixel));
+u32 GetPixelOffset(SDL_Surface* surface, Point2D point) {
+    return point.y * surface->pitch + point.x * surface->format->BytesPerPixel;
+}
+
+Uint32* GetPixel(SDL_Surface *surface, u32 offset) {
+    return (Uint32 *) ((Uint8 *) surface->pixels + offset);
+}
+
+Uint32* GetPixel(SDL_Surface* surface, Point2D point) {
+    return GetPixel(surface, GetPixelOffset(surface, point));
 }
 
 void ClearSurface(SDL_Surface *surface, Color color) {
@@ -46,7 +51,7 @@ void ClearSurface(SDL_Surface *surface, Color color) {
     for (point.y = 0; point.y < height; point.y += 1) {
         //thread_pool.Schedule([=]() {
             for (point.x = 0; point.x < width; point.x += EdgeFunction::step_increment_x) {
-                *GetPixels(surface, point) = pixel_colors;
+                *(Vec4i32*)GetPixel(surface, point) = pixel_colors;
             }
         //});
     }
@@ -78,25 +83,27 @@ void RenderPixels(SDL_Surface *surface, const Point2D &origin_point, Vec4i32 mas
     const Vec4i32 xs = Vec4i32(origin_point.x) + Vec4i32(0, 1, 2, 3);
     const Vec4i32 ys = Vec4i32(origin_point.y);
 
+    const Vec4i32 pixel_offsets = GetPixelOffsets(surface, xs, ys);
+
     if (mask.x()) {
-        const auto color = texture.get_pixel_from_idx(tex_idx.w());
-        const Uint32 mapped_color = SDL_MapRGB(surface->format, color.red, color.green, color.blue);
-        *GetPixel(surface, Point2D{xs.w(), ys.w()}) = mapped_color;
-    }
-    if (mask.y()) {
-        const auto color = texture.get_pixel_from_idx(tex_idx.z());
-        const Uint32 mapped_color = SDL_MapRGB(surface->format, color.red, color.green, color.blue);
-        *GetPixel(surface, Point2D{ xs.z(), ys.z() }) = mapped_color;
-    }
-    if (mask.z()) {
-        const auto color = texture.get_pixel_from_idx(tex_idx.y());
-        const Uint32 mapped_color = SDL_MapRGB(surface->format, color.red, color.green, color.blue);
-        *GetPixel(surface, Point2D{ xs.y(), ys.y() }) = mapped_color;
-    }
-    if (mask.w()) {
         const auto color = texture.get_pixel_from_idx(tex_idx.x());
         const Uint32 mapped_color = SDL_MapRGB(surface->format, color.red, color.green, color.blue);
-        *GetPixel(surface, Point2D{ xs.x(), ys.x() }) = mapped_color;
+        *GetPixel(surface, pixel_offsets.x()) = mapped_color;
+    }
+    if (mask.y()) {
+        const auto color = texture.get_pixel_from_idx(tex_idx.y());
+        const Uint32 mapped_color = SDL_MapRGB(surface->format, color.red, color.green, color.blue);
+        *GetPixel(surface, pixel_offsets.y()) = mapped_color;
+    }
+    if (mask.z()) {
+        const auto color = texture.get_pixel_from_idx(tex_idx.z());
+        const Uint32 mapped_color = SDL_MapRGB(surface->format, color.red, color.green, color.blue);
+        *GetPixel(surface, pixel_offsets.z()) = mapped_color;
+    }
+    if (mask.w()) {
+        const auto color = texture.get_pixel_from_idx(tex_idx.w());
+        const Uint32 mapped_color = SDL_MapRGB(surface->format, color.red, color.green, color.blue);
+        *GetPixel(surface, pixel_offsets.w()) = mapped_color;
     }
 }
 
