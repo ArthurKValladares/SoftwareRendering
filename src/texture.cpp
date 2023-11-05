@@ -11,12 +11,16 @@ Texture::Texture(const char *path) {
     }
 }
 
-Color Texture::get_pixel_xy(u32 x, u32 y) const {
-    const u32 start = y * m_stride + x * m_channels;
+Color Texture::get_pixel_from_idx(u32 start) const {
     const u8 red = m_img[start];
     const u8 green = m_img[start + 1];
     const u8 blue = m_img[start + 2];
     return Color{red, green, blue};
+}
+
+Color Texture::get_pixel_xy(u32 x, u32 y) const {
+    const u32 start = y * m_stride + x * m_channels;
+    return this->get_pixel_from_idx(start);
 }
 
 float clamp(float v, float lo, float hi) {

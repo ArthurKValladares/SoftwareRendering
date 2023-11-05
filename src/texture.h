@@ -7,6 +7,8 @@
 
 struct Texture {
     Texture(const char* path);
+
+    Color get_pixel_from_idx(u32 idx) const;
     Color get_pixel_xy(u32 x, u32 y) const;
     Color get_pixel_uv(float u, float v) const;
     

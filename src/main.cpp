@@ -74,30 +74,28 @@ void RenderPixels(SDL_Surface *surface, const Point2D &origin_point, Vec4i32 mas
     const Vec4i32 ui = (u.clamp(0.0, 1.0) * texture.m_width).to_int_nearest();
     const Vec4i32 vi = (v.clamp(0.0, 1.0) * texture.m_height).to_int_nearest();
 
-    // TODO: A bunch of work can be vectorized, mainly the repeated work in `get_pixel_xy`
+    const Vec4i32 xs = Vec4i32(origin_point.x) + Vec4i32(0, 1, 2, 3);
+    const Vec4i32 ys = Vec4i32(origin_point.y);
+
     if (mask.x()) {
-        const Point2D p = origin_point;
         const Color color = texture.get_pixel_xy(ui.w(), vi.w());
         const Uint32 mapped_color = SDL_MapRGB(surface->format, color.red, color.green, color.blue);
-        *GetPixel(surface, p) = mapped_color;
+        *GetPixel(surface, Point2D{xs.w(), ys.w()}) = mapped_color;
     }
     if (mask.y()) {
-        const Point2D p = origin_point + Point2D(1, 0);
         const Color color = texture.get_pixel_xy(ui.z(), vi.z());
         const Uint32 mapped_color = SDL_MapRGB(surface->format, color.red, color.green, color.blue);
-        *GetPixel(surface, p) = mapped_color;
+        *GetPixel(surface, Point2D{ xs.z(), ys.z() }) = mapped_color;
     }
     if (mask.z()) {
-        const Point2D p = origin_point + Point2D(2, 0);
         const Color color = texture.get_pixel_xy(ui.y(), vi.y());
         const Uint32 mapped_color = SDL_MapRGB(surface->format, color.red, color.green, color.blue);
-        *GetPixel(surface, p) = mapped_color;
+        *GetPixel(surface, Point2D{ xs.y(), ys.y() }) = mapped_color;
     }
     if (mask.w()) {
-        const Point2D p = origin_point + Point2D(3, 0);
         const Color color = texture.get_pixel_xy(ui.x(), vi.x());
         const Uint32 mapped_color = SDL_MapRGB(surface->format, color.red, color.green, color.blue);
-        *GetPixel(surface, p) = mapped_color;
+        *GetPixel(surface, Point2D{ xs.x(), ys.x() }) = mapped_color;
     }
 }
 
@@ -147,8 +145,8 @@ void DrawTriangle(SDL_Surface *surface, const Triangle &triangle, const Texture 
                     RenderPixels(surface, point, mask, u, v, texture);
                 }
                 
-                w1 += e20.step_size_x;
                 w0 += e12.step_size_x;
+                w1 += e20.step_size_x;
                 w2 += e01.step_size_x;
             }
         //});
