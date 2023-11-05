@@ -78,7 +78,7 @@ void ClearSurfaceSingle(SDL_Surface *surface, Color color) {
 void RenderPixels(SDL_Surface *surface, const Point2D &origin_point, Vec4i32 mask, Vec4f32 u, Vec4f32 v, const Texture &texture) {
     const Vec4i32 ui = (u.clamp(0.0, 1.0) * texture.m_width).to_int_nearest();
     const Vec4i32 vi = (v.clamp(0.0, 1.0) * texture.m_height).to_int_nearest();
-    const Vec4i32 tex_idx = vi * Vec4i32(texture.m_stride) + ui * Vec4i32(texture.m_channels);
+    const Vec4i32 tex_idx = vi * Vec4i32(texture.m_width) + ui;
 
     const Vec4i32 xs = Vec4i32(origin_point.x) + Vec4i32(0, 1, 2, 3);
     const Vec4i32 ys = Vec4i32(origin_point.y);
@@ -86,24 +86,16 @@ void RenderPixels(SDL_Surface *surface, const Point2D &origin_point, Vec4i32 mas
     const Vec4i32 pixel_offsets = GetPixelOffsets(surface, xs, ys);
 
     if (mask.x()) {
-        const auto color = texture.get_pixel_from_idx(tex_idx.x());
-        const Uint32 mapped_color = SDL_MapRGB(surface->format, color.red, color.green, color.blue);
-        *GetPixel(surface, pixel_offsets.x()) = mapped_color;
+        *GetPixel(surface, pixel_offsets.x()) = texture.get_pixel_from_idx(tex_idx.x());
     }
     if (mask.y()) {
-        const auto color = texture.get_pixel_from_idx(tex_idx.y());
-        const Uint32 mapped_color = SDL_MapRGB(surface->format, color.red, color.green, color.blue);
-        *GetPixel(surface, pixel_offsets.y()) = mapped_color;
+        *GetPixel(surface, pixel_offsets.y()) = texture.get_pixel_from_idx(tex_idx.y());;
     }
     if (mask.z()) {
-        const auto color = texture.get_pixel_from_idx(tex_idx.z());
-        const Uint32 mapped_color = SDL_MapRGB(surface->format, color.red, color.green, color.blue);
-        *GetPixel(surface, pixel_offsets.z()) = mapped_color;
+        *GetPixel(surface, pixel_offsets.z()) = texture.get_pixel_from_idx(tex_idx.z());;
     }
     if (mask.w()) {
-        const auto color = texture.get_pixel_from_idx(tex_idx.w());
-        const Uint32 mapped_color = SDL_MapRGB(surface->format, color.red, color.green, color.blue);
-        *GetPixel(surface, pixel_offsets.w()) = mapped_color;
+        *GetPixel(surface, pixel_offsets.w()) = texture.get_pixel_from_idx(tex_idx.w());
     }
 }
 
@@ -217,9 +209,7 @@ void DrawTriangleSingle(SDL_Surface *surface, const Triangle &triangle, const Te
                     };
                     
                     const Point2D point = Point2D{x, y};
-                    const Color texture_color = texture.get_pixel_uv(uv.u, uv.v);
-                    const Uint32 mapped_color = SDL_MapRGB(surface->format, texture_color.red, texture_color.green, texture_color.blue);
-                    *GetPixel(surface, point) = mapped_color;
+                    *GetPixel(surface, point) = texture.get_pixel_uv(uv.u, uv.v);
                 }
                 
                 w0 += A12;
@@ -340,9 +330,7 @@ void DrawMesh(SDL_Surface *surface, const Mesh &mesh, bool wireframe) {
     }
 }
 
-int main(int argc, char *argv[]) {
-    const Texture texture = Texture("../assets/test.jpg");
-    
+int main(int argc, char *argv[]) { 
     // Init
     if (SDL_Init(SDL_INIT_VIDEO) < 0) {
         printf("SDL could not be initialized!\n"
@@ -362,7 +350,8 @@ int main(int argc, char *argv[]) {
     SDL_Surface *surface = SDL_GetWindowSurface(window);
     assert(surface->format->BytesPerPixel ==
            4);   // Not supporting non-32-bit pixel formats
-    
+    Texture texture = Texture("../assets/test.jpg", surface);
+
     const float triangle_margin = 0.2f;
     const int margin_w = round(surface->w * triangle_margin);
     const int margin_h = round(surface->h * triangle_margin);
@@ -462,6 +451,7 @@ int main(int argc, char *argv[]) {
     // Cleanup
     SDL_DestroyWindow(window);
     SDL_Quit();
-
+    texture.free();
+    
     return 0;
 }
