@@ -29,7 +29,7 @@ float clamp(float v, float lo, float hi) {
 }
 
 Color Texture::get_pixel_uv(float u, float v) const {
-    // TODO: A `clamp` function
+    // TODO: Some `sampler` like stuff for different sampling methods when outside range
     float c_u = clamp(u, 0.0, 1.0);
     float c_v = clamp(v, 0.0, 1.0);
     return this->get_pixel_xy(round(c_u * m_width), round(c_v * m_height));

@@ -7,8 +7,8 @@
 #else
 #include <emmintrin.h>
 #endif
-#include "SIMD/vec4f32.hpp"
 
+struct Vec4f32;
 struct Vec4i32 {
     Vec4i32();
     Vec4i32(i32 a, i32 b, i32 c, i32 d);
