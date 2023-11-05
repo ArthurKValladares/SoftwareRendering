@@ -4,6 +4,7 @@
 
 Texture::Texture(const char *path) {
     m_img = stbi_load(path, &m_width, &m_height, &m_channels, 0);
+    m_stride = m_width * m_channels;
     if (m_img == NULL) {
         printf("Error in loading the image\n");
         exit(1);
@@ -11,8 +12,7 @@ Texture::Texture(const char *path) {
 }
 
 Color Texture::get_pixel_xy(u32 x, u32 y) const {
-    const u32 stride = m_width * m_channels;
-    const u32 start = y * stride + x * m_channels;
+    const u32 start = y * m_stride + x * m_channels;
     const u8 red = m_img[start];
     const u8 green = m_img[start + 1];
     const u8 blue = m_img[start + 2];

@@ -42,10 +42,10 @@ void ClearSurface(SDL_Surface *surface, Color color) {
         SDL_MapRGB(surface->format, color.red, color.green, color.blue);
     const Vec4i32 pixel_colors = Vec4i32(pixel_color);
     
-    for (int y = 0; y < height; y += EdgeFunction::step_increment_y) {
+    Point2D point = Point2D{ 0, 0 };
+    for (point.y = 0; point.y < height; point.y += 1) {
         //thread_pool.Schedule([=]() {
-            for (int x = 0; x < width; x += EdgeFunction::step_increment_x) {
-                Point2D point = Point2D{x, y};
+            for (point.x = 0; point.x < width; point.x += EdgeFunction::step_increment_x) {
                 *GetPixels(surface, point) = pixel_colors;
             }
         //});
@@ -59,10 +59,10 @@ void ClearSurfaceSingle(SDL_Surface *surface, Color color) {
     const Uint32 pixel_color =
         SDL_MapRGB(surface->format, color.red, color.green, color.blue);
 
-    for (int y = 0; y < height; y += 1) {
+    Point2D point = {0, 0};
+    for (point.y = 0; point.y < height; point.y += 1) {
         //thread_pool.Schedule([=]() {
-            for (int x = 0; x < width; x += 1) {
-                Point2D point = Point2D{x, y};
+            for (point.x = 0; point.x < width; point.x += 1) {
                 *GetPixel(surface, point) = pixel_color;
             }
         //});
@@ -114,8 +114,9 @@ void DrawTriangle(SDL_Surface *surface, const Triangle &triangle, const Texture 
     const Vec4i32 w1_init = e20.Init(triangle.v2, triangle.v0, min_point);
     const Vec4i32 w2_init = e01.Init(triangle.v0, triangle.v1, min_point);
     
-    for (int y = bounding_box.minY; y <= bounding_box.maxY; y += EdgeFunction::step_increment_y) {
-        const Vec4i32 delta_y = Vec4i32(y - bounding_box.minY);
+    Point2D point = { 0, 0 };
+    for (point.y = bounding_box.minY; point.y <= bounding_box.maxY; point.y += EdgeFunction::step_increment_y) {
+        const Vec4i32 delta_y = Vec4i32(point.y - bounding_box.minY);
         
         const Vec4i32 w0_row = w0_init + e12.step_size_y * delta_y;
         const Vec4i32 w1_row = w1_init + e20.step_size_y * delta_y;
@@ -126,7 +127,7 @@ void DrawTriangle(SDL_Surface *surface, const Triangle &triangle, const Texture 
             Vec4i32 w1 = w1_row;
             Vec4i32 w2 = w2_row;
             
-            for (int x = bounding_box.minX; x <= bounding_box.maxX; x += EdgeFunction::step_increment_x) {
+            for (point.x = bounding_box.minX; point.x <= bounding_box.maxX; point.x += EdgeFunction::step_increment_x) {
                 const Vec4i32 mask = w0 | w1 | w2;
                 
                 if (mask.any_gte(0)) {
@@ -143,11 +144,11 @@ void DrawTriangle(SDL_Surface *surface, const Triangle &triangle, const Texture 
                     const Vec4f32 u = u_0 + u_1 + u_2;
                     const Vec4f32 v = v_0 + v_1 + v_2;
                     
-                    RenderPixels(surface, Point2D(x, y), mask, u, v, texture);
+                    RenderPixels(surface, point, mask, u, v, texture);
                 }
                 
-                w0 += e12.step_size_x;
                 w1 += e20.step_size_x;
+                w0 += e12.step_size_x;
                 w2 += e01.step_size_x;
             }
         //});

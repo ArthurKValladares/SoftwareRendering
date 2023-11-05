@@ -11,6 +11,7 @@ struct Texture {
     Color get_pixel_uv(float u, float v) const;
     
     int m_width, m_height, m_channels;
+    int m_stride;
     unsigned char *m_img;
 };
 
