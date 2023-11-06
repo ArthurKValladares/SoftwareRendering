@@ -17,6 +17,7 @@
 #include "uv.hpp"
 #include "mesh.hpp"
 #include "line.hpp"
+#include "ThreadPool.h"
 #include "SIMD/vec4f32.hpp"
 #include "SIMD/vec4i32.hpp"
 
@@ -40,39 +41,39 @@ Uint32* GetPixel(SDL_Surface* surface, Point2D point) {
     return GetPixel(surface, GetPixelOffset(surface, point));
 }
 
-void ClearSurface(SDL_Surface *surface, Color color) {
+void ClearSurface(ThreadPool& thread_pool, SDL_Surface *surface, Color color) {
     const int width = surface->w;
     const int height = surface->h;
     const Uint32 pixel_color =
         SDL_MapRGB(surface->format, color.red, color.green, color.blue);
     const Vec4i32 pixel_colors = Vec4i32(pixel_color);
     
-    Point2D point = Point2D{ 0, 0 };
-    for (point.y = 0; point.y < height; point.y += 1) {
-        //thread_pool.Schedule([=]() {
+    for (int y = 0; y < height; y += 1) {
+        thread_pool.Schedule([=]() {
+            Point2D point = Point2D{ 0, y };
             for (point.x = 0; point.x < width; point.x += EdgeFunction::step_increment_x) {
                 *(Vec4i32*)GetPixel(surface, point) = pixel_colors;
             }
-        //});
+        });
     }
-    //thread_pool.Wait();
+    thread_pool.Wait();
 }
 
-void ClearSurfaceSingle(SDL_Surface *surface, Color color) {
+void ClearSurfaceSingle(ThreadPool& thread_pool, SDL_Surface *surface, Color color) {
     const int width = surface->w;
     const int height = surface->h;
     const Uint32 pixel_color =
         SDL_MapRGB(surface->format, color.red, color.green, color.blue);
 
-    Point2D point = {0, 0};
-    for (point.y = 0; point.y < height; point.y += 1) {
-        //thread_pool.Schedule([=]() {
+    for (int y = 0; y < height; y += 1) {
+        thread_pool.Schedule([=]() {
+            Point2D point = { 0, y };
             for (point.x = 0; point.x < width; point.x += 1) {
                 *GetPixel(surface, point) = pixel_color;
             }
-        //});
+        });
     }
-    //thread_pool.Wait();
+    thread_pool.Wait();
 }
 
 void RenderPixels(SDL_Surface *surface, const Point2D &origin_point, Vec4i32 mask, Vec4f32 u, Vec4f32 v, const Texture &texture) {
@@ -99,7 +100,7 @@ void RenderPixels(SDL_Surface *surface, const Point2D &origin_point, Vec4i32 mas
     }
 }
 
-void DrawTriangle(SDL_Surface *surface, const Triangle &triangle, const Texture &texture) {
+void DrawTriangle(ThreadPool& thread_pool, SDL_Surface *surface, const Triangle &triangle, const Texture &texture) {
     const Rect2D bounding_box = ClipRect(surface->w, surface->h, triangle.bounding_box());
     const Point2D min_point = Point2D{bounding_box.minX, bounding_box.minY};
     
@@ -112,15 +113,16 @@ void DrawTriangle(SDL_Surface *surface, const Triangle &triangle, const Texture 
     const Vec4i32 w1_init = e20.Init(triangle.v2, triangle.v0, min_point);
     const Vec4i32 w2_init = e01.Init(triangle.v0, triangle.v1, min_point);
     
-    Point2D point = { 0, 0 };
-    for (point.y = bounding_box.minY; point.y <= bounding_box.maxY; point.y += EdgeFunction::step_increment_y) {
-        const Vec4i32 delta_y = Vec4i32(point.y - bounding_box.minY);
+    for (int y = bounding_box.minY; y <= bounding_box.maxY; y += EdgeFunction::step_increment_y) {
+        const Vec4i32 delta_y = Vec4i32(y - bounding_box.minY);
         
         const Vec4i32 w0_row = w0_init + e12.step_size_y * delta_y;
         const Vec4i32 w1_row = w1_init + e20.step_size_y * delta_y;
         const Vec4i32 w2_row = w2_init + e01.step_size_y * delta_y;
         
-        //thread_pool.Schedule([=]() {
+        thread_pool.Schedule([=]() {
+            Point2D point = { 0, y };
+
             Vec4i32 w0 = w0_row;
             Vec4i32 w1 = w1_row;
             Vec4i32 w2 = w2_row;
@@ -149,12 +151,12 @@ void DrawTriangle(SDL_Surface *surface, const Triangle &triangle, const Texture 
                 w1 += e20.step_size_x;
                 w2 += e01.step_size_x;
             }
-        //});
+        });
     }
-    //thread_pool.Wait();
+    thread_pool.Wait();
 }
 
-void DrawTriangleSingle(SDL_Surface *surface, const Triangle &triangle, const Texture &texture) {
+void DrawTriangleSingle(ThreadPool& thread_pool, SDL_Surface *surface, const Triangle &triangle, const Texture &texture) {
     const Rect2D bounding_box = ClipRect(surface->w, surface->h, triangle.bounding_box());
     const Point2D min_point = Point2D{bounding_box.minX, bounding_box.minY};
     
@@ -180,7 +182,7 @@ void DrawTriangleSingle(SDL_Surface *surface, const Triangle &triangle, const Te
         const i32 w1_row = w1_init + B20 * delta_y;
         const i32 w2_row = w2_init + B01 * delta_y;
         
-        //thread_pool.Schedule([=]() {
+        thread_pool.Schedule([=]() {
             i32 w0 = w0_row;
             i32 w1 = w1_row;
             i32 w2 = w2_row;
@@ -216,9 +218,9 @@ void DrawTriangleSingle(SDL_Surface *surface, const Triangle &triangle, const Te
                 w1 += A20;
                 w2 += A01;
             }
-        //});
+        });
     }
-    //thread_pool.Wait();
+    thread_pool.Wait();
 }
 
 // NOTE: I don't think this SIMD version is really worth it tbh,
@@ -328,11 +330,11 @@ void DrawLineSingle(SDL_Surface *surface, const Line2D &line, const Uint32 mappe
     }
 }
 
-void DrawMesh(SDL_Surface *surface, const Mesh &mesh, bool wireframe) {
+void DrawMesh(ThreadPool& thread_pool, SDL_Surface *surface, const Mesh &mesh, bool wireframe) {
     for (const Triangle &triangle : mesh.triangles) {
 #if SIMD
         if (!wireframe) {
-            DrawTriangle(surface, triangle, mesh.texture);
+            DrawTriangle(thread_pool, surface, triangle, mesh.texture);
         } else {
             const Color wireframe_color = Color{255, 0, 0};
             const auto mapped_color = SDL_MapRGB(surface->format, wireframe_color.red, wireframe_color.green, wireframe_color.blue);
@@ -345,7 +347,7 @@ void DrawMesh(SDL_Surface *surface, const Mesh &mesh, bool wireframe) {
         }
 #else
         if (!wireframe) {
-            DrawTriangleSingle(surface, triangle, mesh.texture);
+            DrawTriangleSingle(thread_pool, surface, triangle, mesh.texture);
         } else {
             const Color wireframe_color = Color{255, 0, 0};
             const auto mapped_color = SDL_MapRGB(surface->format, wireframe_color.red, wireframe_color.green, wireframe_color.blue);
@@ -377,6 +379,8 @@ int main(int argc, char *argv[]) {
                SDL_GetError());
         return 0;
     }
+    ThreadPool thread_pool;
+
     SDL_Surface *surface = SDL_GetWindowSurface(window);
     assert(surface->format->BytesPerPixel ==
            4);   // Not supporting non-32-bit pixel formats
@@ -461,15 +465,15 @@ int main(int argc, char *argv[]) {
         const std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
         
 #if SIMD
-        ClearSurface(surface, Color{100, 100, 100});
+        ClearSurface(thread_pool, surface, Color{100, 100, 100});
 #else
-        ClearSurfaceSingle(surface, Color{100, 100, 100});
+        ClearSurfaceSingle(thread_pool, surface, Color{100, 100, 100});
 #endif
         
         const Mesh rotated_mesh =
             mesh.rotated(Point2D{surface->w / 2, surface->h / 2},
                        rotate_angle);
-        DrawMesh(surface, rotated_mesh, wireframe);
+        DrawMesh(thread_pool, surface, rotated_mesh, wireframe);
         
         const std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
         printf("dt: %ld ms\n", (long) std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count());
