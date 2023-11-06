@@ -1,5 +1,13 @@
 #include "point.hpp"
+#include "defs.h"
+
 #include <cmath>
+
+Point2D Point2D::clamp(Point2D min, Point2D max) const {
+    const int x = CLAMP(this->x, min.x, max.x);
+    const int y = CLAMP(this->y, min.y, max.y);
+    return Point2D{x,y};
+}
 
 Point2D Point2D::operator+(const Point2D& rhs) const {
     return Point2D{x + rhs.x, y + rhs.y};

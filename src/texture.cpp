@@ -37,18 +37,9 @@ Uint32 Texture::get_pixel_xy(u32 x, u32 y) const {
     return this->get_pixel_from_idx(idx);
 }
 
-float clamp(float v, float lo, float hi) {
-    const float t = v < lo
-        ? lo
-        : v;
-    return t > hi
-        ? hi
-        : t;
-}
-
 Uint32 Texture::get_pixel_uv(float u, float v) const {
     // TODO: Some `sampler` like stuff for different sampling methods when outside range
-    float c_u = clamp(u, 0.0, 1.0);
-    float c_v = clamp(v, 0.0, 1.0);
+    float c_u = CLAMP(u, 0.0, 1.0);
+    float c_v = CLAMP(v, 0.0, 1.0);
     return this->get_pixel_xy(round(c_u * m_width), round(c_v * m_height));
 }

@@ -225,40 +225,70 @@ void DrawTriangleSingle(SDL_Surface *surface, const Triangle &triangle, const Te
 // but I wanted to do it for completeness sake
 void DrawLine(SDL_Surface *surface, const Line2D &line, const Uint32 mapped_color) {
     // TODO: This is very sloppy, will write something real later
+    // Since we know the slope, we can be smarter about breaking out early when we go out of bounds
+    // Maybe the testin can be SIMD too
+
+    const auto is_in_bounds = [=](u32 x, u32 y) {
+        return x > 0 && x < surface->w && y > 0 && y < surface->h;
+    };
+    
     Point2D p0 = line.p0;
     Point2D p1 = line.p1;
     
     const i32 dx = p1.x - p0.x;
     const i32 dy = p1.y - p0.y;
     
-    // TODO: I need to handle the case where we have less than 4 points in the line at the end correctly
     if (abs(dx) > abs(dy)) {
         if (p0.x > p1.x) {
             std::swap(p0, p1);
         }
-        
         const float slope = dy / (float) dx;
-        for (u32 x = p0.x; x <= p1.x; x += 4) {
+
+        const u32 x_start = MAX(p0.x, 0);
+        const u32 x_end = MIN(p1.x, surface->w);
+        for (u32 x = x_start; x <= x_end; x += 4) {
             const u32 x_delta = x - p0.x;
-            const Vec4f32 y = Vec4f32(p0.y) + Vec4f32(slope) * Vec4f32(x_delta, x_delta + 1, x_delta + 2, x_delta + 3);
-            *GetPixel(surface, Point2D(x, round(y.w()))) = mapped_color;
-            *GetPixel(surface, Point2D(x + 1, round(y.z()))) = mapped_color;
-            *GetPixel(surface, Point2D(x + 2, round(y.y()))) = mapped_color;
-            *GetPixel(surface, Point2D(x + 3, round(y.x()))) = mapped_color;
+
+            const Vec4i32 xs = Vec4i32(x) + Vec4i32(0, 1, 2, 3);
+            const Vec4i32 ys = (Vec4f32(p0.y) + Vec4f32(slope) * Vec4f32(x_delta, x_delta + 1, x_delta + 2, x_delta + 3)).to_int_nearest();
+            if (is_in_bounds(xs.x(), ys.x())) {
+                *GetPixel(surface, Point2D(xs.x(), ys.x())) = mapped_color;
+            }
+            if (is_in_bounds(xs.y(), ys.y())) {
+                *GetPixel(surface, Point2D(xs.y(), ys.y())) = mapped_color;
+            }
+            if (is_in_bounds(xs.z(), ys.z())) {
+                *GetPixel(surface, Point2D(xs.z(), ys.z())) = mapped_color;
+            }
+            if (is_in_bounds(xs.w(), ys.w())) {
+                *GetPixel(surface, Point2D(xs.w(), ys.w())) = mapped_color;
+            }
         }
     } else {
         if (p0.y > p1.y) {
             std::swap(p0, p1);
         }
-        
         const float slope = dx / (float) dy;
-        for (i32 y = p0.y; y <= p1.y; y += 4) {
+
+        const u32 y_start = MAX(p0.y, 0);
+        const u32 y_end = MIN(p1.y, surface->h);
+        for (i32 y = y_start; y <= y_end; y += 4) {
             const u32 y_delta = y - p0.y;
-            const Vec4f32 x = Vec4f32(p0.x) + Vec4f32(slope) * Vec4f32(y_delta, y_delta + 1, y_delta + 2, y_delta + 3);
-            *GetPixel(surface, Point2D(round(x.w()), y)) = mapped_color;
-            *GetPixel(surface, Point2D(round(x.z()), y + 1)) = mapped_color;
-            *GetPixel(surface, Point2D(round(x.y()), y + 2)) = mapped_color;
-            *GetPixel(surface, Point2D(round(x.x()), y + 3)) = mapped_color;
+
+            const Vec4i32 ys = Vec4i32(y) + Vec4i32(0, 1, 2, 3);
+            const Vec4i32 xs = (Vec4f32(p0.x) + Vec4f32(slope) * Vec4f32(y_delta, y_delta + 1, y_delta + 2, y_delta + 3)).to_int_nearest();
+            if (is_in_bounds(xs.x(), ys.x())) {
+                *GetPixel(surface, Point2D(xs.x(), ys.x())) = mapped_color;
+            }
+            if (is_in_bounds(xs.y(), ys.y())) {
+                *GetPixel(surface, Point2D(xs.y(), ys.y())) = mapped_color;
+            }
+            if (is_in_bounds(xs.z(), ys.z())) {
+                *GetPixel(surface, Point2D(xs.z(), ys.z())) = mapped_color;
+            }
+            if (is_in_bounds(xs.w(), ys.w())) {
+                *GetPixel(surface, Point2D(xs.w(), ys.w())) = mapped_color;
+            }
         }
     }
 }

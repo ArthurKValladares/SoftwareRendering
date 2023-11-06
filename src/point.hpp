@@ -6,6 +6,8 @@ struct Point2D {
         : x(x)
         , y(y) {}
     
+    Point2D clamp(Point2D min, Point2D max) const;
+
     Point2D operator+(const Point2D& rhs) const;
     Point2D operator-(const Point2D& rhs) const;
     

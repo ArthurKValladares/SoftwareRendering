@@ -15,6 +15,8 @@
 #define MAX3(a, b, c) MAX(a, MAX(b, c))
 #define MIN3(a, b, c) MIN(a, MIN(b, c))
 
+#define CLAMP(val, min, max) val > max ? max : val < min ? min : val;
+
 #define ArrayCount(Array) (sizeof(Array) / sizeof((Array)[0]))
 
 typedef uint8_t u8;
