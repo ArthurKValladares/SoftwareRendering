@@ -1,7 +1,7 @@
-#include "triangle.hpp"
+#include "triangle.h"
 #include "defs.h"
-#include "SIMD/vec4i32.hpp"
-#include "edge_function.hpp"
+#include "SIMD/vec4i32.h"
+#include "edge_function.h"
 
 Triangle Triangle::rotated(Point2D pivot, float angle) const {
     return Triangle{

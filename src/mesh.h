@@ -2,8 +2,8 @@
 
 #include <vector>
 
-#include "point.hpp"
-#include "triangle.hpp"
+#include "point.h"
+#include "triangle.h"
 #include "texture.h"
 
 struct Mesh {

@@ -2,7 +2,7 @@
 #define texture_h
 
 #include "defs.h"
-#include "color.hpp"
+#include "color.h"
 #include <string>
 
 struct Texture {

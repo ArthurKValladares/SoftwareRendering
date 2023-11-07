@@ -1,10 +1,10 @@
-#ifndef triangle_hpp
-#define triangle_hpp
+#ifndef triangle_h
+#define triangle_h
 
-#include "point.hpp"
-#include "color.hpp"
-#include "uv.hpp"
-#include "rect.hpp"
+#include "point.h"
+#include "color.h"
+#include "uv.h"
+#include "rect.h"
 
 // Assumes counter-clockwise winding order
 struct Triangle {

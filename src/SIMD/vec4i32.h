@@ -1,5 +1,4 @@
-#ifndef integer_hpp
-#define integer_hpp
+#pragma once
 
 #include "defs.h"
 #ifdef __ARM_NEON
@@ -47,5 +46,3 @@ private:
         i32 _xyzw[4];
     };
 };
-
-#endif

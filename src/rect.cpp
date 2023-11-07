@@ -1,4 +1,4 @@
-#include "rect.hpp"
+#include "rect.h"
 #include "defs.h"
 
 Rect2D ClipRect(int width, int height, Rect2D rect) {

@@ -1,4 +1,4 @@
-#include "edge_function.hpp"
+#include "edge_function.h"
 
 Vec4i32 EdgeFunction::Init(Point2D v0, Point2D v1, Point2D p) {
         const int A = v0.y - v1.y;

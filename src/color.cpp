@@ -1,4 +1,4 @@
-#include "color.hpp"
+#include "color.h"
 
 Color Color::operator*(float s) const {
     return Color{

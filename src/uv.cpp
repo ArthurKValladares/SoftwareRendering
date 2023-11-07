@@ -1,4 +1,4 @@
-#include "uv.hpp"
+#include "uv.h"
 
 UV UV::operator*(float s) const {
     return UV{

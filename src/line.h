@@ -1,6 +1,6 @@
 #pragma once
 
-#include "point.hpp"
+#include "point.h"
 
 struct Line2D {
     Point2D p0;

@@ -1,4 +1,4 @@
-#include "mesh.hpp"
+#include "mesh.h"
 
 #include "defs.h"
 

@@ -7,19 +7,19 @@
 #include <stdio.h>
 #include <vector>
 
-#include "point.hpp"
+#include "point.h"
 #include "texture.h"
-#include "color.hpp"
-#include "rect.hpp"
+#include "color.h"
+#include "rect.h"
 #include "defs.h"
-#include "triangle.hpp"
-#include "edge_function.hpp"
-#include "uv.hpp"
-#include "mesh.hpp"
-#include "line.hpp"
+#include "triangle.h"
+#include "edge_function.h"
+#include "uv.h"
+#include "mesh.h"
+#include "line.h"
 #include "ThreadPool.h"
-#include "SIMD/vec4f32.hpp"
-#include "SIMD/vec4i32.hpp"
+#include "SIMD/vec4f32.h"
+#include "SIMD/vec4i32.h"
 
 #define SIMD true
 #define SCREEN_WIDTH  1200

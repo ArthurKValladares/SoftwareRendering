@@ -1,5 +1,5 @@
-#ifndef color_hpp
-#define color_hpp
+#ifndef color_h
+#define color_h
 
 #include <cstdint>
 

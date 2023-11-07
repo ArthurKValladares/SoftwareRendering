@@ -1,9 +1,9 @@
-#ifndef edge_function_hpp
-#define edge_function_hpp
+#ifndef edge_function_h
+#define edge_function_h
 
 #include "defs.h"
-#include "SIMD/vec4i32.hpp"
-#include "point.hpp"
+#include "SIMD/vec4i32.h"
+#include "point.h"
 
 struct EdgeFunction {
     Vec4i32 Init(Point2D v0, Point2D v1, Point2D p);
