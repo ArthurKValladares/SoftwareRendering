@@ -14,7 +14,12 @@ struct Point2D {
     int x;
     int y;
 };
-
 Point2D rotate_point(Point2D point, Point2D pivot, float angle);
+
+struct Point3D {
+    int x;
+    int y;
+    int z;
+};
 
 #endif

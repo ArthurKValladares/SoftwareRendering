@@ -19,10 +19,12 @@ add_executable(${PROJECT_NAME}
     ${project_root}/src/line.cpp
     ${project_root}/src/mesh.cpp
     ${project_root}/src/point.cpp
+    ${project_root}/src/vector.cpp
     ${project_root}/src/rect.cpp
     ${project_root}/src/texture.cpp
     ${project_root}/src/triangle.cpp
     ${project_root}/src/uv.cpp
+    ${project_root}/src/camera.cpp
     ${project_root}/src/main.cpp
     # SIMD
     ${project_root}/src/SIMD/vec4f32.cpp

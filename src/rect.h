@@ -1,5 +1,4 @@
-#ifndef rect_hpp
-#define rect_hpp
+#pragma once
 
 struct Rect2D {
     int minX;
@@ -9,4 +8,3 @@ struct Rect2D {
 };
 
 Rect2D ClipRect(int width, int height, Rect2D rect);
-#endif
