@@ -22,4 +22,16 @@ struct Point3D {
     int z;
 };
 
+// TODO: I will probably need to make some of the point/rect/line/etc functions generic in some way later
+struct Point2D_f {
+    float x;
+    float y;
+};
+
+struct Point3D_f {
+    float x;
+    float y;
+    float z;
+};
+
 #endif

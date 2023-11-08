@@ -2,6 +2,7 @@
 #define defs_h
 
 #include <stdint.h>
+#include <assert.h>
 
 #ifdef __APPLE__
 #include <SDL2/SDL.h>

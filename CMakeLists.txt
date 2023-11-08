@@ -25,6 +25,7 @@ add_executable(${PROJECT_NAME}
     ${project_root}/src/triangle.cpp
     ${project_root}/src/uv.cpp
     ${project_root}/src/camera.cpp
+    ${project_root}/src/viewport.cpp
     ${project_root}/src/main.cpp
     # SIMD
     ${project_root}/src/SIMD/vec4f32.cpp
