@@ -17,20 +17,16 @@ struct ScreenTriangle {
 };
 
 // Assumes counter-clockwise winding order
+// TODO: Will just hold 3 vertices later. Or not exist at all?
 struct Triangle {
     Point3D_f v0;
     Point3D_f v1;
     Point3D_f v2;
-    Color c0;
-    Color c1;
-    Color c2;
     UV u0;
     UV u1;
     UV u2;
-    
-    Triangle rotated(Vec3D_f axis, float angle) const;
-    Rect2D bounding_box() const;
 
+    Rect2D bounding_box() const;
     ScreenTriangle project_to_surface(SDL_Surface *surface, const Viewport& viewport) const;
 };
 

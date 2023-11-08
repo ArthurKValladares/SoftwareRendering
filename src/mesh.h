@@ -7,8 +7,14 @@
 #include "texture.h"
 #include "vector.h"
 
+struct Vertex {
+    Point3D_f p;
+    UV uv;
+};
+
 struct Mesh {
-    std::vector<Triangle> triangles;
+    std::vector<Vertex> vertices;
+    std::vector<u32> indices;
     // TODO: Probably shouldn't really be a part of Mesh struct
     Texture texture;
     

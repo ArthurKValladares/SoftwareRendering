@@ -203,11 +203,6 @@ void DrawTriangleSingle(ThreadPool& thread_pool, SDL_Surface *surface, const Vie
                     const float b1 = (float) w1 / sum;
                     const float b2 = (float) w2 / sum;
 
-                    const Color c0 = triangle.c0 * b0;
-                    const Color c1 = triangle.c1 * b1;
-                    const Color c2 = triangle.c2 * b2;
-                    const Color color = c0 + c1 + c2;
-
                     const UV u0 = triangle.u0 * b0;
                     const UV u1 = triangle.u1 * b1;
                     const UV u2 = triangle.u2 * b2;
@@ -337,7 +332,18 @@ void DrawLineSingle(SDL_Surface *surface, const Line2D &line, const Uint32 mappe
 }
 
 void DrawMesh(ThreadPool& thread_pool, SDL_Surface *surface, const Viewport& viewport, const Mesh &mesh, bool wireframe) {
-    for (const Triangle &triangle : mesh.triangles) {
+    for (int i = 0; i < mesh.indices.size(); i += 3) {
+        const Vertex& v0 = mesh.vertices[mesh.indices[i]];
+        const Vertex& v1 = mesh.vertices[mesh.indices[i + 1]];
+        const Vertex& v2 = mesh.vertices[mesh.indices[i + 2]];
+        const Triangle triangle = Triangle {
+            v0.p,
+            v1.p,
+            v2.p,
+            v0.uv,
+            v1.uv,
+            v2.uv,
+        };
 #if SIMD
         if (!wireframe) {
             DrawTriangle(thread_pool, surface, viewport, triangle, mesh.texture);
@@ -406,34 +412,33 @@ int main(int argc, char *argv[]) {
     const float margin_h = surface->h * triangle_margin;
     const Mesh mesh = {
         {
-            Triangle{
-                Point3D_f{margin_w, margin_h, 1.0},
+            // Top-left
+            Vertex {
+                Point3D_f{margin_w, margin_h, 1.0}, 
+                UV{1.0, 0.0},
+            }, 
+            // Top-right
+            Vertex {
                 Point3D_f{surface->w - margin_w, margin_h, 1.0},
-                Point3D_f{surface->w - margin_w, surface->h - margin_h, 1.0},
-                Color{255, 0, 0},
-                Color{0, 0, 0},
-                Color{0, 255, 0},
-                UV{1.0, 0.0},
                 UV{0.0, 0.0},
-                UV{0.0, 1.0},
-                
             },
-            Triangle{
-                Point3D_f{margin_w, margin_h, 1.0},
+            // Bottom-right
+            Vertex{
                 Point3D_f{surface->w - margin_w, surface->h - margin_h, 1.0},
-                Point3D_f{margin_w, surface->h - margin_h, 1.0},
-                Color{255, 0, 0},
-                Color{0, 255, 0},
-                Color{255, 255, 0},
-                UV{1.0, 0.0},
                 UV{0.0, 1.0},
+            }, 
+            // Bottom-left
+            Vertex{
+                Point3D_f{margin_w, surface->h - margin_h, 1.0},
                 UV{1.0, 1.0}
             }
         },
+        {0, 1, 2, 2, 3, 0},
         texture
     };
 
     // Render loop
+    // TODO: rotate stuff again
     const float rotate_delta = 0.03;
     float rotate_angle = 0.0;
     bool wireframe = false;
@@ -484,8 +489,7 @@ int main(int argc, char *argv[]) {
         ClearSurfaceSingle(thread_pool, surface, Color{100, 100, 100});
 #endif
         
-        const Mesh rotated_mesh = mesh.rotated(Vec3D_f{0.0, 1.0, 0.0}, rotate_angle);
-        DrawMesh(thread_pool, surface, viewport, rotated_mesh, wireframe);
+        DrawMesh(thread_pool, surface, viewport, mesh, wireframe);
         
         const std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
         printf("dt: %ld ms\n", (long) std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count());
