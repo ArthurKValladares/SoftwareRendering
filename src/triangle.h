@@ -6,6 +6,15 @@
 #include "uv.h"
 #include "rect.h"
 #include "vector.h"
+#include "viewport.h"
+
+struct ScreenTriangle {
+    Point2D v0;
+    Point2D v1;
+    Point2D v2;
+
+    Rect2D bounding_box() const;
+};
 
 // Assumes counter-clockwise winding order
 struct Triangle {
@@ -21,6 +30,8 @@ struct Triangle {
     
     Triangle rotated(Vec3D_f axis, float angle) const;
     Rect2D bounding_box() const;
+
+    ScreenTriangle project_to_surface(SDL_Surface *surface, const Viewport& viewport) const;
 };
 
 #endif

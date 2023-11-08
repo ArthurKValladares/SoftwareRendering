@@ -102,21 +102,20 @@ void RenderPixels(SDL_Surface *surface, const Point2D &origin_point, Vec4i32 mas
 }
 
 void DrawTriangle(ThreadPool& thread_pool, SDL_Surface *surface, const Viewport& viewport, const Triangle &triangle, const Texture &texture) {
-    const Point2D v0 = viewport.project_to_surface(surface, triangle.v0).round();
-    const Point2D v1 = viewport.project_to_surface(surface, triangle.v1).round();
-    const Point2D v2 = viewport.project_to_surface(surface, triangle.v2).round();
+    const ScreenTriangle st = triangle.project_to_surface(surface, viewport);
 
-    const Rect2D bounding_box = ClipRect(surface->w, surface->h, triangle.bounding_box());
+    const Rect2D bounding_box = ClipRect(surface->w, surface->h, st.bounding_box());
     const Point2D min_point = Point2D{bounding_box.minX, bounding_box.minY};
     
+    // TODO: I need to `project` this as well
     const float c0_u = triangle.u0.u, c0_v = triangle.u0.v;
     const float c1_u = triangle.u1.u, c1_v = triangle.u1.v;
     const float c2_u = triangle.u2.u, c2_v = triangle.u2.v;
     
     EdgeFunction e01, e12, e20;
-    const Vec4i32 w0_init = e12.Init(v1, v2, min_point);
-    const Vec4i32 w1_init = e20.Init(v2, v0, min_point);
-    const Vec4i32 w2_init = e01.Init(v0, v1, min_point);
+    const Vec4i32 w0_init = e12.Init(st.v1, st.v2, min_point);
+    const Vec4i32 w1_init = e20.Init(st.v2, st.v0, min_point);
+    const Vec4i32 w2_init = e01.Init(st.v0, st.v1, min_point);
     
     for (int y = bounding_box.minY; y <= bounding_box.maxY; y += EdgeFunction::step_increment_y) {
         const Vec4i32 delta_y = Vec4i32(y - bounding_box.minY);
@@ -162,27 +161,25 @@ void DrawTriangle(ThreadPool& thread_pool, SDL_Surface *surface, const Viewport&
 }
 
 void DrawTriangleSingle(ThreadPool& thread_pool, SDL_Surface *surface, const Viewport& viewport, const Triangle &triangle, const Texture &texture) {
-    const Point2D v0 = viewport.project_to_surface(surface, triangle.v0).round();
-    const Point2D v1 = viewport.project_to_surface(surface, triangle.v1).round();
-    const Point2D v2 = viewport.project_to_surface(surface, triangle.v2).round();
+    const ScreenTriangle st = triangle.project_to_surface(surface, viewport);
 
-    const Rect2D bounding_box = ClipRect(surface->w, surface->h, triangle.bounding_box());
+    const Rect2D bounding_box = ClipRect(surface->w, surface->h, st.bounding_box());
     const Point2D min_point = Point2D{bounding_box.minX, bounding_box.minY};
     
-    const i32 A01  = triangle.v0.y - triangle.v1.y;
-    const i32 A12  = triangle.v1.y - triangle.v2.y;
-    const i32 A20  = triangle.v2.y - triangle.v0.y;
+    const i32 A01  = st.v0.y - st.v1.y;
+    const i32 A12  = st.v1.y - st.v2.y;
+    const i32 A20  = st.v2.y - st.v0.y;
     
-    const i32 B01  = triangle.v1.x - triangle.v0.x;
-    const i32 B12  = triangle.v2.x - triangle.v1.x;
-    const i32 B20  = triangle.v0.x - triangle.v2.x;
+    const i32 B01  = st.v1.x - st.v0.x;
+    const i32 B12  = st.v2.x - st.v1.x;
+    const i32 B20  = st.v0.x - st.v2.x;
     
     const auto edge_function = [](const Point2D& a, const Point2D& b, const Point2D& c) {
         return (b.x-a.x)*(c.y-a.y) - (b.y-a.y)*(c.x-a.x);
     };
-    const i32 w0_init = edge_function(v1, v2, min_point);
-    const i32 w1_init = edge_function(v2, v0, min_point);
-    const i32 w2_init = edge_function(v0, v1, min_point);
+    const i32 w0_init = edge_function(st.v1, st.v2, min_point);
+    const i32 w1_init = edge_function(st.v2, st.v0, min_point);
+    const i32 w2_init = edge_function(st.v0, st.v1, min_point);
     
     for (int y = bounding_box.minY; y <= bounding_box.maxY; y += 1) {
         const i32 delta_y = y - bounding_box.minY;
