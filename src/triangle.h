@@ -7,6 +7,7 @@
 #include "rect.h"
 #include "vector.h"
 #include "viewport.h"
+#include "vertex.h"
 
 struct ScreenTriangle {
     Point2D v0;
@@ -16,17 +17,11 @@ struct ScreenTriangle {
     Rect2D bounding_box() const;
 };
 
-// Assumes counter-clockwise winding order
-// TODO: Will just hold 3 vertices later. Or not exist at all?
 struct Triangle {
-    Point3D_f v0;
-    Point3D_f v1;
-    Point3D_f v2;
-    UV u0;
-    UV u1;
-    UV u2;
+    const Vertex& v0;
+    const Vertex& v1;
+    const Vertex& v2;
 
-    Rect2D bounding_box() const;
     ScreenTriangle project_to_surface(SDL_Surface *surface, const Viewport& viewport) const;
 };
 

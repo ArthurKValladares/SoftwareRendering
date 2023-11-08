@@ -108,9 +108,9 @@ void DrawTriangle(ThreadPool& thread_pool, SDL_Surface *surface, const Viewport&
     const Point2D min_point = Point2D{bounding_box.minX, bounding_box.minY};
     
     // TODO: I need to `project` this as well
-    const float c0_u = triangle.u0.u, c0_v = triangle.u0.v;
-    const float c1_u = triangle.u1.u, c1_v = triangle.u1.v;
-    const float c2_u = triangle.u2.u, c2_v = triangle.u2.v;
+    const float c0_u = triangle.v0.uv.u, c0_v = triangle.v0.uv.v;
+    const float c1_u = triangle.v1.uv.u, c1_v = triangle.v1.uv.v;
+    const float c2_u = triangle.v2.uv.u, c2_v = triangle.v2.uv.v;
     
     EdgeFunction e01, e12, e20;
     const Vec4i32 w0_init = e12.Init(st.v1, st.v2, min_point);
@@ -166,6 +166,7 @@ void DrawTriangleSingle(ThreadPool& thread_pool, SDL_Surface *surface, const Vie
     const Rect2D bounding_box = ClipRect(surface->w, surface->h, st.bounding_box());
     const Point2D min_point = Point2D{bounding_box.minX, bounding_box.minY};
     
+    // TODO: I need to `project` this as well
     const i32 A01  = st.v0.y - st.v1.y;
     const i32 A12  = st.v1.y - st.v2.y;
     const i32 A20  = st.v2.y - st.v0.y;
@@ -203,9 +204,9 @@ void DrawTriangleSingle(ThreadPool& thread_pool, SDL_Surface *surface, const Vie
                     const float b1 = (float) w1 / sum;
                     const float b2 = (float) w2 / sum;
 
-                    const UV u0 = triangle.u0 * b0;
-                    const UV u1 = triangle.u1 * b1;
-                    const UV u2 = triangle.u2 * b2;
+                    const UV u0 = triangle.v0.uv * b0;
+                    const UV u1 = triangle.v1.uv * b1;
+                    const UV u2 = triangle.v2.uv * b2;
                     const UV uv = UV{
                         u0.u + u1.u + u2.u,
                         u0.v + u1.v + u2.v
@@ -337,12 +338,9 @@ void DrawMesh(ThreadPool& thread_pool, SDL_Surface *surface, const Viewport& vie
         const Vertex& v1 = mesh.vertices[mesh.indices[i + 1]];
         const Vertex& v2 = mesh.vertices[mesh.indices[i + 2]];
         const Triangle triangle = Triangle {
-            v0.p,
-            v1.p,
-            v2.p,
-            v0.uv,
-            v1.uv,
-            v2.uv,
+            v0,
+            v1,
+            v2
         };
 #if SIMD
         if (!wireframe) {
@@ -350,12 +348,10 @@ void DrawMesh(ThreadPool& thread_pool, SDL_Surface *surface, const Viewport& vie
         } else {
             const Color wireframe_color = Color{255, 0, 0};
             const auto mapped_color = SDL_MapRGB(surface->format, wireframe_color.red, wireframe_color.green, wireframe_color.blue);
-            const Point2D v0 = viewport.project_to_surface(surface, triangle.v0).round();
-            const Point2D v1 = viewport.project_to_surface(surface, triangle.v1).round();
-            const Point2D v2 = viewport.project_to_surface(surface, triangle.v2).round();
-            const Line2D line0 = Line2D{v0, v1};
-            const Line2D line1 = Line2D{v1, v2};
-            const Line2D line2 = Line2D{v2, v0};
+            const ScreenTriangle st = triangle.project_to_surface(surface, viewport);
+            const Line2D line0 = Line2D{st.v0, st.v1};
+            const Line2D line1 = Line2D{st.v1, st.v2};
+            const Line2D line2 = Line2D{st.v2, st.v0};
             DrawLine(surface, line0, mapped_color);
             DrawLine(surface, line1, mapped_color);
             DrawLine(surface, line2, mapped_color);
@@ -366,12 +362,10 @@ void DrawMesh(ThreadPool& thread_pool, SDL_Surface *surface, const Viewport& vie
         } else {
             const Color wireframe_color = Color{255, 0, 0};
             const auto mapped_color = SDL_MapRGB(surface->format, wireframe_color.red, wireframe_color.green, wireframe_color.blue);
-            const Point2D v0 = viewport.project_to_surface(surface, triangle.v0).round();
-            const Point2D v1 = viewport.project_to_surface(surface, triangle.v1).round();
-            const Point2D v2 = viewport.project_to_surface(surface, triangle.v2).round();
-            const Line2D line0 = Line2D{v0, v1};
-            const Line2D line1 = Line2D{v1, v2};
-            const Line2D line2 = Line2D{v2, v0};
+           const ScreenTriangle st = triangle.project_to_surface(surface, viewport);
+            const Line2D line0 = Line2D{st.v0, st.v1};
+            const Line2D line1 = Line2D{st.v1, st.v2};
+            const Line2D line2 = Line2D{st.v2, st.v0};
             DrawLineSingle(surface, line0, mapped_color);
             DrawLineSingle(surface, line1, mapped_color);
             DrawLineSingle(surface, line2, mapped_color);
