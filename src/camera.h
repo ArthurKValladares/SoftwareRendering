@@ -4,6 +4,6 @@
 #include "vector.h"
 
 struct Camera {
-    Point3D point;
-    Vec3D direction;
+    Point3D_f point;
+    Vec3D_f direction;
 };

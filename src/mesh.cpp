@@ -2,10 +2,10 @@
 
 #include "defs.h"
 
-Mesh Mesh::rotated(Point2D pivot, float angle) const {
+Mesh Mesh::rotated(Vec3D_f axis, float angle) const {
     Mesh new_mesh = *this;
     for (Triangle &triangle : new_mesh.triangles) {
-        triangle = triangle.rotated(pivot, angle);
+        triangle = triangle.rotated(axis, angle);
     }
     return new_mesh;
 }

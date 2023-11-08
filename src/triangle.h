@@ -5,12 +5,13 @@
 #include "color.h"
 #include "uv.h"
 #include "rect.h"
+#include "vector.h"
 
 // Assumes counter-clockwise winding order
 struct Triangle {
-    Point2D v0;
-    Point2D v1;
-    Point2D v2;
+    Point3D_f v0;
+    Point3D_f v1;
+    Point3D_f v2;
     Color c0;
     Color c1;
     Color c2;
@@ -18,7 +19,7 @@ struct Triangle {
     UV u1;
     UV u2;
     
-    Triangle rotated(Point2D pivot, float angle) const;
+    Triangle rotated(Vec3D_f axis, float angle) const;
     Rect2D bounding_box() const;
 };
 

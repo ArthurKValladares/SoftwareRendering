@@ -26,12 +26,16 @@ struct Point3D {
 struct Point2D_f {
     float x;
     float y;
+
+    Point2D round() const;
 };
 
 struct Point3D_f {
     float x;
     float y;
     float z;
+
+    Point3D round() const;
 };
 
 #endif

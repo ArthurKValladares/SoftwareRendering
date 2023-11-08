@@ -17,6 +17,7 @@
 #include "uv.h"
 #include "mesh.h"
 #include "line.h"
+#include "viewport.h"
 #include "ThreadPool.h"
 #include "SIMD/vec4f32.h"
 #include "SIMD/vec4i32.h"
@@ -100,7 +101,11 @@ void RenderPixels(SDL_Surface *surface, const Point2D &origin_point, Vec4i32 mas
     }
 }
 
-void DrawTriangle(ThreadPool& thread_pool, SDL_Surface *surface, const Triangle &triangle, const Texture &texture) {
+void DrawTriangle(ThreadPool& thread_pool, SDL_Surface *surface, const Viewport& viewport, const Triangle &triangle, const Texture &texture) {
+    const Point2D v0 = viewport.project_to_surface(surface, triangle.v0).round();
+    const Point2D v1 = viewport.project_to_surface(surface, triangle.v1).round();
+    const Point2D v2 = viewport.project_to_surface(surface, triangle.v2).round();
+
     const Rect2D bounding_box = ClipRect(surface->w, surface->h, triangle.bounding_box());
     const Point2D min_point = Point2D{bounding_box.minX, bounding_box.minY};
     
@@ -109,9 +114,9 @@ void DrawTriangle(ThreadPool& thread_pool, SDL_Surface *surface, const Triangle 
     const float c2_u = triangle.u2.u, c2_v = triangle.u2.v;
     
     EdgeFunction e01, e12, e20;
-    const Vec4i32 w0_init = e12.Init(triangle.v1, triangle.v2, min_point);
-    const Vec4i32 w1_init = e20.Init(triangle.v2, triangle.v0, min_point);
-    const Vec4i32 w2_init = e01.Init(triangle.v0, triangle.v1, min_point);
+    const Vec4i32 w0_init = e12.Init(v1, v2, min_point);
+    const Vec4i32 w1_init = e20.Init(v2, v0, min_point);
+    const Vec4i32 w2_init = e01.Init(v0, v1, min_point);
     
     for (int y = bounding_box.minY; y <= bounding_box.maxY; y += EdgeFunction::step_increment_y) {
         const Vec4i32 delta_y = Vec4i32(y - bounding_box.minY);
@@ -156,7 +161,11 @@ void DrawTriangle(ThreadPool& thread_pool, SDL_Surface *surface, const Triangle 
     thread_pool.Wait();
 }
 
-void DrawTriangleSingle(ThreadPool& thread_pool, SDL_Surface *surface, const Triangle &triangle, const Texture &texture) {
+void DrawTriangleSingle(ThreadPool& thread_pool, SDL_Surface *surface, const Viewport& viewport, const Triangle &triangle, const Texture &texture) {
+    const Point2D v0 = viewport.project_to_surface(surface, triangle.v0).round();
+    const Point2D v1 = viewport.project_to_surface(surface, triangle.v1).round();
+    const Point2D v2 = viewport.project_to_surface(surface, triangle.v2).round();
+
     const Rect2D bounding_box = ClipRect(surface->w, surface->h, triangle.bounding_box());
     const Point2D min_point = Point2D{bounding_box.minX, bounding_box.minY};
     
@@ -171,9 +180,9 @@ void DrawTriangleSingle(ThreadPool& thread_pool, SDL_Surface *surface, const Tri
     const auto edge_function = [](const Point2D& a, const Point2D& b, const Point2D& c) {
         return (b.x-a.x)*(c.y-a.y) - (b.y-a.y)*(c.x-a.x);
     };
-    const i32 w0_init = edge_function(triangle.v1, triangle.v2, min_point);
-    const i32 w1_init = edge_function(triangle.v2, triangle.v0, min_point);
-    const i32 w2_init = edge_function(triangle.v0, triangle.v1, min_point);
+    const i32 w0_init = edge_function(v1, v2, min_point);
+    const i32 w1_init = edge_function(v2, v0, min_point);
+    const i32 w2_init = edge_function(v0, v1, min_point);
     
     for (int y = bounding_box.minY; y <= bounding_box.maxY; y += 1) {
         const i32 delta_y = y - bounding_box.minY;
@@ -330,30 +339,36 @@ void DrawLineSingle(SDL_Surface *surface, const Line2D &line, const Uint32 mappe
     }
 }
 
-void DrawMesh(ThreadPool& thread_pool, SDL_Surface *surface, const Mesh &mesh, bool wireframe) {
+void DrawMesh(ThreadPool& thread_pool, SDL_Surface *surface, const Viewport& viewport, const Mesh &mesh, bool wireframe) {
     for (const Triangle &triangle : mesh.triangles) {
 #if SIMD
         if (!wireframe) {
-            DrawTriangle(thread_pool, surface, triangle, mesh.texture);
+            DrawTriangle(thread_pool, surface, viewport, triangle, mesh.texture);
         } else {
             const Color wireframe_color = Color{255, 0, 0};
             const auto mapped_color = SDL_MapRGB(surface->format, wireframe_color.red, wireframe_color.green, wireframe_color.blue);
-            const Line2D line0 = Line2D{triangle.v0, triangle.v1};
-            const Line2D line1 = Line2D{triangle.v1, triangle.v2};
-            const Line2D line2 = Line2D{triangle.v2, triangle.v0};
+            const Point2D v0 = viewport.project_to_surface(surface, triangle.v0).round();
+            const Point2D v1 = viewport.project_to_surface(surface, triangle.v1).round();
+            const Point2D v2 = viewport.project_to_surface(surface, triangle.v2).round();
+            const Line2D line0 = Line2D{v0, v1};
+            const Line2D line1 = Line2D{v1, v2};
+            const Line2D line2 = Line2D{v2, v0};
             DrawLine(surface, line0, mapped_color);
             DrawLine(surface, line1, mapped_color);
             DrawLine(surface, line2, mapped_color);
         }
 #else
         if (!wireframe) {
-            DrawTriangleSingle(thread_pool, surface, triangle, mesh.texture);
+            DrawTriangleSingle(thread_pool, surface, viewport, triangle, mesh.texture);
         } else {
             const Color wireframe_color = Color{255, 0, 0};
             const auto mapped_color = SDL_MapRGB(surface->format, wireframe_color.red, wireframe_color.green, wireframe_color.blue);
-            const Line2D line0 = Line2D{triangle.v0, triangle.v1};
-            const Line2D line1 = Line2D{triangle.v1, triangle.v2};
-            const Line2D line2 = Line2D{triangle.v2, triangle.v0};
+            const Point2D v0 = viewport.project_to_surface(surface, triangle.v0).round();
+            const Point2D v1 = viewport.project_to_surface(surface, triangle.v1).round();
+            const Point2D v2 = viewport.project_to_surface(surface, triangle.v2).round();
+            const Line2D line0 = Line2D{v0, v1};
+            const Line2D line1 = Line2D{v1, v2};
+            const Line2D line2 = Line2D{v2, v0};
             DrawLineSingle(surface, line0, mapped_color);
             DrawLineSingle(surface, line1, mapped_color);
             DrawLineSingle(surface, line2, mapped_color);
@@ -384,18 +399,20 @@ int main(int argc, char *argv[]) {
     SDL_Surface *surface = SDL_GetWindowSurface(window);
     assert(surface->format->BytesPerPixel ==
            4);   // Not supporting non-32-bit pixel formats
+
     Texture texture = Texture("../assets/test.jpg", surface);
 
-    const float triangle_margin = 0.2f;
-    const int margin_w = round(surface->w * triangle_margin);
-    const int margin_h = round(surface->h * triangle_margin);
+    const Viewport viewport{SCREEN_WIDTH, SCREEN_HEIGHT, 1.0};
 
+    const float triangle_margin = 0.2f;
+    const float margin_w = surface->w * triangle_margin;
+    const float margin_h = surface->h * triangle_margin;
     const Mesh mesh = {
         {
             Triangle{
-                Point2D{margin_w, margin_h},
-                Point2D{surface->w - margin_w, margin_h},
-                Point2D{surface->w - margin_w, surface->h - margin_h},
+                Point3D_f{margin_w, margin_h, 1.0},
+                Point3D_f{surface->w - margin_w, margin_h, 1.0},
+                Point3D_f{surface->w - margin_w, surface->h - margin_h, 1.0},
                 Color{255, 0, 0},
                 Color{0, 0, 0},
                 Color{0, 255, 0},
@@ -405,9 +422,9 @@ int main(int argc, char *argv[]) {
                 
             },
             Triangle{
-                Point2D{margin_w, margin_h},
-                Point2D{surface->w - margin_w, surface->h - margin_h},
-                Point2D{margin_w, surface->h - margin_h},
+                Point3D_f{margin_w, margin_h, 1.0},
+                Point3D_f{surface->w - margin_w, surface->h - margin_h, 1.0},
+                Point3D_f{margin_w, surface->h - margin_h, 1.0},
                 Color{255, 0, 0},
                 Color{0, 255, 0},
                 Color{255, 255, 0},
@@ -470,10 +487,8 @@ int main(int argc, char *argv[]) {
         ClearSurfaceSingle(thread_pool, surface, Color{100, 100, 100});
 #endif
         
-        const Mesh rotated_mesh =
-            mesh.rotated(Point2D{surface->w / 2, surface->h / 2},
-                       rotate_angle);
-        DrawMesh(thread_pool, surface, rotated_mesh, wireframe);
+        const Mesh rotated_mesh = mesh.rotated(Vec3D_f{0.0, 1.0, 0.0}, rotate_angle);
+        DrawMesh(thread_pool, surface, viewport, rotated_mesh, wireframe);
         
         const std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
         printf("dt: %ld ms\n", (long) std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count());

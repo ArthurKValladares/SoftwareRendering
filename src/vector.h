@@ -1,12 +1,12 @@
 #pragma once
 
-struct Vec2D {
-    int x;
-    int y;
+struct Vec2D_f {
+    float x;
+    float y;
 };
 
-struct Vec3D {
-    int x;
-    int y;
-    int z;
+struct Vec3D_f {
+    float x;
+    float y;
+    float z;
 };

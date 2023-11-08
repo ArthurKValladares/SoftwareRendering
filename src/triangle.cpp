@@ -3,18 +3,9 @@
 #include "SIMD/vec4i32.h"
 #include "edge_function.h"
 
-Triangle Triangle::rotated(Point2D pivot, float angle) const {
-    return Triangle{
-        rotate_point(v0, pivot, angle),
-        rotate_point(v1, pivot, angle),
-        rotate_point(v2, pivot, angle),
-        c0,
-        c1,
-        c2,
-        u0,
-        u1,
-        u2,
-    };
+Triangle Triangle::rotated(Vec3D_f axis, float angle) const {
+    // TODO: Actually implement rotation function
+    return *this;
 }
 
 Rect2D Triangle::bounding_box() const {

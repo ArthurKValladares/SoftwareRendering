@@ -28,3 +28,18 @@ Point2D rotate_point(Point2D point, Point2D pivot, float angle) {
 
     return Point2D{(int) round(new_x) + pivot.x, (int) round(new_y) + pivot.y};
 }
+
+Point2D Point2D_f::round() const {
+    return Point2D {
+        (int) ::round(this->x),
+        (int) ::round(this->y)
+    };
+}
+
+Point3D Point3D_f::round() const {
+    return Point3D {
+        (int) ::round(this->x),
+        (int) ::round(this->y),
+        (int) ::round(this->z)
+    };
+}
