@@ -2,7 +2,7 @@
 #define edge_function_h
 
 #include "defs.h"
-#include "SIMD/vec4i32.h"
+#include "math/vec4i32.h"
 #include "point.h"
 
 struct EdgeFunction {

@@ -27,9 +27,9 @@ add_executable(${PROJECT_NAME}
     ${project_root}/src/camera.cpp
     ${project_root}/src/vertex.cpp
     ${project_root}/src/main.cpp
-    # SIMD
-    ${project_root}/src/SIMD/vec4f32.cpp
-    ${project_root}/src/SIMD/vec4i32.cpp
+    # math
+    ${project_root}/src/math/vec4f32.cpp
+    ${project_root}/src/math/vec4i32.cpp
     # ConcurrencyPrimitives
     ${project_root}/vendor/ConcurrencyPrimitives/src/ThreadPool.cpp
 )

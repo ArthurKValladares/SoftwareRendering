@@ -18,8 +18,8 @@
 #include "mesh.h"
 #include "line.h"
 #include "ThreadPool.h"
-#include "SIMD/vec4f32.h"
-#include "SIMD/vec4i32.h"
+#include "math/vec4f32.h"
+#include "math/vec4i32.h"
 
 #define SIMD true
 #define SCREEN_WIDTH  1200
