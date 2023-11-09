@@ -166,7 +166,6 @@ void DrawTriangleSingle(ThreadPool& thread_pool, SDL_Surface *surface, const Vie
     const Rect2D bounding_box = ClipRect(surface->w, surface->h, st.bounding_box());
     const Point2D min_point = Point2D{bounding_box.minX, bounding_box.minY};
     
-    // TODO: I need to `project` this as well
     const i32 A01  = st.v0.y - st.v1.y;
     const i32 A12  = st.v1.y - st.v2.y;
     const i32 A20  = st.v2.y - st.v0.y;
@@ -401,33 +400,48 @@ int main(int argc, char *argv[]) {
 
     const Viewport viewport{SCREEN_WIDTH, SCREEN_HEIGHT, 1.0};
 
-    const float triangle_margin = 0.2f;
-    const float margin_w = surface->w * triangle_margin;
-    const float margin_h = surface->h * triangle_margin;
+    const float cube_size = SCREEN_HEIGHT * 0.7;
     const Mesh mesh = {
         {
-            // Top-left
+            // Front-face
             Vertex {
-                Point3D_f{margin_w, margin_h, 1.0}, 
+                Point3D_f{0.0, 0.0, 1.0}, 
                 UV{1.0, 0.0},
             }, 
-            // Top-right
             Vertex {
-                Point3D_f{surface->w - margin_w, margin_h, 1.0},
+                Point3D_f{cube_size, 0.0, 1.0},
                 UV{0.0, 0.0},
             },
-            // Bottom-right
             Vertex{
-                Point3D_f{surface->w - margin_w, surface->h - margin_h, 1.0},
+                Point3D_f{cube_size, cube_size, 1.0},
                 UV{0.0, 1.0},
             }, 
-            // Bottom-left
             Vertex{
-                Point3D_f{margin_w, surface->h - margin_h, 1.0},
+                Point3D_f{0.0, cube_size, 1.0},
                 UV{1.0, 1.0}
-            }
+            },
+            // Back-face
+            Vertex {
+                Point3D_f{0.0, 0.0, 2.0}, 
+                UV{1.0, 0.0},
+            }, 
+            Vertex {
+                Point3D_f{cube_size, 0.0, 2.0},
+                UV{0.0, 0.0},
+            },
+            Vertex{
+                Point3D_f{cube_size, cube_size, 2.0},
+                UV{0.0, 1.0},
+            }, 
+            Vertex{
+                Point3D_f{0.0, cube_size, 2.0},
+                UV{1.0, 1.0}
+            },
         },
-        {0, 1, 2, 2, 3, 0},
+        {
+            0, 1, 2, 2, 3, 0,
+            4, 5, 6, 6, 7, 4,
+        },
         texture
     };
 
