@@ -17,7 +17,6 @@
 #include "uv.h"
 #include "mesh.h"
 #include "line.h"
-#include "viewport.h"
 #include "ThreadPool.h"
 #include "SIMD/vec4f32.h"
 #include "SIMD/vec4i32.h"
@@ -40,6 +39,22 @@ Uint32* GetPixel(SDL_Surface *surface, u32 offset) {
 
 Uint32* GetPixel(SDL_Surface* surface, Point2D point) {
     return GetPixel(surface, GetPixelOffset(surface, point));
+}
+
+Point2D hacky_project_to_surface(SDL_Surface* surface, Point3D_f point) {
+    const u32 w = surface->w;
+    const u32 h = surface->h;
+    const float sx = (point.x + 1.0) / (2.0) * w;
+    const float sy = (point.y + 1.0) / (2.0) * h;
+    return Point2D{(int) round(sx), (int) round(sy)};
+}
+
+Rect2D bounding_box(Point2D p0, Point2D p1, Point2D p2) {
+    const int minY = MIN3(p0.y, p1.y, p2.y);
+    const int minX = MIN3(p0.x, p1.x, p2.x);
+    const int maxX = MAX3(p0.x, p1.x, p2.x);
+    const int maxY = MAX3(p0.y, p1.y, p2.y);
+    return Rect2D{minX, minY, maxX, maxY};
 }
 
 void ClearSurface(ThreadPool& thread_pool, SDL_Surface *surface, Color color) {
@@ -101,10 +116,12 @@ void RenderPixels(SDL_Surface *surface, const Point2D &origin_point, Vec4i32 mas
     }
 }
 
-void DrawTriangle(ThreadPool& thread_pool, SDL_Surface *surface, const Viewport& viewport, const Triangle &triangle, const Texture &texture) {
-    const ScreenTriangle st = triangle.project_to_surface(surface, viewport);
+void DrawTriangle(ThreadPool& thread_pool, SDL_Surface *surface, const Triangle &triangle, const Texture &texture) {
+    const Point2D sv0 = hacky_project_to_surface(surface, triangle.v0.p);
+    const Point2D sv1 = hacky_project_to_surface(surface, triangle.v1.p);
+    const Point2D sv2 = hacky_project_to_surface(surface, triangle.v2.p);
 
-    const Rect2D bounding_box = ClipRect(surface->w, surface->h, st.bounding_box());
+    const Rect2D bounding_box = ClipRect(surface->w, surface->h, ::bounding_box(sv0, sv1, sv2));
     const Point2D min_point = Point2D{bounding_box.minX, bounding_box.minY};
     
     // TODO: I need to `project` this as well
@@ -113,9 +130,9 @@ void DrawTriangle(ThreadPool& thread_pool, SDL_Surface *surface, const Viewport&
     const float c2_u = triangle.v2.uv.u, c2_v = triangle.v2.uv.v;
     
     EdgeFunction e01, e12, e20;
-    const Vec4i32 w0_init = e12.Init(st.v1, st.v2, min_point);
-    const Vec4i32 w1_init = e20.Init(st.v2, st.v0, min_point);
-    const Vec4i32 w2_init = e01.Init(st.v0, st.v1, min_point);
+    const Vec4i32 w0_init = e12.Init(sv1, sv2, min_point);
+    const Vec4i32 w1_init = e20.Init(sv2, sv0, min_point);
+    const Vec4i32 w2_init = e01.Init(sv0, sv1, min_point);
     
     for (int y = bounding_box.minY; y <= bounding_box.maxY; y += EdgeFunction::step_increment_y) {
         const Vec4i32 delta_y = Vec4i32(y - bounding_box.minY);
@@ -160,26 +177,28 @@ void DrawTriangle(ThreadPool& thread_pool, SDL_Surface *surface, const Viewport&
     thread_pool.Wait();
 }
 
-void DrawTriangleSingle(ThreadPool& thread_pool, SDL_Surface *surface, const Viewport& viewport, const Triangle &triangle, const Texture &texture) {
-    const ScreenTriangle st = triangle.project_to_surface(surface, viewport);
+void DrawTriangleSingle(ThreadPool& thread_pool, SDL_Surface *surface, const Triangle &triangle, const Texture &texture) {
+    const Point2D sv0 = hacky_project_to_surface(surface, triangle.v0.p);
+    const Point2D sv1 = hacky_project_to_surface(surface, triangle.v1.p);
+    const Point2D sv2 = hacky_project_to_surface(surface, triangle.v2.p);
 
-    const Rect2D bounding_box = ClipRect(surface->w, surface->h, st.bounding_box());
+    const Rect2D bounding_box = ClipRect(surface->w, surface->h, ::bounding_box(sv0, sv1, sv2));
     const Point2D min_point = Point2D{bounding_box.minX, bounding_box.minY};
     
-    const i32 A01  = st.v0.y - st.v1.y;
-    const i32 A12  = st.v1.y - st.v2.y;
-    const i32 A20  = st.v2.y - st.v0.y;
+    const i32 A01  = sv0.y - sv1.y;
+    const i32 A12  = sv1.y - sv2.y;
+    const i32 A20  = sv2.y - sv0.y;
     
-    const i32 B01  = st.v1.x - st.v0.x;
-    const i32 B12  = st.v2.x - st.v1.x;
-    const i32 B20  = st.v0.x - st.v2.x;
+    const i32 B01  = sv1.x - sv0.x;
+    const i32 B12  = sv2.x - sv1.x;
+    const i32 B20  = sv0.x - sv2.x;
     
     const auto edge_function = [](const Point2D& a, const Point2D& b, const Point2D& c) {
         return (b.x-a.x)*(c.y-a.y) - (b.y-a.y)*(c.x-a.x);
     };
-    const i32 w0_init = edge_function(st.v1, st.v2, min_point);
-    const i32 w1_init = edge_function(st.v2, st.v0, min_point);
-    const i32 w2_init = edge_function(st.v0, st.v1, min_point);
+    const i32 w0_init = edge_function(sv1, sv2, min_point);
+    const i32 w1_init = edge_function(sv2, sv0, min_point);
+    const i32 w2_init = edge_function(sv0, sv1, min_point);
     
     for (int y = bounding_box.minY; y <= bounding_box.maxY; y += 1) {
         const i32 delta_y = y - bounding_box.minY;
@@ -331,7 +350,7 @@ void DrawLineSingle(SDL_Surface *surface, const Line2D &line, const Uint32 mappe
     }
 }
 
-void DrawMesh(ThreadPool& thread_pool, SDL_Surface *surface, const Viewport& viewport, const Mesh &mesh, bool wireframe) {
+void DrawMesh(ThreadPool& thread_pool, SDL_Surface *surface, const Mesh &mesh, bool wireframe) {
     for (int i = 0; i < mesh.indices.size(); i += 3) {
         const Vertex& v0 = mesh.vertices[mesh.indices[i]];
         const Vertex& v1 = mesh.vertices[mesh.indices[i + 1]];
@@ -343,28 +362,38 @@ void DrawMesh(ThreadPool& thread_pool, SDL_Surface *surface, const Viewport& vie
         };
 #if SIMD
         if (!wireframe) {
-            DrawTriangle(thread_pool, surface, viewport, triangle, mesh.texture);
+            DrawTriangle(thread_pool, surface, triangle, mesh.texture);
         } else {
             const Color wireframe_color = Color{255, 0, 0};
             const auto mapped_color = SDL_MapRGB(surface->format, wireframe_color.red, wireframe_color.green, wireframe_color.blue);
-            const ScreenTriangle st = triangle.project_to_surface(surface, viewport);
-            const Line2D line0 = Line2D{st.v0, st.v1};
-            const Line2D line1 = Line2D{st.v1, st.v2};
-            const Line2D line2 = Line2D{st.v2, st.v0};
+            
+            const Point2D sv0 = hacky_project_to_surface(surface, triangle.v0.p);
+            const Point2D sv1 = hacky_project_to_surface(surface, triangle.v1.p);
+            const Point2D sv2 = hacky_project_to_surface(surface, triangle.v2.p);
+
+            const Line2D line0 = Line2D{sv0, sv1};
+            const Line2D line1 = Line2D{sv1, sv2};
+            const Line2D line2 = Line2D{sv2, sv0};
+
             DrawLine(surface, line0, mapped_color);
             DrawLine(surface, line1, mapped_color);
             DrawLine(surface, line2, mapped_color);
         }
 #else
         if (!wireframe) {
-            DrawTriangleSingle(thread_pool, surface, viewport, triangle, mesh.texture);
+            DrawTriangleSingle(thread_pool, surface, triangle, mesh.texture);
         } else {
             const Color wireframe_color = Color{255, 0, 0};
             const auto mapped_color = SDL_MapRGB(surface->format, wireframe_color.red, wireframe_color.green, wireframe_color.blue);
-           const ScreenTriangle st = triangle.project_to_surface(surface, viewport);
-            const Line2D line0 = Line2D{st.v0, st.v1};
-            const Line2D line1 = Line2D{st.v1, st.v2};
-            const Line2D line2 = Line2D{st.v2, st.v0};
+            
+            const Point2D sv0 = hacky_project_to_surface(surface, triangle.v0.p);
+            const Point2D sv1 = hacky_project_to_surface(surface, triangle.v1.p);
+            const Point2D sv2 = hacky_project_to_surface(surface, triangle.v2.p);
+
+            const Line2D line0 = Line2D{sv0, sv1};
+            const Line2D line1 = Line2D{sv1, sv2};
+            const Line2D line2 = Line2D{sv2, sv0};
+
             DrawLineSingle(surface, line0, mapped_color);
             DrawLineSingle(surface, line1, mapped_color);
             DrawLineSingle(surface, line2, mapped_color);
@@ -398,49 +427,29 @@ int main(int argc, char *argv[]) {
 
     Texture texture = Texture("../assets/test.jpg", surface);
 
-    const Viewport viewport{SCREEN_WIDTH, SCREEN_HEIGHT, 1.0};
-
-    const float cube_size = SCREEN_HEIGHT * 0.7;
     const Mesh mesh = {
         {
             // Front-face
             Vertex {
-                Point3D_f{0.0, 0.0, 1.0}, 
+                Point3D_f{-0.5, -0.5, 1.0},
+                UV{0.0, 0.0}
+            }, 
+            Vertex {
+                Point3D_f{0.5, -0.5, 1.0},
                 UV{1.0, 0.0},
-            }, 
-            Vertex {
-                Point3D_f{cube_size, 0.0, 1.0},
-                UV{0.0, 0.0},
+
             },
             Vertex{
-                Point3D_f{cube_size, cube_size, 1.0},
+                Point3D_f{0.5, 0.5, 1.0},
+                UV{1.0, 1.0},
+            }, 
+            Vertex{
+                Point3D_f{-0.5, 0.5, 1.0},
                 UV{0.0, 1.0},
-            }, 
-            Vertex{
-                Point3D_f{0.0, cube_size, 1.0},
-                UV{1.0, 1.0}
-            },
-            // Back-face
-            Vertex {
-                Point3D_f{0.0, 0.0, 2.0}, 
-                UV{1.0, 0.0},
-            }, 
-            Vertex {
-                Point3D_f{cube_size, 0.0, 2.0},
-                UV{0.0, 0.0},
-            },
-            Vertex{
-                Point3D_f{cube_size, cube_size, 2.0},
-                UV{0.0, 1.0},
-            }, 
-            Vertex{
-                Point3D_f{0.0, cube_size, 2.0},
-                UV{1.0, 1.0}
             },
         },
         {
             0, 1, 2, 2, 3, 0,
-            4, 5, 6, 6, 7, 4,
         },
         texture
     };
@@ -497,7 +506,7 @@ int main(int argc, char *argv[]) {
         ClearSurfaceSingle(thread_pool, surface, Color{100, 100, 100});
 #endif
         
-        DrawMesh(thread_pool, surface, viewport, mesh, wireframe);
+        DrawMesh(thread_pool, surface, mesh, wireframe);
         
         const std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
         printf("dt: %ld ms\n", (long) std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count());
@@ -515,5 +524,5 @@ int main(int argc, char *argv[]) {
 }
 
 
-// TODO: Make it so that we use a clip-space coordinate system of: [-1,1][-1,1][0,1], with y up
 // TODO: Use a model-view-proj system to convert from world-space to clip space
+// TOOD: no-op thread pool (i.e single-threaded)
