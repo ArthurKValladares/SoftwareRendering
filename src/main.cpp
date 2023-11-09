@@ -513,3 +513,7 @@ int main(int argc, char *argv[]) {
     
     return 0;
 }
+
+
+// TODO: Make it so that we use a clip-space coordinate system of: [-1,1][-1,1][0,1], with y up
+// TODO: Use a model-view-proj system to convert from world-space to clip space
