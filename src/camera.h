@@ -2,8 +2,34 @@
 
 #include "point.h"
 #include "vector.h"
+#include "math/mat4f32.h"
+
+enum class CameraType {
+    Perspective,
+    Ortographic,
+};
+
+struct OrtographicCamera {
+    float x_min;
+    float x_max;
+    float y_min;
+    float y_max;
+    float z_min;
+    float z_max;
+};
+
+struct PerspectiveCamera {
+    // TODO
+};
 
 struct Camera {
-    Point3D_f point;
-    Vec3D_f direction;
+    static Camera orthographic(OrtographicCamera data);
+
+    Mat4f32 GetProjMatrix() const;
+
+    CameraType m_ty;
+    union {
+        OrtographicCamera m_orthographic;
+        PerspectiveCamera m_perspective;
+    };
 };

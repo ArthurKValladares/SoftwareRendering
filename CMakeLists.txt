@@ -30,6 +30,7 @@ add_executable(${PROJECT_NAME}
     # math
     ${project_root}/src/math/vec4f32.cpp
     ${project_root}/src/math/vec4i32.cpp
+    ${project_root}/src/math/mat4f32.cpp
     # ConcurrencyPrimitives
     ${project_root}/vendor/ConcurrencyPrimitives/src/ThreadPool.cpp
 )
