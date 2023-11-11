@@ -1,6 +1,7 @@
 #pragma once
 
 #include "defs.h"
+#include "point.h"
 #ifdef __ARM_NEON
 #include "sse2neon.h"
 #else
@@ -12,6 +13,7 @@ struct Vec4f32 {
     Vec4f32();
     Vec4f32(float val);
     Vec4f32(float a, float b, float c, float d);
+    Vec4f32(Point3D_f point, float d);
     Vec4f32(__m128 a);
     
     Vec4i32 to_int_nearest() const;

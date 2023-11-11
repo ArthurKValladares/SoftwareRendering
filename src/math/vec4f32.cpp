@@ -10,7 +10,10 @@ Vec4f32::Vec4f32(float val) {
     _mf = _mm_set1_ps(val);
 }
 Vec4f32::Vec4f32(float a, float b, float c, float d) {
-    _mf = _mm_set_ps(a, b, c, d);
+    _mf = _mm_set_ps(d, c, b, a);
+}
+Vec4f32::Vec4f32(Point3D_f p, float d) {
+    _mf = _mm_set_ps(d, p.z, p.y, p.x);
 }
 Vec4f32::Vec4f32(__m128 a) {
     _mf = std::move(a);

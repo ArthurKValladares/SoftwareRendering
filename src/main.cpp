@@ -17,6 +17,7 @@
 #include "uv.h"
 #include "mesh.h"
 #include "line.h"
+#include "camera.h"
 #include "ThreadPool.h"
 #include "math/vec4f32.h"
 #include "math/vec4i32.h"
@@ -116,10 +117,16 @@ void RenderPixels(SDL_Surface *surface, const Point2D &origin_point, Vec4i32 mas
     }
 }
 
-void DrawTriangle(ThreadPool& thread_pool, SDL_Surface *surface, const Triangle &triangle, const Texture &texture) {
-    const Point2D sv0 = hacky_project_to_surface(surface, triangle.v0.p);
-    const Point2D sv1 = hacky_project_to_surface(surface, triangle.v1.p);
-    const Point2D sv2 = hacky_project_to_surface(surface, triangle.v2.p);
+void DrawTriangle(ThreadPool& thread_pool, SDL_Surface *surface, const Camera& camera, const Triangle &triangle, const Texture &texture) {
+    const Mat4f32 proj_matrix = camera.GetProjMatrix();
+
+    const Vec4f32 pv0 = proj_matrix * Vec4f32(triangle.v0.p, 1.0);
+    const Vec4f32 pv1 = proj_matrix * Vec4f32(triangle.v1.p, 1.0);
+    const Vec4f32 pv2 = proj_matrix * Vec4f32(triangle.v2.p, 1.0);
+
+    const Point2D sv0 = hacky_project_to_surface(surface, Point3D_f(pv0.x(), pv0.y(), pv0.z()));
+    const Point2D sv1 = hacky_project_to_surface(surface, Point3D_f(pv1.x(), pv1.y(), pv1.z()));
+    const Point2D sv2 = hacky_project_to_surface(surface, Point3D_f(pv2.x(), pv2.y(), pv2.z()));
 
     const Rect2D bounding_box = ClipRect(surface->w, surface->h, ::bounding_box(sv0, sv1, sv2));
     const Point2D min_point = Point2D{bounding_box.minX, bounding_box.minY};
@@ -350,7 +357,7 @@ void DrawLineSingle(SDL_Surface *surface, const Line2D &line, const Uint32 mappe
     }
 }
 
-void DrawMesh(ThreadPool& thread_pool, SDL_Surface *surface, const Mesh &mesh, bool wireframe) {
+void DrawMesh(ThreadPool& thread_pool, SDL_Surface *surface, const Camera& camera, const Mesh &mesh, bool wireframe) {
     for (int i = 0; i < mesh.indices.size(); i += 3) {
         const Vertex& v0 = mesh.vertices[mesh.indices[i]];
         const Vertex& v1 = mesh.vertices[mesh.indices[i + 1]];
@@ -362,7 +369,7 @@ void DrawMesh(ThreadPool& thread_pool, SDL_Surface *surface, const Mesh &mesh, b
         };
 #if SIMD
         if (!wireframe) {
-            DrawTriangle(thread_pool, surface, triangle, mesh.texture);
+            DrawTriangle(thread_pool, surface, camera, triangle, mesh.texture);
         } else {
             const Color wireframe_color = Color{255, 0, 0};
             const auto mapped_color = SDL_MapRGB(surface->format, wireframe_color.red, wireframe_color.green, wireframe_color.blue);
@@ -473,6 +480,15 @@ int main(int argc, char *argv[]) {
         texture
     };
 
+    const Camera camera = Camera::orthographic(OrtographicCamera{
+        -1.0,
+        1.0,
+        -1.0,
+        1.0,
+        0.0,
+        1.0
+    });
+
     // Render loop
     // TODO: rotate stuff again
     const float rotate_delta = 0.03;
@@ -525,7 +541,7 @@ int main(int argc, char *argv[]) {
         ClearSurfaceSingle(thread_pool, surface, Color{100, 100, 100});
 #endif
         
-        DrawMesh(thread_pool, surface, mesh, wireframe);
+        DrawMesh(thread_pool, surface, camera, mesh, wireframe);
         
         const std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
         printf("dt: %ld ms\n", (long) std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count());

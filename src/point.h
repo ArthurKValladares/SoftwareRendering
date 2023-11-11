@@ -35,6 +35,11 @@ struct Point3D_f {
     float y;
     float z;
 
+    Point3D_f(float x, float y, float z) :
+        x(x),
+        y(y),
+        z(z)
+    {}
     Point3D round() const;
 };
 
