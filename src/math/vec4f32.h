@@ -26,6 +26,8 @@ struct Vec4f32 {
 	float z() const;
 	float w() const;
     
+    float dot(const Vec4f32& rhs) const;
+
     Vec4f32 operator+(const Vec4f32& rhs) const;
     Vec4f32 operator*(const Vec4f32& rhs) const;
     Vec4f32 operator/(const Vec4f32& rhs) const;

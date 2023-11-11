@@ -431,6 +431,24 @@ int main(int argc, char *argv[]) {
         {
             // Front-face
             Vertex {
+                Point3D_f{-0.5, -0.5, 0.0},
+                UV{0.0, 0.0}
+            }, 
+            Vertex {
+                Point3D_f{0.5, -0.5, 0.0},
+                UV{1.0, 0.0},
+
+            },
+            Vertex{
+                Point3D_f{0.5, 0.5, 0.0},
+                UV{1.0, 1.0},
+            }, 
+            Vertex{
+                Point3D_f{-0.5, 0.5, 0.0},
+                UV{0.0, 1.0},
+            },
+            // Back-face
+            Vertex {
                 Point3D_f{-0.5, -0.5, 1.0},
                 UV{0.0, 0.0}
             }, 
@@ -450,6 +468,7 @@ int main(int argc, char *argv[]) {
         },
         {
             0, 1, 2, 2, 3, 0,
+            4, 5, 6, 6, 7, 4,
         },
         texture
     };

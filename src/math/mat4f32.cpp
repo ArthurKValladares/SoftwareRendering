@@ -15,3 +15,7 @@ Mat4f32::Mat4f32(Vec4f32 r0, Vec4f32 r1, Vec4f32 r2, Vec4f32 r3) :
     r2(r2),
     r3(r3)
 {}
+
+Vec4f32 Mat4f32::operator*(const Vec4f32& rhs) const {
+    return Vec4f32(r0.dot(rhs), r1.dot(rhs), r2.dot(rhs), r3.dot(rhs));
+}

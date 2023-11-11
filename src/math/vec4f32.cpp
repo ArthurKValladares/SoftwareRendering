@@ -48,6 +48,11 @@ float Vec4f32::w() const {
     return _xyzw[3];
 }
 
+float Vec4f32::dot(const Vec4f32& rhs) const {
+    const Vec4f32 mul = *this * rhs;
+    return mul.x() + mul.y() + mul.z() + mul.w();
+}
+
 Vec4f32 Vec4f32::operator+(const Vec4f32& rhs) const {
     return Vec4f32(_mm_add_ps(_mf, rhs._mf));
 }
