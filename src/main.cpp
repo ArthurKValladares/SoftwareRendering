@@ -161,6 +161,7 @@ void DrawTriangle(ThreadPool& thread_pool, SDL_Surface *surface, const Camera& c
                 if (mask.any_gte(0)) {
                     const Vec4f32 sum = (w0 + w1 + w2).to_float();
                     
+                    // TODO: This division can be zero, avoid that
                     const Vec4f32 b0 = w0.to_float() / sum;
                     const Vec4f32 b1 = w1.to_float() / sum;
                     const Vec4f32 b2 = w2.to_float() / sum;
@@ -438,44 +439,46 @@ int main(int argc, char *argv[]) {
         {
             // Front-face
             Vertex {
-                Point3D_f{-0.5, -0.5, 0.0},
-                UV{0.0, 0.0}
+                Point3D_f{-0.5, 0.5, 0.0},
+                UV{0.0, 1.0}
             }, 
             Vertex {
-                Point3D_f{0.5, -0.5, 0.0},
-                UV{1.0, 0.0},
-
-            },
-            Vertex{
                 Point3D_f{0.5, 0.5, 0.0},
                 UV{1.0, 1.0},
+            },
+            Vertex{
+                Point3D_f{-0.5, -0.5, 0.0},
+                UV{0.0, 0.0},
             }, 
             Vertex{
-                Point3D_f{-0.5, 0.5, 0.0},
-                UV{0.0, 1.0},
+                Point3D_f{0.5, -0.5, 0.0},
+                UV{1.0, 1.0},
             },
             // Back-face
             Vertex {
-                Point3D_f{-0.5, -0.5, 1.0},
-                UV{0.0, 0.0}
-            }, 
-            Vertex {
-                Point3D_f{0.5, -0.5, 1.0},
-                UV{1.0, 0.0},
-
+                Point3D_f{-0.5, 0.5, 1.0},
+                UV{0.0, 1.0}
             },
-            Vertex{
+            Vertex {
                 Point3D_f{0.5, 0.5, 1.0},
                 UV{1.0, 1.0},
-            }, 
+            },
             Vertex{
-                Point3D_f{-0.5, 0.5, 1.0},
-                UV{0.0, 1.0},
+                Point3D_f{-0.5, -0.5, 1.0},
+                UV{0.0, 0.0},
+            },
+            Vertex{
+                Point3D_f{0.5, -0.5, 1.0},
+                UV{1.0, 0.0},
             },
         },
         {
-            0, 1, 2, 2, 3, 0,
-            4, 5, 6, 6, 7, 4,
+            0, 1, 2, 2, 1, 3,
+            4, 0, 6, 6, 0, 2,
+            7, 5, 6, 6, 5, 4,
+            3, 1, 7, 7, 1, 5,
+            4, 5, 0, 0, 5, 1,
+            3, 7, 2, 2, 7, 6
         },
         texture
     };
