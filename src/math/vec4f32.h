@@ -30,8 +30,6 @@ struct Vec4f32 {
     
     float dot(const Vec4f32& rhs) const;
 
-    bool operator==(Vec4f32 const& rhs) const;
-
     Vec4f32 operator+(const Vec4f32& rhs) const;
     Vec4f32 operator*(const Vec4f32& rhs) const;
     Vec4f32 operator/(const Vec4f32& rhs) const;

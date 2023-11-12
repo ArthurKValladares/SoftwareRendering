@@ -18,6 +18,7 @@
 #include "mesh.h"
 #include "line.h"
 #include "camera.h"
+#include "transform.h"
 #include "ThreadPool.h"
 #include "math/vec4f32.h"
 #include "math/vec4i32.h"
@@ -25,6 +26,10 @@
 #define SIMD true
 #define SCREEN_WIDTH  1200
 #define SCREEN_HEIGHT 800
+
+namespace {
+    float rotate_angle = 0.0;
+};
 
 Vec4i32 GetPixelOffsets(SDL_Surface* surface, Vec4i32 xs, Vec4i32 ys) {
     return ys * Vec4i32(surface->pitch) + xs * Vec4i32(surface->format->BytesPerPixel);
@@ -119,10 +124,11 @@ void RenderPixels(SDL_Surface *surface, const Point2D &origin_point, Vec4i32 mas
 
 void DrawTriangle(ThreadPool& thread_pool, SDL_Surface *surface, const Camera& camera, const Triangle &triangle, const Texture &texture) {
     const Mat4f32 proj_matrix = camera.GetProjMatrix();
+    const Mat4f32 model_matrix = rotate_matrix(Vec3D_f{ 1.0, 1.0, 0 }, rotate_angle);
 
-    const Vec4f32 pv0 = proj_matrix * Vec4f32(triangle.v0.p, 1.0);
-    const Vec4f32 pv1 = proj_matrix * Vec4f32(triangle.v1.p, 1.0);
-    const Vec4f32 pv2 = proj_matrix * Vec4f32(triangle.v2.p, 1.0);
+    const Vec4f32 pv0 = proj_matrix * (model_matrix * Vec4f32(triangle.v0.p, 1.0));
+    const Vec4f32 pv1 = proj_matrix * (model_matrix * Vec4f32(triangle.v1.p, 1.0));
+    const Vec4f32 pv2 = proj_matrix * (model_matrix * Vec4f32(triangle.v2.p, 1.0));
 
     const Point2D sv0 = hacky_project_to_surface(surface, Point3D_f(pv0.x(), pv0.y(), pv0.z()));
     const Point2D sv1 = hacky_project_to_surface(surface, Point3D_f(pv1.x(), pv1.y(), pv1.z()));
@@ -185,10 +191,17 @@ void DrawTriangle(ThreadPool& thread_pool, SDL_Surface *surface, const Camera& c
     thread_pool.Wait();
 }
 
-void DrawTriangleSingle(ThreadPool& thread_pool, SDL_Surface *surface, const Triangle &triangle, const Texture &texture) {
-    const Point2D sv0 = hacky_project_to_surface(surface, triangle.v0.p);
-    const Point2D sv1 = hacky_project_to_surface(surface, triangle.v1.p);
-    const Point2D sv2 = hacky_project_to_surface(surface, triangle.v2.p);
+void DrawTriangleSingle(ThreadPool& thread_pool, SDL_Surface *surface, const Camera& camera, const Triangle &triangle, const Texture &texture) {
+    const Mat4f32 proj_matrix = camera.GetProjMatrix();
+    const Mat4f32 model_matrix = rotate_matrix(Vec3D_f{ 1.0, 1.0, 0 }, rotate_angle);
+
+    const Vec4f32 pv0 = proj_matrix * (model_matrix * Vec4f32(triangle.v0.p, 1.0));
+    const Vec4f32 pv1 = proj_matrix * (model_matrix * Vec4f32(triangle.v1.p, 1.0));
+    const Vec4f32 pv2 = proj_matrix * (model_matrix * Vec4f32(triangle.v2.p, 1.0));
+
+    const Point2D sv0 = hacky_project_to_surface(surface, Point3D_f(pv0.x(), pv0.y(), pv0.z()));
+    const Point2D sv1 = hacky_project_to_surface(surface, Point3D_f(pv1.x(), pv1.y(), pv1.z()));
+    const Point2D sv2 = hacky_project_to_surface(surface, Point3D_f(pv2.x(), pv2.y(), pv2.z()));
 
     const Rect2D bounding_box = ClipRect(surface->w, surface->h, ::bounding_box(sv0, sv1, sv2));
     const Point2D min_point = Point2D{bounding_box.minX, bounding_box.minY};
@@ -375,9 +388,17 @@ void DrawMesh(ThreadPool& thread_pool, SDL_Surface *surface, const Camera& camer
             const Color wireframe_color = Color{255, 0, 0};
             const auto mapped_color = SDL_MapRGB(surface->format, wireframe_color.red, wireframe_color.green, wireframe_color.blue);
             
-            const Point2D sv0 = hacky_project_to_surface(surface, triangle.v0.p);
-            const Point2D sv1 = hacky_project_to_surface(surface, triangle.v1.p);
-            const Point2D sv2 = hacky_project_to_surface(surface, triangle.v2.p);
+            // TODO: gotta abstract this
+            const Mat4f32 proj_matrix = camera.GetProjMatrix();
+            const Mat4f32 model_matrix = rotate_matrix(Vec3D_f{ 1.0, 1.0, 0 }, rotate_angle);
+
+            const Vec4f32 pv0 = proj_matrix * (model_matrix * Vec4f32(triangle.v0.p, 1.0));
+            const Vec4f32 pv1 = proj_matrix * (model_matrix * Vec4f32(triangle.v1.p, 1.0));
+            const Vec4f32 pv2 = proj_matrix * (model_matrix * Vec4f32(triangle.v2.p, 1.0));
+
+            const Point2D sv0 = hacky_project_to_surface(surface, Point3D_f(pv0.x(), pv0.y(), pv0.z()));
+            const Point2D sv1 = hacky_project_to_surface(surface, Point3D_f(pv1.x(), pv1.y(), pv1.z()));
+            const Point2D sv2 = hacky_project_to_surface(surface, Point3D_f(pv2.x(), pv2.y(), pv2.z()));
 
             const Line2D line0 = Line2D{sv0, sv1};
             const Line2D line1 = Line2D{sv1, sv2};
@@ -389,18 +410,25 @@ void DrawMesh(ThreadPool& thread_pool, SDL_Surface *surface, const Camera& camer
         }
 #else
         if (!wireframe) {
-            DrawTriangleSingle(thread_pool, surface, triangle, mesh.texture);
+            DrawTriangleSingle(thread_pool, surface, camera, triangle, mesh.texture);
         } else {
             const Color wireframe_color = Color{255, 0, 0};
             const auto mapped_color = SDL_MapRGB(surface->format, wireframe_color.red, wireframe_color.green, wireframe_color.blue);
             
-            const Point2D sv0 = hacky_project_to_surface(surface, triangle.v0.p);
-            const Point2D sv1 = hacky_project_to_surface(surface, triangle.v1.p);
-            const Point2D sv2 = hacky_project_to_surface(surface, triangle.v2.p);
+            const Mat4f32 proj_matrix = camera.GetProjMatrix();
+            const Mat4f32 model_matrix = rotate_matrix(Vec3D_f{ 1.0, 1.0, 0 }, rotate_angle);
 
-            const Line2D line0 = Line2D{sv0, sv1};
-            const Line2D line1 = Line2D{sv1, sv2};
-            const Line2D line2 = Line2D{sv2, sv0};
+            const Vec4f32 pv0 = proj_matrix * (model_matrix * Vec4f32(triangle.v0.p, 1.0));
+            const Vec4f32 pv1 = proj_matrix * (model_matrix * Vec4f32(triangle.v1.p, 1.0));
+            const Vec4f32 pv2 = proj_matrix * (model_matrix * Vec4f32(triangle.v2.p, 1.0));
+
+            const Point2D sv0 = hacky_project_to_surface(surface, Point3D_f(pv0.x(), pv0.y(), pv0.z()));
+            const Point2D sv1 = hacky_project_to_surface(surface, Point3D_f(pv1.x(), pv1.y(), pv1.z()));
+            const Point2D sv2 = hacky_project_to_surface(surface, Point3D_f(pv2.x(), pv2.y(), pv2.z()));
+
+            const Line2D line0 = Line2D{ sv0, sv1 };
+            const Line2D line1 = Line2D{ sv1, sv2 };
+            const Line2D line2 = Line2D{ sv2, sv0 };
 
             DrawLineSingle(surface, line0, mapped_color);
             DrawLineSingle(surface, line1, mapped_color);
@@ -495,7 +523,6 @@ int main(int argc, char *argv[]) {
     // Render loop
     // TODO: rotate stuff again
     const float rotate_delta = 0.03;
-    float rotate_angle = 0.0;
     bool wireframe = false;
     bool quit = false;
     while (!quit) {

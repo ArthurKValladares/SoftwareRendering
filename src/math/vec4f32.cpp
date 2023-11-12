@@ -56,10 +56,6 @@ float Vec4f32::dot(const Vec4f32& rhs) const {
     return mul.x() + mul.y() + mul.z() + mul.w();
 }
 
-bool Vec4f32::operator==(Vec4f32 const& rhs) const { 
-    return _mf == rhs._mf; 
-}
-
 Vec4f32 Vec4f32::operator+(const Vec4f32& rhs) const {
     return Vec4f32(_mm_add_ps(_mf, rhs._mf));
 }
