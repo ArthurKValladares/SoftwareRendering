@@ -521,3 +521,6 @@ int main(int argc, char *argv[]) {
 }
 
 // TOOD: no-op thread pool (i.e single-threaded)
+// Test to see if point is inside triangle still failing some times, need to review winding order stuff
+// Depth buffer
+// Optimize how many pixels we try to draw per triangle
