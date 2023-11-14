@@ -23,12 +23,49 @@
 #include "math/vec4f32.h"
 #include "math/vec4i32.h"
 
+// TODO: Will bring back non-SIMD versions
 #define SIMD true
 #define SCREEN_WIDTH  1200
 #define SCREEN_HEIGHT 800
 
 namespace {
+    bool wireframe = false;
     float rotate_angle = 0.0;
+
+    struct ScreenTriangle {
+        Point2D p0;
+        Point2D p1;
+        Point2D p2;
+    };
+
+    Point2D hacky_project_to_surface(SDL_Surface* surface, Point3D_f point) {
+        const u32 w = surface->w;
+        const u32 h = surface->h;
+        const float sx = (point.x + 1.0) / (2.0) * w;
+        const float sy = (point.y + 1.0) / (2.0) * h;
+        return Point2D{ (int)round(sx), (int)round(sy) };
+    }
+
+    ScreenTriangle project_triangle_to_screen(SDL_Surface* surface, const Camera& camera, const Triangle& triangle) {
+        const Mat4f32 proj_matrix = camera.GetProjMatrix();
+        // TODO: Better View matrix stuff
+        const Mat4f32 model_matrix = rotate_matrix(Vec3D_f{ 1.0, 1.0, 0 }, rotate_angle);
+
+        const Vec4f32 pv0 = proj_matrix * (model_matrix * Vec4f32(triangle.v0.p, 1.0));
+        const Vec4f32 pv1 = proj_matrix * (model_matrix * Vec4f32(triangle.v1.p, 1.0));
+        const Vec4f32 pv2 = proj_matrix * (model_matrix * Vec4f32(triangle.v2.p, 1.0));
+
+        // TODO: Cleanup
+        const Point2D sv0 = hacky_project_to_surface(surface, Point3D_f(pv0.x(), pv0.y(), pv0.z()));
+        const Point2D sv1 = hacky_project_to_surface(surface, Point3D_f(pv1.x(), pv1.y(), pv1.z()));
+        const Point2D sv2 = hacky_project_to_surface(surface, Point3D_f(pv2.x(), pv2.y(), pv2.z()));
+
+        return ScreenTriangle{
+            sv0,
+            sv1,
+            sv2
+        };
+    }
 };
 
 Vec4i32 GetPixelOffsets(SDL_Surface* surface, Vec4i32 xs, Vec4i32 ys) {
@@ -45,14 +82,6 @@ Uint32* GetPixel(SDL_Surface *surface, u32 offset) {
 
 Uint32* GetPixel(SDL_Surface* surface, Point2D point) {
     return GetPixel(surface, GetPixelOffset(surface, point));
-}
-
-Point2D hacky_project_to_surface(SDL_Surface* surface, Point3D_f point) {
-    const u32 w = surface->w;
-    const u32 h = surface->h;
-    const float sx = (point.x + 1.0) / (2.0) * w;
-    const float sy = (point.y + 1.0) / (2.0) * h;
-    return Point2D{(int) round(sx), (int) round(sy)};
 }
 
 Rect2D bounding_box(Point2D p0, Point2D p1, Point2D p2) {
@@ -75,23 +104,6 @@ void ClearSurface(ThreadPool& thread_pool, SDL_Surface *surface, Color color) {
             Point2D point = Point2D{ 0, y };
             for (point.x = 0; point.x < width; point.x += EdgeFunction::step_increment_x) {
                 *(Vec4i32*)GetPixel(surface, point) = pixel_colors;
-            }
-        });
-    }
-    thread_pool.Wait();
-}
-
-void ClearSurfaceSingle(ThreadPool& thread_pool, SDL_Surface *surface, Color color) {
-    const int width = surface->w;
-    const int height = surface->h;
-    const Uint32 pixel_color =
-        SDL_MapRGB(surface->format, color.red, color.green, color.blue);
-
-    for (int y = 0; y < height; y += 1) {
-        thread_pool.Schedule([=]() {
-            Point2D point = { 0, y };
-            for (point.x = 0; point.x < width; point.x += 1) {
-                *GetPixel(surface, point) = pixel_color;
             }
         });
     }
@@ -123,29 +135,19 @@ void RenderPixels(SDL_Surface *surface, const Point2D &origin_point, Vec4i32 mas
 }
 
 void DrawTriangle(ThreadPool& thread_pool, SDL_Surface *surface, const Camera& camera, const Triangle &triangle, const Texture &texture) {
-    const Mat4f32 proj_matrix = camera.GetProjMatrix();
-    const Mat4f32 model_matrix = rotate_matrix(Vec3D_f{ 1.0, 1.0, 0 }, rotate_angle);
+    const ScreenTriangle st = project_triangle_to_screen(surface, camera, triangle);
 
-    const Vec4f32 pv0 = proj_matrix * (model_matrix * Vec4f32(triangle.v0.p, 1.0));
-    const Vec4f32 pv1 = proj_matrix * (model_matrix * Vec4f32(triangle.v1.p, 1.0));
-    const Vec4f32 pv2 = proj_matrix * (model_matrix * Vec4f32(triangle.v2.p, 1.0));
-
-    const Point2D sv0 = hacky_project_to_surface(surface, Point3D_f(pv0.x(), pv0.y(), pv0.z()));
-    const Point2D sv1 = hacky_project_to_surface(surface, Point3D_f(pv1.x(), pv1.y(), pv1.z()));
-    const Point2D sv2 = hacky_project_to_surface(surface, Point3D_f(pv2.x(), pv2.y(), pv2.z()));
-
-    const Rect2D bounding_box = ClipRect(surface->w, surface->h, ::bounding_box(sv0, sv1, sv2));
+    const Rect2D bounding_box = ClipRect(surface->w, surface->h, ::bounding_box(st.p0, st.p1, st.p2));
     const Point2D min_point = Point2D{bounding_box.minX, bounding_box.minY};
     
-    // TODO: I need to `project` this as well
     const float c0_u = triangle.v0.uv.u, c0_v = triangle.v0.uv.v;
     const float c1_u = triangle.v1.uv.u, c1_v = triangle.v1.uv.v;
     const float c2_u = triangle.v2.uv.u, c2_v = triangle.v2.uv.v;
     
     EdgeFunction e01, e12, e20;
-    const Vec4i32 w0_init = e12.Init(sv1, sv2, min_point);
-    const Vec4i32 w1_init = e20.Init(sv2, sv0, min_point);
-    const Vec4i32 w2_init = e01.Init(sv0, sv1, min_point);
+    const Vec4i32 w0_init = e12.Init(st.p1, st.p2, min_point);
+    const Vec4i32 w1_init = e20.Init(st.p2, st.p0, min_point);
+    const Vec4i32 w2_init = e01.Init(st.p0, st.p1, min_point);
     
     for (int y = bounding_box.minY; y <= bounding_box.maxY; y += EdgeFunction::step_increment_y) {
         const Vec4i32 delta_y = Vec4i32(y - bounding_box.minY);
@@ -191,101 +193,28 @@ void DrawTriangle(ThreadPool& thread_pool, SDL_Surface *surface, const Camera& c
     thread_pool.Wait();
 }
 
-void DrawTriangleSingle(ThreadPool& thread_pool, SDL_Surface *surface, const Camera& camera, const Triangle &triangle, const Texture &texture) {
-    const Mat4f32 proj_matrix = camera.GetProjMatrix();
-    const Mat4f32 model_matrix = rotate_matrix(Vec3D_f{ 1.0, 1.0, 0 }, rotate_angle);
-
-    const Vec4f32 pv0 = proj_matrix * (model_matrix * Vec4f32(triangle.v0.p, 1.0));
-    const Vec4f32 pv1 = proj_matrix * (model_matrix * Vec4f32(triangle.v1.p, 1.0));
-    const Vec4f32 pv2 = proj_matrix * (model_matrix * Vec4f32(triangle.v2.p, 1.0));
-
-    const Point2D sv0 = hacky_project_to_surface(surface, Point3D_f(pv0.x(), pv0.y(), pv0.z()));
-    const Point2D sv1 = hacky_project_to_surface(surface, Point3D_f(pv1.x(), pv1.y(), pv1.z()));
-    const Point2D sv2 = hacky_project_to_surface(surface, Point3D_f(pv2.x(), pv2.y(), pv2.z()));
-
-    const Rect2D bounding_box = ClipRect(surface->w, surface->h, ::bounding_box(sv0, sv1, sv2));
-    const Point2D min_point = Point2D{bounding_box.minX, bounding_box.minY};
-    
-    const i32 A01  = sv0.y - sv1.y;
-    const i32 A12  = sv1.y - sv2.y;
-    const i32 A20  = sv2.y - sv0.y;
-    
-    const i32 B01  = sv1.x - sv0.x;
-    const i32 B12  = sv2.x - sv1.x;
-    const i32 B20  = sv0.x - sv2.x;
-    
-    const auto edge_function = [](const Point2D& a, const Point2D& b, const Point2D& c) {
-        return (b.x-a.x)*(c.y-a.y) - (b.y-a.y)*(c.x-a.x);
-    };
-    const i32 w0_init = edge_function(sv1, sv2, min_point);
-    const i32 w1_init = edge_function(sv2, sv0, min_point);
-    const i32 w2_init = edge_function(sv0, sv1, min_point);
-    
-    for (int y = bounding_box.minY; y <= bounding_box.maxY; y += 1) {
-        const i32 delta_y = y - bounding_box.minY;
-        
-        const i32 w0_row = w0_init + B12 * delta_y;
-        const i32 w1_row = w1_init + B20 * delta_y;
-        const i32 w2_row = w2_init + B01 * delta_y;
-        
-        thread_pool.Schedule([=]() {
-            i32 w0 = w0_row;
-            i32 w1 = w1_row;
-            i32 w2 = w2_row;
-            
-            for (int x = bounding_box.minX; x <= bounding_box.maxX; x += 1) {
-                const i32 mask = w0 | w1 | w2;
-                
-                if (mask >= 0) {
-                    const i32 sum = w0 + w1 + w2;
-                    
-                    const float b0 = (float) w0 / sum;
-                    const float b1 = (float) w1 / sum;
-                    const float b2 = (float) w2 / sum;
-
-                    const UV u0 = triangle.v0.uv * b0;
-                    const UV u1 = triangle.v1.uv * b1;
-                    const UV u2 = triangle.v2.uv * b2;
-                    const UV uv = UV{
-                        u0.u + u1.u + u2.u,
-                        u0.v + u1.v + u2.v
-                    };
-                    
-                    const Point2D point = Point2D{x, y};
-                    *GetPixel(surface, point) = texture.get_pixel_uv(uv.u, uv.v);
-                }
-                
-                w0 += A12;
-                w1 += A20;
-                w2 += A01;
-            }
-        });
-    }
-    thread_pool.Wait();
-}
-
 // NOTE: I don't think this SIMD version is really worth it tbh,
 // but I wanted to do it for completeness sake
-void DrawLine(SDL_Surface *surface, const Line2D &line, const Uint32 mapped_color) {
+void DrawLine(SDL_Surface* surface, const Line2D& line, const Uint32 mapped_color) {
     // TODO: This is very sloppy, will write something real later
     // Since we know the slope, we can be smarter about breaking out early when we go out of bounds
-    // Maybe the testin can be SIMD too
+    // Maybe the testing can be SIMD too
 
     const auto is_in_bounds = [=](u32 x, u32 y) {
         return x > 0 && x < surface->w && y > 0 && y < surface->h;
     };
-    
+
     Point2D p0 = line.p0;
     Point2D p1 = line.p1;
-    
+
     const i32 dx = p1.x - p0.x;
     const i32 dy = p1.y - p0.y;
-    
+
     if (abs(dx) > abs(dy)) {
         if (p0.x > p1.x) {
             std::swap(p0, p1);
         }
-        const float slope = dy / (float) dx;
+        const float slope = dy / (float)dx;
 
         const u32 x_start = MAX(p0.x, 0);
         const u32 x_end = MIN(p1.x, surface->w);
@@ -307,11 +236,12 @@ void DrawLine(SDL_Surface *surface, const Line2D &line, const Uint32 mapped_colo
                 *GetPixel(surface, Point2D(xs.w(), ys.w())) = mapped_color;
             }
         }
-    } else {
+    }
+    else {
         if (p0.y > p1.y) {
             std::swap(p0, p1);
         }
-        const float slope = dx / (float) dy;
+        const float slope = dx / (float)dy;
 
         const u32 y_start = MAX(p0.y, 0);
         const u32 y_end = MIN(p1.y, surface->h);
@@ -336,42 +266,22 @@ void DrawLine(SDL_Surface *surface, const Line2D &line, const Uint32 mapped_colo
     }
 }
 
-void DrawLineSingle(SDL_Surface *surface, const Line2D &line, const Uint32 mapped_color) {
-    // TODO: This is very sloppy, will write something real later
-    Point2D p0 = line.p0;
-    Point2D p1 = line.p1;
-    
-    const i32 dx = p1.x - p0.x;
-    const i32 dy = p1.y - p0.y;
-    
-    if (abs(dx) > abs(dy)) {
-        if (p0.x > p1.x) {
-            std::swap(p0, p1);
-        }
-        
-        const float slope = dy / (float) dx;
-        float y = p0.y;
-        for (u32 x = p0.x; x <= p1.x; ++x) {
-            const Point2D point = Point2D(x, round(y));
-            *GetPixel(surface, point) = mapped_color;
-            y += slope;
-        }
-    } else {
-        if (p0.y > p1.y) {
-            std::swap(p0, p1);
-        }
-        
-        const float slope = dx / (float) dy;
-        float x = p0.x;
-        for (i32 y = p0.y; y <= p1.y; ++y) {
-            const Point2D point = Point2D(round(x), y);
-            *GetPixel(surface, point) = mapped_color;
-            x += slope;
-        }
-    }
+void DrawTriangleWireframe(SDL_Surface* surface, const Camera& camera, const Triangle& triangle) {
+    const ScreenTriangle st = project_triangle_to_screen(surface, camera, triangle);
+
+    const Line2D line0 = Line2D{ st.p0, st.p1 };
+    const Line2D line1 = Line2D{ st.p1, st.p2 };
+    const Line2D line2 = Line2D{ st.p2, st.p0 };
+
+    const Color wireframe_color = Color{ 255, 0, 0 };
+    const auto mapped_color = SDL_MapRGB(surface->format, wireframe_color.red, wireframe_color.green, wireframe_color.blue);
+
+    DrawLine(surface, line0, mapped_color);
+    DrawLine(surface, line1, mapped_color);
+    DrawLine(surface, line2, mapped_color);
 }
 
-void DrawMesh(ThreadPool& thread_pool, SDL_Surface *surface, const Camera& camera, const Mesh &mesh, bool wireframe) {
+void DrawMesh(ThreadPool& thread_pool, SDL_Surface *surface, const Camera& camera, const Mesh &mesh) {
     for (int i = 0; i < mesh.indices.size(); i += 3) {
         const Vertex& v0 = mesh.vertices[mesh.indices[i]];
         const Vertex& v1 = mesh.vertices[mesh.indices[i + 1]];
@@ -381,60 +291,11 @@ void DrawMesh(ThreadPool& thread_pool, SDL_Surface *surface, const Camera& camer
             v1,
             v2
         };
-#if SIMD
         if (!wireframe) {
             DrawTriangle(thread_pool, surface, camera, triangle, mesh.texture);
         } else {
-            const Color wireframe_color = Color{255, 0, 0};
-            const auto mapped_color = SDL_MapRGB(surface->format, wireframe_color.red, wireframe_color.green, wireframe_color.blue);
-            
-            // TODO: gotta abstract this
-            const Mat4f32 proj_matrix = camera.GetProjMatrix();
-            const Mat4f32 model_matrix = rotate_matrix(Vec3D_f{ 1.0, 1.0, 0 }, rotate_angle);
-
-            const Vec4f32 pv0 = proj_matrix * (model_matrix * Vec4f32(triangle.v0.p, 1.0));
-            const Vec4f32 pv1 = proj_matrix * (model_matrix * Vec4f32(triangle.v1.p, 1.0));
-            const Vec4f32 pv2 = proj_matrix * (model_matrix * Vec4f32(triangle.v2.p, 1.0));
-
-            const Point2D sv0 = hacky_project_to_surface(surface, Point3D_f(pv0.x(), pv0.y(), pv0.z()));
-            const Point2D sv1 = hacky_project_to_surface(surface, Point3D_f(pv1.x(), pv1.y(), pv1.z()));
-            const Point2D sv2 = hacky_project_to_surface(surface, Point3D_f(pv2.x(), pv2.y(), pv2.z()));
-
-            const Line2D line0 = Line2D{sv0, sv1};
-            const Line2D line1 = Line2D{sv1, sv2};
-            const Line2D line2 = Line2D{sv2, sv0};
-
-            DrawLine(surface, line0, mapped_color);
-            DrawLine(surface, line1, mapped_color);
-            DrawLine(surface, line2, mapped_color);
+            DrawTriangleWireframe(surface, camera, triangle);
         }
-#else
-        if (!wireframe) {
-            DrawTriangleSingle(thread_pool, surface, camera, triangle, mesh.texture);
-        } else {
-            const Color wireframe_color = Color{255, 0, 0};
-            const auto mapped_color = SDL_MapRGB(surface->format, wireframe_color.red, wireframe_color.green, wireframe_color.blue);
-            
-            const Mat4f32 proj_matrix = camera.GetProjMatrix();
-            const Mat4f32 model_matrix = rotate_matrix(Vec3D_f{ 1.0, 1.0, 0 }, rotate_angle);
-
-            const Vec4f32 pv0 = proj_matrix * (model_matrix * Vec4f32(triangle.v0.p, 1.0));
-            const Vec4f32 pv1 = proj_matrix * (model_matrix * Vec4f32(triangle.v1.p, 1.0));
-            const Vec4f32 pv2 = proj_matrix * (model_matrix * Vec4f32(triangle.v2.p, 1.0));
-
-            const Point2D sv0 = hacky_project_to_surface(surface, Point3D_f(pv0.x(), pv0.y(), pv0.z()));
-            const Point2D sv1 = hacky_project_to_surface(surface, Point3D_f(pv1.x(), pv1.y(), pv1.z()));
-            const Point2D sv2 = hacky_project_to_surface(surface, Point3D_f(pv2.x(), pv2.y(), pv2.z()));
-
-            const Line2D line0 = Line2D{ sv0, sv1 };
-            const Line2D line1 = Line2D{ sv1, sv2 };
-            const Line2D line2 = Line2D{ sv2, sv0 };
-
-            DrawLineSingle(surface, line0, mapped_color);
-            DrawLineSingle(surface, line1, mapped_color);
-            DrawLineSingle(surface, line2, mapped_color);
-        }
-#endif
     }
 }
 
@@ -591,7 +452,6 @@ int main(int argc, char *argv[]) {
     // Render loop
     // TODO: rotate stuff again
     const float rotate_delta = 0.03;
-    bool wireframe = false;
     bool quit = false;
     while (!quit) {
         SDL_Event e;
@@ -633,13 +493,8 @@ int main(int argc, char *argv[]) {
         
         const std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
         
-#if SIMD
         ClearSurface(thread_pool, surface, Color{100, 100, 100});
-#else
-        ClearSurfaceSingle(thread_pool, surface, Color{100, 100, 100});
-#endif
-        
-        DrawMesh(thread_pool, surface, camera, mesh, wireframe);
+        DrawMesh(thread_pool, surface, camera, mesh);
         
         const std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
         printf("dt: %ld ms\n", (long) std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count());
@@ -656,6 +511,4 @@ int main(int argc, char *argv[]) {
     return 0;
 }
 
-
-// TODO: Use a model-view-proj system to convert from world-space to clip space
 // TOOD: no-op thread pool (i.e single-threaded)
