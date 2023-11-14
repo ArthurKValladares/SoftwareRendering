@@ -39,6 +39,7 @@ bool Vec4i32::any_gte(i32 val) const {
            this->w() >= val;
 }
 
+
 Vec4i32 Vec4i32::operator+(const Vec4i32&rhs) const {
     return Vec4i32(_mm_add_epi32(_mi, rhs._mi));
 }

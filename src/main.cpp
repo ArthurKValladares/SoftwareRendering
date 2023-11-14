@@ -6,6 +6,7 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include <vector>
+#include <algorithm>
 
 #include "point.h"
 #include "texture.h"
@@ -66,6 +67,10 @@ namespace {
             sv2
         };
     }
+
+    float edge_function(const Point2D& a, const Point2D& b, const Point2D& c) {
+        return (b.x - a.x) * (c.y - a.y) - (b.y - a.y) * (c.x - a.x);
+    };
 };
 
 Vec4i32 GetPixelOffsets(SDL_Surface* surface, Vec4i32 xs, Vec4i32 ys) {
@@ -134,8 +139,13 @@ void RenderPixels(SDL_Surface *surface, const Point2D &origin_point, Vec4i32 mas
     }
 }
 
-void DrawTriangle(ThreadPool& thread_pool, SDL_Surface *surface, const Camera& camera, const Triangle &triangle, const Texture &texture) {
-    const ScreenTriangle st = project_triangle_to_screen(surface, camera, triangle);
+void DrawTriangle(ThreadPool& thread_pool, SDL_Surface* surface, const Camera& camera, const Triangle& triangle, const Texture& texture) {
+    ScreenTriangle st = project_triangle_to_screen(surface, camera, triangle);
+
+    // Early return if triangle has zero area
+    if (edge_function(st.p0, st.p1, st.p2) == 0.0) {
+        return;
+    }
 
     const Rect2D bounding_box = ClipRect(surface->w, surface->h, ::bounding_box(st.p0, st.p1, st.p2));
     const Point2D min_point = Point2D{bounding_box.minX, bounding_box.minY};
@@ -169,7 +179,6 @@ void DrawTriangle(ThreadPool& thread_pool, SDL_Surface *surface, const Camera& c
                 if (mask.any_gte(0)) {
                     const Vec4f32 sum = (w0 + w1 + w2).to_float();
                     
-                    // TODO: This division can be zero, avoid that
                     const Vec4f32 b0 = w0.to_float() / sum;
                     const Vec4f32 b1 = w1.to_float() / sum;
                     const Vec4f32 b2 = w2.to_float() / sum;
@@ -341,7 +350,7 @@ int main(int argc, char *argv[]) {
             }, 
             Vertex{
                 Point3D_f{0.5, -0.5, 0.0},
-                UV{1.0, 1.0},
+                UV{1.0, 0.0},
             },
             // Back-face
             Vertex {
@@ -430,7 +439,7 @@ int main(int argc, char *argv[]) {
             }
         },
         {
-            0,  1,   2,  2,  1,  3,
+            1,  0,   2,  1, 2, 3,
             4,  5,   6,  6,  5,  7,
             8,  9,  10, 10,  9, 11,
             12, 13, 14, 14, 13, 15,
