@@ -20,6 +20,7 @@
 #include "line.h"
 #include "camera.h"
 #include "transform.h"
+#include "depth_buffer.h"
 #include "ThreadPool.h"
 #include "math/vec4f32.h"
 #include "math/vec4i32.h"
@@ -139,7 +140,7 @@ void RenderPixels(SDL_Surface *surface, const Point2D &origin_point, Vec4i32 mas
     }
 }
 
-void DrawTriangle(ThreadPool& thread_pool, SDL_Surface* surface, const Camera& camera, const Triangle& triangle, const Texture& texture) {
+void DrawTriangle(ThreadPool& thread_pool, SDL_Surface* surface, DepthBuffer& depth_buffer, const Camera& camera, const Triangle& triangle, const Texture& texture) {
     ScreenTriangle st = project_triangle_to_screen(surface, camera, triangle);
 
     // Early return if triangle has zero area
@@ -290,7 +291,7 @@ void DrawTriangleWireframe(SDL_Surface* surface, const Camera& camera, const Tri
     DrawLine(surface, line2, mapped_color);
 }
 
-void DrawMesh(ThreadPool& thread_pool, SDL_Surface *surface, const Camera& camera, const Mesh &mesh) {
+void DrawMesh(ThreadPool& thread_pool, SDL_Surface *surface, DepthBuffer& depth_buffer, const Camera& camera, const Mesh &mesh) {
     for (int i = 0; i < mesh.indices.size(); i += 3) {
         const Vertex& v0 = mesh.vertices[mesh.indices[i]];
         const Vertex& v1 = mesh.vertices[mesh.indices[i + 1]];
@@ -301,7 +302,7 @@ void DrawMesh(ThreadPool& thread_pool, SDL_Surface *surface, const Camera& camer
             v2
         };
         if (!wireframe) {
-            DrawTriangle(thread_pool, surface, camera, triangle, mesh.texture);
+            DrawTriangle(thread_pool, surface, depth_buffer, camera, triangle, mesh.texture);
         } else {
             DrawTriangleWireframe(surface, camera, triangle);
         }
@@ -328,8 +329,9 @@ int main(int argc, char *argv[]) {
     ThreadPool thread_pool;
 
     SDL_Surface *surface = SDL_GetWindowSurface(window);
-    assert(surface->format->BytesPerPixel ==
-           4);   // Not supporting non-32-bit pixel formats
+    // Not supporting non-32-bit pixel formats
+    assert(surface->format->BytesPerPixel == 4);
+    DepthBuffer depth_buffer = DepthBuffer(surface->w, surface->h);
 
     Texture texture = Texture("../assets/test.jpg", surface);
 
@@ -440,8 +442,8 @@ int main(int argc, char *argv[]) {
         },
         {
             1,  0,   2,  1, 2, 3,
-            4,  5,   6,  6,  5,  7,
-            8,  9,  10, 10,  9, 11,
+            5,  4,   6,  5,  6,  7,
+            9,  8,  10, 9,  10, 11,
             12, 13, 14, 14, 13, 15,
             16, 17, 18, 18, 17, 19,
             20, 21, 22, 22, 21, 23
@@ -503,7 +505,7 @@ int main(int argc, char *argv[]) {
         const std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
         
         ClearSurface(thread_pool, surface, Color{100, 100, 100});
-        DrawMesh(thread_pool, surface, camera, mesh);
+        DrawMesh(thread_pool, surface, depth_buffer, camera, mesh);
         
         const std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
         printf("dt: %ld ms\n", (long) std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count());

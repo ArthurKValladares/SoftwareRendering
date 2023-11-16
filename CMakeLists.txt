@@ -28,6 +28,7 @@ add_executable(${PROJECT_NAME}
     ${project_root}/src/vertex.cpp
     ${project_root}/src/main.cpp
     ${project_root}/src/transform.cpp
+    ${project_root}/src/depth_buffer.cpp
     # math
     ${project_root}/src/math/vec4f32.cpp
     ${project_root}/src/math/vec4i32.cpp
