@@ -5,5 +5,12 @@
 struct DepthBuffer {
     DepthBuffer(u32 width, u32 height);
     
-    float* pixels;
+    float ValueAt(u32 width, u32 height) const;
+    void Write(u32 width, u32 height, float depth);
+
+    void Clear();
+
+    u32 m_width;
+    u32 m_height;
+    float* m_pixels;
 };

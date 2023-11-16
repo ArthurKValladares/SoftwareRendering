@@ -116,7 +116,7 @@ void ClearSurface(ThreadPool& thread_pool, SDL_Surface *surface, Color color) {
     thread_pool.Wait();
 }
 
-void RenderPixels(SDL_Surface *surface, const Point2D &origin_point, Vec4i32 mask, Vec4f32 u, Vec4f32 v, const Texture &texture) {
+void RenderPixels(SDL_Surface *surface, DepthBuffer& depth_buffer, const Point2D &origin_point, Vec4i32 mask, Vec4f32 u, Vec4f32 v, Vec4f32 d, const Texture &texture) {
     const Vec4i32 ui = (u.clamp(0.0, 1.0) * texture.m_width).to_int_nearest();
     const Vec4i32 vi = (v.clamp(0.0, 1.0) * texture.m_height).to_int_nearest();
     const Vec4i32 tex_idx = vi * Vec4i32(texture.m_width) + ui;
@@ -127,16 +127,28 @@ void RenderPixels(SDL_Surface *surface, const Point2D &origin_point, Vec4i32 mas
     const Vec4i32 pixel_offsets = GetPixelOffsets(surface, xs, ys);
 
     if (mask.x()) {
-        *GetPixel(surface, pixel_offsets.x()) = texture.get_pixel_from_idx(tex_idx.x());
+        if (d.x() > depth_buffer.ValueAt(xs.x(), ys.x())) {
+            *GetPixel(surface, pixel_offsets.x()) = texture.get_pixel_from_idx(tex_idx.x());
+            depth_buffer.Write(xs.x(), ys.x(), d.x());
+        }
     }
     if (mask.y()) {
-        *GetPixel(surface, pixel_offsets.y()) = texture.get_pixel_from_idx(tex_idx.y());;
+        if (d.y() > depth_buffer.ValueAt(xs.y(), ys.y())) {
+            *GetPixel(surface, pixel_offsets.y()) = texture.get_pixel_from_idx(tex_idx.y());
+            depth_buffer.Write(xs.y(), ys.y(), d.y());
+        }
     }
     if (mask.z()) {
-        *GetPixel(surface, pixel_offsets.z()) = texture.get_pixel_from_idx(tex_idx.z());;
+        if (d.z() > depth_buffer.ValueAt(xs.z(), ys.z())) {
+            *GetPixel(surface, pixel_offsets.z()) = texture.get_pixel_from_idx(tex_idx.z());
+            depth_buffer.Write(xs.z(), ys.z(), d.z());
+        }
     }
     if (mask.w()) {
-        *GetPixel(surface, pixel_offsets.w()) = texture.get_pixel_from_idx(tex_idx.w());
+        if (d.w() > depth_buffer.ValueAt(xs.w(), ys.w())) {
+            *GetPixel(surface, pixel_offsets.w()) = texture.get_pixel_from_idx(tex_idx.w());
+            depth_buffer.Write(xs.w(), ys.w(), d.w());
+        }
     }
 }
 
@@ -155,6 +167,10 @@ void DrawTriangle(ThreadPool& thread_pool, SDL_Surface* surface, DepthBuffer& de
     const float c1_u = triangle.v1.uv.u, c1_v = triangle.v1.uv.v;
     const float c2_u = triangle.v2.uv.u, c2_v = triangle.v2.uv.v;
     
+    const float c0_d = triangle.v0.p.z;
+    const float c1_d = triangle.v1.p.z;
+    const float c2_d = triangle.v2.p.z;
+
     EdgeFunction e01, e12, e20;
     const Vec4i32 w0_init = e12.Init(st.p1, st.p2, min_point);
     const Vec4i32 w1_init = e20.Init(st.p2, st.p0, min_point);
@@ -167,7 +183,7 @@ void DrawTriangle(ThreadPool& thread_pool, SDL_Surface* surface, DepthBuffer& de
         const Vec4i32 w1_row = w1_init + e20.step_size_y * delta_y;
         const Vec4i32 w2_row = w2_init + e01.step_size_y * delta_y;
         
-        thread_pool.Schedule([=]() {
+        thread_pool.Schedule([=]() mutable {
             Point2D point = { 0, y };
 
             Vec4i32 w0 = w0_row;
@@ -191,7 +207,13 @@ void DrawTriangle(ThreadPool& thread_pool, SDL_Surface* surface, DepthBuffer& de
                     const Vec4f32 u = u_0 + u_1 + u_2;
                     const Vec4f32 v = v_0 + v_1 + v_2;
                     
-                    RenderPixels(surface, point, mask, u, v, texture);
+                    // THis is probably not right
+                    const Vec4f32 d_0 = Vec4f32(c0_d) * b0;
+                    const Vec4f32 d_1 = Vec4f32(c1_d) * b1;
+                    const Vec4f32 d_2 = Vec4f32(c2_d) * b2;
+                    const Vec4f32 d = d_0 + d_1 + d_2;
+
+                    RenderPixels(surface, depth_buffer, point, mask, u, v, d, texture);
                 }
                 
                 w0 += e12.step_size_x;
@@ -504,6 +526,7 @@ int main(int argc, char *argv[]) {
         
         const std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
         
+        depth_buffer.Clear();
         ClearSurface(thread_pool, surface, Color{100, 100, 100});
         DrawMesh(thread_pool, surface, depth_buffer, camera, mesh);
         
