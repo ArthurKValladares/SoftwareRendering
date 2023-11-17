@@ -126,29 +126,21 @@ void RenderPixels(SDL_Surface *surface, DepthBuffer& depth_buffer, const Point2D
 
     const Vec4i32 pixel_offsets = GetPixelOffsets(surface, xs, ys);
 
-    if (mask.x()) {
-        if (d.x() > depth_buffer.ValueAt(xs.x(), ys.x())) {
-            *GetPixel(surface, pixel_offsets.x()) = texture.get_pixel_from_idx(tex_idx.x());
-            depth_buffer.Write(xs.x(), ys.x(), d.x());
-        }
+    if (mask.x() && d.x() > depth_buffer.ValueAt(xs.x(), ys.x())) {
+        *GetPixel(surface, pixel_offsets.x()) = texture.get_pixel_from_idx(tex_idx.x());
+        depth_buffer.Write(xs.x(), ys.x(), d.x());
     }
-    if (mask.y()) {
-        if (d.y() > depth_buffer.ValueAt(xs.y(), ys.y())) {
-            *GetPixel(surface, pixel_offsets.y()) = texture.get_pixel_from_idx(tex_idx.y());
-            depth_buffer.Write(xs.y(), ys.y(), d.y());
-        }
+    if (mask.y() && d.y() > depth_buffer.ValueAt(xs.y(), ys.y())) {
+        *GetPixel(surface, pixel_offsets.y()) = texture.get_pixel_from_idx(tex_idx.y());
+        depth_buffer.Write(xs.y(), ys.y(), d.y());
     }
-    if (mask.z()) {
-        if (d.z() > depth_buffer.ValueAt(xs.z(), ys.z())) {
-            *GetPixel(surface, pixel_offsets.z()) = texture.get_pixel_from_idx(tex_idx.z());
-            depth_buffer.Write(xs.z(), ys.z(), d.z());
-        }
+    if (mask.z() && d.z() > depth_buffer.ValueAt(xs.z(), ys.z())) {
+        *GetPixel(surface, pixel_offsets.z()) = texture.get_pixel_from_idx(tex_idx.z());
+        depth_buffer.Write(xs.z(), ys.z(), d.z());
     }
-    if (mask.w()) {
-        if (d.w() > depth_buffer.ValueAt(xs.w(), ys.w())) {
-            *GetPixel(surface, pixel_offsets.w()) = texture.get_pixel_from_idx(tex_idx.w());
-            depth_buffer.Write(xs.w(), ys.w(), d.w());
-        }
+    if (mask.w() && d.w() > depth_buffer.ValueAt(xs.w(), ys.w())) {
+        *GetPixel(surface, pixel_offsets.w()) = texture.get_pixel_from_idx(tex_idx.w());
+        depth_buffer.Write(xs.w(), ys.w(), d.w());
     }
 }
 
