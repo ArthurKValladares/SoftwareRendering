@@ -353,111 +353,113 @@ int main(int argc, char *argv[]) {
         {
             // Front-face
             Vertex {
-                Point3D_f{-0.5, 0.5, 0.0},
+                Point3D_f{-0.5, 0.5, 0.5},
                 UV{0.0, 1.0}
             }, 
             Vertex {
-                Point3D_f{0.5, 0.5, 0.0},
+                Point3D_f{0.5, 0.5, 0.5},
                 UV{1.0, 1.0},
             },
             Vertex{
-                Point3D_f{-0.5, -0.5, 0.0},
+                Point3D_f{-0.5, -0.5, 0.5},
                 UV{0.0, 0.0},
             }, 
             Vertex{
-                Point3D_f{0.5, -0.5, 0.0},
+                Point3D_f{0.5, -0.5, 0.5},
                 UV{1.0, 0.0},
             },
             // Back-face
             Vertex {
-                Point3D_f{-0.5, 0.5, 1.0},
+                Point3D_f{-0.5, 0.5, 1.5},
                 UV{0.0, 1.0}
             },
             Vertex {
-                Point3D_f{0.5, 0.5, 1.0},
+                Point3D_f{0.5, 0.5, 1.5},
                 UV{1.0, 1.0},
             },
             Vertex{
-                Point3D_f{-0.5, -0.5, 1.0},
+                Point3D_f{-0.5, -0.5, 1.5},
                 UV{0.0, 0.0},
             },
             Vertex{
-                Point3D_f{0.5, -0.5, 1.0},
+                Point3D_f{0.5, -0.5, 1.5},
                 UV{1.0, 0.0},
             },
             // Right-face
             Vertex {
-                Point3D_f{0.5, 0.5, 0.0},
+                Point3D_f{0.5, 0.5, 0.5},
                 UV{0.0, 1.0}
             },
             Vertex {
-                Point3D_f{0.5, 0.5, 1.0},
+                Point3D_f{0.5, 0.5, 1.5},
                 UV{1.0, 1.0},
             },
             Vertex{
-                Point3D_f{0.5, -0.5, 0.0},
+                Point3D_f{0.5, -0.5, 0.5},
                 UV{0.0, 0.0},
             },
             Vertex{
-                Point3D_f{0.5, -0.5, 1.0},
+                Point3D_f{0.5, -0.5, 1.5},
                 UV{1.0, 0.0},
             },
             // Left-face
             Vertex {
-                Point3D_f{-0.5, 0.5, 0.0},
+                Point3D_f{-0.5, 0.5, 0.5},
                 UV{0.0, 1.0}
             },
             Vertex {
-                Point3D_f{-0.5, 0.5, 1.0},
+                Point3D_f{-0.5, 0.5, 1.5},
                 UV{1.0, 1.0},
             },
             Vertex{
-                Point3D_f{-0.5, -0.5, 0.0},
+                Point3D_f{-0.5, -0.5, 0.5},
                 UV{0.0, 0.0},
             },
             Vertex{
-                Point3D_f{-0.5, -0.5, 1.0},
+                Point3D_f{-0.5, -0.5, 1.5},
                 UV{1.0, 0.0},
             },
             // Top-face
             Vertex {
-                Point3D_f{-0.5, 0.5, 1.0},
+                Point3D_f{-0.5, 0.5, 1.5},
                 UV{0.0, 1.0}
             },
             Vertex {
-                Point3D_f{0.5, 0.5, 1.0},
+                Point3D_f{0.5, 0.5, 1.5},
                 UV{1.0, 1.0},
             },
             Vertex{
-                Point3D_f{-0.5, 0.5, 0.0},
+                Point3D_f{-0.5, 0.5, 0.5},
                 UV{0.0, 0.0},
             },
             Vertex{
-                Point3D_f{0.5, 0.5, 0.0},
+                Point3D_f{0.5, 0.5, 0.5},
                 UV{1.0, 0.0},
             },
             // Bottom-face
             Vertex{
-                Point3D_f{0.5, -0.5, 0.0},
+                Point3D_f{0.5, -0.5, 0.5},
                 UV{1.0, 0.0},
             },
             Vertex{
-                Point3D_f{-0.5, -0.5, 0.0},
+                Point3D_f{-0.5, -0.5, 0.5},
                 UV{0.0, 0.0},
             },
             Vertex {
-                Point3D_f{0.5, -0.5, 1.0},
+                Point3D_f{0.5, -0.5, 1.5},
                 UV{1.0, 1.0},
             },
             Vertex {
-                Point3D_f{-0.5, -0.5, 1.0},
+                Point3D_f{-0.5, -0.5, 1.5},
                 UV{0.0, 1.0}
             }
         },
         {
-            1,  0,   2,  1, 2, 3,
-            5,  4,   6,  5,  6,  7,
-            9,  8,  10, 9,  10, 11,
+            // Front
+            1, 0, 2, 1, 2, 3,
+            // Back
+            5, 4, 6, 5, 6, 7,
+            9, 8, 10, 9, 10, 11,
             12, 13, 14, 14, 13, 15,
             16, 17, 18, 18, 17, 19,
             20, 21, 22, 22, 21, 23
@@ -539,5 +541,4 @@ int main(int argc, char *argv[]) {
 
 // TOOD: no-op thread pool (i.e single-threaded)
 // Test to see if point is inside triangle still failing some times, need to review winding order stuff
-// Depth buffer
 // Optimize how many pixels we try to draw per triangle
