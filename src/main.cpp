@@ -419,7 +419,7 @@ int main(int argc, char *argv[]) {
                 Point3D_f{-0.5, -0.5, 1.5},
                 UV{1.0, 0.0},
             },
-            // Top-face
+            // Bottom-face
             Vertex {
                 Point3D_f{-0.5, 0.5, 1.5},
                 UV{0.0, 1.0}
@@ -436,7 +436,7 @@ int main(int argc, char *argv[]) {
                 Point3D_f{0.5, 0.5, 0.5},
                 UV{1.0, 0.0},
             },
-            // Bottom-face
+            // Top-face
             Vertex{
                 Point3D_f{0.5, -0.5, 0.5},
                 UV{1.0, 0.0},
@@ -459,10 +459,14 @@ int main(int argc, char *argv[]) {
             1, 0, 2, 1, 2, 3,
             // Back
             5, 4, 6, 5, 6, 7,
-            9, 8, 10, 9, 10, 11,
-            12, 13, 14, 14, 13, 15,
+            // Right
+            8, 9, 10, 10, 9, 11,
+            // Left
+            13, 12, 14, 13, 14, 15,
+            // Top
             16, 17, 18, 18, 17, 19,
-            20, 21, 22, 22, 21, 23
+            // Bottom
+            21, 20, 22, 21, 22, 23
         },
         texture
     };
