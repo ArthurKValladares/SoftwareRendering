@@ -5,7 +5,7 @@
 #include "color.h"
 #include "uv.h"
 #include "rect.h"
-#include "vector.h"
+#include "math/vector.h"
 #include "vertex.h"
 
 struct Triangle {

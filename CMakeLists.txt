@@ -19,7 +19,6 @@ add_executable(${PROJECT_NAME}
     ${project_root}/src/line.cpp
     ${project_root}/src/mesh.cpp
     ${project_root}/src/point.cpp
-    ${project_root}/src/vector.cpp
     ${project_root}/src/rect.cpp
     ${project_root}/src/texture.cpp
     ${project_root}/src/triangle.cpp
@@ -30,6 +29,7 @@ add_executable(${PROJECT_NAME}
     ${project_root}/src/transform.cpp
     ${project_root}/src/depth_buffer.cpp
     # math
+    ${project_root}/src/math/vector.cpp
     ${project_root}/src/math/vec4f32.cpp
     ${project_root}/src/math/vec4i32.cpp
     ${project_root}/src/math/mat4f32.cpp

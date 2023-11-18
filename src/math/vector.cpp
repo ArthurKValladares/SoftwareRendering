@@ -1,4 +1,4 @@
-#include "vector.h"
+#include "math/vector.h"
 
 Vec3D_f Vec3D_f::normalized() const {
     const float sum = x + y + z;
