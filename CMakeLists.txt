@@ -29,7 +29,7 @@ add_executable(${PROJECT_NAME}
     ${project_root}/src/transform.cpp
     ${project_root}/src/depth_buffer.cpp
     # math
-    ${project_root}/src/math/vector.cpp
+    ${project_root}/src/math/vec3f32.cpp
     ${project_root}/src/math/vec4f32.cpp
     ${project_root}/src/math/vec4i32.cpp
     ${project_root}/src/math/mat4f32.cpp

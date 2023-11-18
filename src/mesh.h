@@ -5,7 +5,7 @@
 #include "point.h"
 #include "triangle.h"
 #include "texture.h"
-#include "math/vector.h"
+#include "math/vec3f32.h"
 #include "vertex.h"
 
 struct Mesh {

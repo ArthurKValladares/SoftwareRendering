@@ -1,7 +1,7 @@
 #pragma once
 
 #include "point.h"
-#include "math/vector.h"
+#include "math/vec3f32.h"
 #include "math/mat4f32.h"
 
 enum class CameraType {
