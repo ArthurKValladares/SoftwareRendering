@@ -8,7 +8,8 @@ include_directories(
     ${project_root}/src/
     ${project_root}/vendor/STB
     ${project_root}/vendor/SDL/include
-    ${project_root}/vendor/sse2neon/
+    ${project_root}/vendor/sse2neon
+    ${project_root}/vendor/tinyobjloader
     ${project_root}/vendor/thread-pool/include
     ${project_root}/vendor/ConcurrencyPrimitives/src
 )
