@@ -16,7 +16,7 @@
 #include "triangle.h"
 #include "edge_function.h"
 #include "uv.h"
-#include "mesh.h"
+#include "mesh/mesh.h"
 #include "line.h"
 #include "camera.h"
 #include "transform.h"
