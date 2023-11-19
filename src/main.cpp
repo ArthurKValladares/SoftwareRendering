@@ -347,7 +347,7 @@ int main(int argc, char *argv[]) {
     assert(surface->format->BytesPerPixel == 4);
     DepthBuffer depth_buffer = DepthBuffer(surface->w, surface->h);
 
-    Texture texture = Texture("../assets/test.jpg", surface);
+    Texture texture = Texture("../assets/textures/test.jpg", surface);
 
     const Mesh mesh = {
         {
