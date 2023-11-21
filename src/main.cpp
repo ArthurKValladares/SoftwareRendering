@@ -305,7 +305,7 @@ void DrawTriangleWireframe(SDL_Surface* surface, const Camera& camera, const Tri
     DrawLine(surface, line2, mapped_color);
 }
 
-void DrawMesh(ThreadPool& thread_pool, SDL_Surface *surface, DepthBuffer& depth_buffer, const Camera& camera, const Mesh &mesh) {
+void DrawMesh(ThreadPool& thread_pool, SDL_Surface *surface, DepthBuffer& depth_buffer, const Camera& camera, const Mesh &mesh, const Texture &texture) {
     for (int i = 0; i < mesh.indices.size(); i += 3) {
         const Vertex& v0 = mesh.vertices[mesh.indices[i]];
         const Vertex& v1 = mesh.vertices[mesh.indices[i + 1]];
@@ -316,7 +316,7 @@ void DrawMesh(ThreadPool& thread_pool, SDL_Surface *surface, DepthBuffer& depth_
             v2
         };
         if (!wireframe) {
-            DrawTriangle(thread_pool, surface, depth_buffer, camera, triangle, mesh.texture);
+            DrawTriangle(thread_pool, surface, depth_buffer, camera, triangle, texture);
         } else {
             DrawTriangleWireframe(surface, camera, triangle);
         }
@@ -467,8 +467,7 @@ int main(int argc, char *argv[]) {
             16, 17, 18, 18, 17, 19,
             // Bottom
             21, 20, 22, 21, 22, 23
-        },
-        texture
+        }
     };
 
     const Camera camera = Camera::orthographic(OrtographicCamera{
@@ -526,7 +525,7 @@ int main(int argc, char *argv[]) {
         
         depth_buffer.Clear();
         ClearSurface(thread_pool, surface, Color{100, 100, 100});
-        DrawMesh(thread_pool, surface, depth_buffer, camera, mesh);
+        DrawMesh(thread_pool, surface, depth_buffer, camera, mesh, texture);
         
         const std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
         printf("dt: %ld ms\n", (long) std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count());

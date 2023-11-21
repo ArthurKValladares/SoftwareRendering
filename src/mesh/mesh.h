@@ -10,7 +10,5 @@
 
 struct Mesh {
     std::vector<Vertex> vertices;
-    std::vector<u32> indices;
-    // TODO: Probably shouldn't really be a part of Mesh struct
-    Texture texture;
+    std::vector<int> indices;
 };

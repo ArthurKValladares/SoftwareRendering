@@ -34,7 +34,8 @@ struct Point3D_f {
     float x;
     float y;
     float z;
-
+    
+    Point3D_f() {}
     Point3D_f(float x, float y, float z) :
         x(x),
         y(y),
