@@ -351,7 +351,7 @@ int main(int argc, char *argv[]) {
 
     Texture texture = Texture("../assets/textures/test.jpg", surface);
 
-    const Mesh mesh = load_obj("../assets/meshes/teapot/teapot.obj");
+    const Mesh mesh = load_obj("../assets/meshes/teapot", "teapot.obj");
 
     const Camera camera = Camera::orthographic(OrtographicCamera{
         -100.0,

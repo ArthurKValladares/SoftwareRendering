@@ -5,12 +5,13 @@
 
 #include <iostream>
 #include <unordered_map>
+#include <string>
 
-Mesh load_obj(const std::string& path) {
+Mesh load_obj(const std::string& dir, const std::string& obj_file) {
     tinyobj::ObjReaderConfig reader_config;
-    reader_config.mtl_search_path = "./"; // Path to material files
+    reader_config.mtl_search_path = dir; // Path to material files
     tinyobj::ObjReader reader;
-    if (!reader.ParseFromFile(path, reader_config)) {
+    if (!reader.ParseFromFile(dir + "/" + obj_file, reader_config)) {
         if (!reader.Error().empty()) {
             std::cerr << "TinyObjReader: " << reader.Error();
         }
