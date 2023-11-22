@@ -17,6 +17,7 @@
 #include "edge_function.h"
 #include "uv.h"
 #include "mesh/mesh.h"
+#include "mesh/obj.h"
 #include "line.h"
 #include "camera.h"
 #include "transform.h"
@@ -306,6 +307,7 @@ void DrawTriangleWireframe(SDL_Surface* surface, const Camera& camera, const Tri
 }
 
 void DrawMesh(ThreadPool& thread_pool, SDL_Surface *surface, DepthBuffer& depth_buffer, const Camera& camera, const Mesh &mesh, const Texture &texture) {
+
     for (int i = 0; i < mesh.indices.size(); i += 3) {
         const Vertex& v0 = mesh.vertices[mesh.indices[i]];
         const Vertex& v1 = mesh.vertices[mesh.indices[i + 1]];
@@ -349,132 +351,13 @@ int main(int argc, char *argv[]) {
 
     Texture texture = Texture("../assets/textures/test.jpg", surface);
 
-    const Mesh mesh = {
-        {
-            // Front-face
-            Vertex {
-                Point3D_f{-0.5, 0.5, 0.5},
-                UV{0.0, 1.0}
-            }, 
-            Vertex {
-                Point3D_f{0.5, 0.5, 0.5},
-                UV{1.0, 1.0},
-            },
-            Vertex{
-                Point3D_f{-0.5, -0.5, 0.5},
-                UV{0.0, 0.0},
-            }, 
-            Vertex{
-                Point3D_f{0.5, -0.5, 0.5},
-                UV{1.0, 0.0},
-            },
-            // Back-face
-            Vertex {
-                Point3D_f{-0.5, 0.5, 1.5},
-                UV{0.0, 1.0}
-            },
-            Vertex {
-                Point3D_f{0.5, 0.5, 1.5},
-                UV{1.0, 1.0},
-            },
-            Vertex{
-                Point3D_f{-0.5, -0.5, 1.5},
-                UV{0.0, 0.0},
-            },
-            Vertex{
-                Point3D_f{0.5, -0.5, 1.5},
-                UV{1.0, 0.0},
-            },
-            // Right-face
-            Vertex {
-                Point3D_f{0.5, 0.5, 0.5},
-                UV{0.0, 1.0}
-            },
-            Vertex {
-                Point3D_f{0.5, 0.5, 1.5},
-                UV{1.0, 1.0},
-            },
-            Vertex{
-                Point3D_f{0.5, -0.5, 0.5},
-                UV{0.0, 0.0},
-            },
-            Vertex{
-                Point3D_f{0.5, -0.5, 1.5},
-                UV{1.0, 0.0},
-            },
-            // Left-face
-            Vertex {
-                Point3D_f{-0.5, 0.5, 0.5},
-                UV{0.0, 1.0}
-            },
-            Vertex {
-                Point3D_f{-0.5, 0.5, 1.5},
-                UV{1.0, 1.0},
-            },
-            Vertex{
-                Point3D_f{-0.5, -0.5, 0.5},
-                UV{0.0, 0.0},
-            },
-            Vertex{
-                Point3D_f{-0.5, -0.5, 1.5},
-                UV{1.0, 0.0},
-            },
-            // Bottom-face
-            Vertex {
-                Point3D_f{-0.5, 0.5, 1.5},
-                UV{0.0, 1.0}
-            },
-            Vertex {
-                Point3D_f{0.5, 0.5, 1.5},
-                UV{1.0, 1.0},
-            },
-            Vertex{
-                Point3D_f{-0.5, 0.5, 0.5},
-                UV{0.0, 0.0},
-            },
-            Vertex{
-                Point3D_f{0.5, 0.5, 0.5},
-                UV{1.0, 0.0},
-            },
-            // Top-face
-            Vertex{
-                Point3D_f{0.5, -0.5, 0.5},
-                UV{1.0, 0.0},
-            },
-            Vertex{
-                Point3D_f{-0.5, -0.5, 0.5},
-                UV{0.0, 0.0},
-            },
-            Vertex {
-                Point3D_f{0.5, -0.5, 1.5},
-                UV{1.0, 1.0},
-            },
-            Vertex {
-                Point3D_f{-0.5, -0.5, 1.5},
-                UV{0.0, 1.0}
-            }
-        },
-        {
-            // Front
-            1, 0, 2, 1, 2, 3,
-            // Back
-            5, 4, 6, 5, 6, 7,
-            // Right
-            8, 9, 10, 10, 9, 11,
-            // Left
-            13, 12, 14, 13, 14, 15,
-            // Top
-            16, 17, 18, 18, 17, 19,
-            // Bottom
-            21, 20, 22, 21, 22, 23
-        }
-    };
+    const Mesh mesh = load_obj("../assets/meshes/teapot/teapot.obj");
 
     const Camera camera = Camera::orthographic(OrtographicCamera{
-        -1.0,
-        1.0,
-        -1.0,
-        1.0,
+        -100.0,
+        100.0,
+        -100.0,
+        100.0,
         0.0,
         1.0
     });

@@ -1,6 +1,8 @@
 #ifndef point_h
 #define point_h
 
+#include "defs.h"
+
 struct Point2D {
     Point2D(int x, int y)
         : x(x)
@@ -42,6 +44,22 @@ struct Point3D_f {
         z(z)
     {}
     Point3D round() const;
+
+    bool operator==(const Point3D_f& other) const {
+        return x == other.x && y == other.y && z == other.z;
+    }
 };
+
+namespace std {
+    template<> struct hash<Point3D_f> {
+        size_t operator()(Point3D_f const& s) const {
+            std::size_t res = 0;
+            hash_combine(res, s.x);
+            hash_combine(res, s.y);
+            hash_combine(res, s.z);
+            return res;
+        }
+    };
+}
 
 #endif

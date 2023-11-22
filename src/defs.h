@@ -3,6 +3,8 @@
 
 #include <stdint.h>
 #include <assert.h>
+#include <cstddef>
+#include <functional>
 
 #ifdef __APPLE__
 #include <SDL2/SDL.h>
@@ -28,5 +30,13 @@ typedef int8_t i8;
 typedef int16_t i16;
 typedef int32_t i32;
 typedef int64_t i64;
+
+
+template <class T>
+inline void hash_combine(std::size_t & s, const T & v)
+{
+    std::hash<T> h;
+    s ^= h(v) + 0x9e3779b9 + (s << 6) + (s >> 2);
+}
 
 #endif
