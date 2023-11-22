@@ -349,8 +349,7 @@ int main(int argc, char *argv[]) {
     assert(surface->format->BytesPerPixel == 4);
     DepthBuffer depth_buffer = DepthBuffer(surface->w, surface->h);
 
-    Texture texture = Texture("../assets/textures/test.jpg", surface);
-
+    Texture texture = Texture("../assets/meshes/teapot/default.png", surface);
     const Mesh mesh = load_obj("../assets/meshes/teapot", "teapot.obj");
 
     const Camera camera = Camera::orthographic(OrtographicCamera{
