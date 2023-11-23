@@ -1,7 +1,7 @@
 #include "transform.h"
 
 Mat4f32 rotate_matrix(Vec3D_f axis, float angle) {
-    const Vec3D_f a = a.normalized();
+    const Vec3D_f a = axis.normalized();
 
     const float s = sin(angle);
     const float c = cos(angle);

@@ -52,7 +52,7 @@ namespace {
     ScreenTriangle project_triangle_to_screen(SDL_Surface* surface, const Camera& camera, const Triangle& triangle) {
         const Mat4f32 proj_matrix = camera.GetProjMatrix();
         // TODO: Better View matrix stuff
-        const Mat4f32 model_matrix = rotate_matrix(Vec3D_f{ 1.0, 1.0, 0 }, rotate_angle);
+        const Mat4f32 model_matrix = rotate_matrix(Vec3D_f{ 1.0, 0.0, 0 }, rotate_angle);
 
         const Vec4f32 pv0 = proj_matrix * (model_matrix * Vec4f32(triangle.v0.p, 1.0));
         const Vec4f32 pv1 = proj_matrix * (model_matrix * Vec4f32(triangle.v1.p, 1.0));
@@ -99,7 +99,7 @@ Rect2D bounding_box(Point2D p0, Point2D p1, Point2D p2) {
     return Rect2D{minX, minY, maxX, maxY};
 }
 
-void ClearSurface(ThreadPool& thread_pool, SDL_Surface *surface, Color color) {
+void ClearSurface(SDL_Surface *surface, Color color) {
     const int width = surface->w;
     const int height = surface->h;
     const Uint32 pixel_color =
@@ -107,14 +107,11 @@ void ClearSurface(ThreadPool& thread_pool, SDL_Surface *surface, Color color) {
     const Vec4i32 pixel_colors = Vec4i32(pixel_color);
     
     for (int y = 0; y < height; y += 1) {
-        thread_pool.Schedule([=]() {
-            Point2D point = Point2D{ 0, y };
-            for (point.x = 0; point.x < width; point.x += EdgeFunction::step_increment_x) {
-                *(Vec4i32*)GetPixel(surface, point) = pixel_colors;
-            }
-        });
+        Point2D point = Point2D{ 0, y };
+        for (point.x = 0; point.x < width; point.x += EdgeFunction::step_increment_x) {
+            *(Vec4i32*)GetPixel(surface, point) = pixel_colors;
+        }
     }
-    thread_pool.Wait();
 }
 
 void RenderPixels(SDL_Surface *surface, DepthBuffer& depth_buffer, const Point2D &origin_point, Vec4i32 mask, Vec4f32 u, Vec4f32 v, Vec4f32 d, const Texture &texture) {
@@ -145,7 +142,7 @@ void RenderPixels(SDL_Surface *surface, DepthBuffer& depth_buffer, const Point2D
     }
 }
 
-void DrawTriangle(ThreadPool& thread_pool, SDL_Surface* surface, DepthBuffer& depth_buffer, const Camera& camera, const Triangle& triangle, const Texture& texture) {
+void DrawTriangle(SDL_Surface* surface, DepthBuffer& depth_buffer, const Camera& camera, const Triangle& triangle, const Texture& texture) {
     ScreenTriangle st = project_triangle_to_screen(surface, camera, triangle);
 
     // Early return if triangle has zero area
@@ -169,53 +166,45 @@ void DrawTriangle(ThreadPool& thread_pool, SDL_Surface* surface, DepthBuffer& de
     const Vec4i32 w1_init = e20.Init(st.p2, st.p0, min_point);
     const Vec4i32 w2_init = e01.Init(st.p0, st.p1, min_point);
     
-    for (int y = bounding_box.minY; y <= bounding_box.maxY; y += EdgeFunction::step_increment_y) {
-        const Vec4i32 delta_y = Vec4i32(y - bounding_box.minY);
+    Point2D point = { 0, 0 };
+    for (point.y = bounding_box.minY; point.y <= bounding_box.maxY; point.y += EdgeFunction::step_increment_y) {
+        const Vec4i32 delta_y = Vec4i32(point.y - bounding_box.minY);
         
-        const Vec4i32 w0_row = w0_init + e12.step_size_y * delta_y;
-        const Vec4i32 w1_row = w1_init + e20.step_size_y * delta_y;
-        const Vec4i32 w2_row = w2_init + e01.step_size_y * delta_y;
-        
-        thread_pool.Schedule([=]() mutable {
-            Point2D point = { 0, y };
-
-            Vec4i32 w0 = w0_row;
-            Vec4i32 w1 = w1_row;
-            Vec4i32 w2 = w2_row;
+        Vec4i32 w0 = w0_init + e12.step_size_y * delta_y;
+        Vec4i32 w1 = w1_init + e20.step_size_y * delta_y;
+        Vec4i32 w2 = w2_init + e01.step_size_y * delta_y;
             
-            for (point.x = bounding_box.minX; point.x <= bounding_box.maxX; point.x += EdgeFunction::step_increment_x) {
-                const Vec4i32 mask = w0 | w1 | w2;
+        for (point.x = bounding_box.minX; point.x <= bounding_box.maxX; point.x += EdgeFunction::step_increment_x) {
+            const Vec4i32 mask = w0 | w1 | w2;
                 
-                if (mask.any_gte(0)) {
-                    const Vec4f32 sum = (w0 + w1 + w2).to_float();
+            if (mask.any_gte(0)) {
+                const Vec4f32 sum = (w0 + w1 + w2).to_float();
                     
-                    const Vec4f32 b0 = w0.to_float() / sum;
-                    const Vec4f32 b1 = w1.to_float() / sum;
-                    const Vec4f32 b2 = w2.to_float() / sum;
+                const Vec4f32 b0 = w0.to_float() / sum;
+                const Vec4f32 b1 = w1.to_float() / sum;
+                const Vec4f32 b2 = w2.to_float() / sum;
                     
-                    const Vec4f32 u_0 = Vec4f32(c0_u) * b0, v_0 = Vec4f32(c0_v) * b0;
-                    const Vec4f32 u_1 = Vec4f32(c1_u) * b1, v_1 = Vec4f32(c1_v) * b1;
-                    const Vec4f32 u_2 = Vec4f32(c2_u) * b2, v_2 = Vec4f32(c2_v) * b2;
+                const Vec4f32 u_0 = Vec4f32(c0_u) * b0, v_0 = Vec4f32(c0_v) * b0;
+                const Vec4f32 u_1 = Vec4f32(c1_u) * b1, v_1 = Vec4f32(c1_v) * b1;
+                const Vec4f32 u_2 = Vec4f32(c2_u) * b2, v_2 = Vec4f32(c2_v) * b2;
                     
-                    const Vec4f32 u = u_0 + u_1 + u_2;
-                    const Vec4f32 v = v_0 + v_1 + v_2;
+                const Vec4f32 u = u_0 + u_1 + u_2;
+                const Vec4f32 v = v_0 + v_1 + v_2;
                     
-                    // THis is probably not right
-                    const Vec4f32 d_0 = Vec4f32(c0_d) * b0;
-                    const Vec4f32 d_1 = Vec4f32(c1_d) * b1;
-                    const Vec4f32 d_2 = Vec4f32(c2_d) * b2;
-                    const Vec4f32 d = d_0 + d_1 + d_2;
+                // THis is probably not right
+                const Vec4f32 d_0 = Vec4f32(c0_d) * b0;
+                const Vec4f32 d_1 = Vec4f32(c1_d) * b1;
+                const Vec4f32 d_2 = Vec4f32(c2_d) * b2;
+                const Vec4f32 d = d_0 + d_1 + d_2;
 
-                    RenderPixels(surface, depth_buffer, point, mask, u, v, d, texture);
-                }
-                
-                w0 += e12.step_size_x;
-                w1 += e20.step_size_x;
-                w2 += e01.step_size_x;
+                RenderPixels(surface, depth_buffer, point, mask, u, v, d, texture);
             }
-        });
+                
+            w0 += e12.step_size_x;
+            w1 += e20.step_size_x;
+            w2 += e01.step_size_x;
+        }
     }
-    thread_pool.Wait();
 }
 
 // NOTE: I don't think this SIMD version is really worth it tbh,
@@ -306,7 +295,7 @@ void DrawTriangleWireframe(SDL_Surface* surface, const Camera& camera, const Tri
     DrawLine(surface, line2, mapped_color);
 }
 
-void DrawMesh(ThreadPool& thread_pool, SDL_Surface *surface, DepthBuffer& depth_buffer, const Camera& camera, const Mesh &mesh, const Texture &texture) {
+void DrawMesh(SDL_Surface *surface, DepthBuffer& depth_buffer, const Camera& camera, const Mesh &mesh, const Texture &texture) {
 
     for (int i = 0; i < mesh.indices.size(); i += 3) {
         const Vertex& v0 = mesh.vertices[mesh.indices[i]];
@@ -318,7 +307,7 @@ void DrawMesh(ThreadPool& thread_pool, SDL_Surface *surface, DepthBuffer& depth_
             v2
         };
         if (!wireframe) {
-            DrawTriangle(thread_pool, surface, depth_buffer, camera, triangle, texture);
+            DrawTriangle(surface, depth_buffer, camera, triangle, texture);
         } else {
             DrawTriangleWireframe(surface, camera, triangle);
         }
@@ -363,7 +352,7 @@ int main(int argc, char *argv[]) {
 
     // Render loop
     // TODO: rotate stuff again
-    const float rotate_delta = 0.03;
+    const float rotate_delta = 0.1;
     bool quit = false;
     while (!quit) {
         SDL_Event e;
@@ -406,8 +395,8 @@ int main(int argc, char *argv[]) {
         const std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
         
         depth_buffer.Clear();
-        ClearSurface(thread_pool, surface, Color{100, 100, 100});
-        DrawMesh(thread_pool, surface, depth_buffer, camera, mesh, texture);
+        ClearSurface(surface, Color{100, 100, 100});
+        DrawMesh(surface, depth_buffer, camera, mesh, texture);
         
         const std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
         printf("dt: %ld ms\n", (long) std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count());
