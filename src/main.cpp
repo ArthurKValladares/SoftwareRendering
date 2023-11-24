@@ -73,6 +73,53 @@ namespace {
     float edge_function(const Point2D& a, const Point2D& b, const Point2D& c) {
         return (b.x - a.x) * (c.y - a.y) - (b.y - a.y) * (c.x - a.x);
     };
+
+    struct ScreenTileData {
+        u32 rows;
+        u32 cols;
+    };
+
+    u32 u_log2(u32 n) {
+        u32 l = 0;
+        while (n >>= 1) {
+            ++l;
+        }
+        return l;
+    }
+
+    ScreenTileData partition_screen_into_tiles() {
+        u32 num_tiles = std::thread::hardware_concurrency();
+        // Ensure that the total number of tiles is even so that it can easily be factored
+        if (num_tiles % 2 == 1) {
+            num_tiles *= 2;
+        }
+        const u32 rows = u_log2(num_tiles);
+        const u32 cols = num_tiles / rows;
+        return ScreenTileData{
+            rows,
+            cols
+        };
+    }
+
+    Rect2D tile_for_index(SDL_Surface* surface, ScreenTileData data, u32 index) {
+        // TODO: Should probably do some of this calculation up-front together with getting
+        // The data itself
+        const u32 tile_width = ceil(surface->w / data.cols);
+        const u32 tile_height = ceil(surface->h / data.rows);
+
+        const u32 row = index / data.cols;
+        const u32 col = index % data.cols;
+
+        const u32 row_start = row * tile_height;
+        const u32 col_start = col * tile_width;
+
+        return Rect2D {
+            (int) row_start,
+            (int) col_start,
+            (int) (row_start + tile_height),
+            (int) (col_start + tile_width)
+        };
+    }
 };
 
 Vec4i32 GetPixelOffsets(SDL_Surface* surface, Vec4i32 xs, Vec4i32 ys) {
@@ -142,7 +189,7 @@ void RenderPixels(SDL_Surface *surface, DepthBuffer& depth_buffer, const Point2D
     }
 }
 
-void DrawTriangle(SDL_Surface* surface, DepthBuffer& depth_buffer, const Camera& camera, const Triangle& triangle, const Texture& texture) {
+void DrawTriangle(SDL_Surface* surface, Rect2D tile_rect, DepthBuffer& depth_buffer, const Camera& camera, const Triangle& triangle, const Texture& texture) {
     ScreenTriangle st = project_triangle_to_screen(surface, camera, triangle);
 
     // Early return if triangle has zero area
@@ -150,7 +197,13 @@ void DrawTriangle(SDL_Surface* surface, DepthBuffer& depth_buffer, const Camera&
         return;
     }
 
-    const Rect2D bounding_box = ClipRect(surface->w, surface->h, ::bounding_box(st.p0, st.p1, st.p2));
+    // TODO: Right now I have this hack since I'm not doing any preprocessing into buckets
+    const std::optional<Rect2D> opt_bounding_box = Intersection(tile_rect, ::bounding_box(st.p0, st.p1, st.p2));
+    if (!opt_bounding_box.has_value()) {
+        return;
+    }
+    const Rect2D bounding_box = opt_bounding_box.value();
+
     const Point2D min_point = Point2D{bounding_box.minX, bounding_box.minY};
     
     const float c0_u = triangle.v0.uv.u, c0_v = triangle.v0.uv.v;
@@ -299,20 +352,39 @@ void DrawTriangleWireframe(SDL_Surface* surface, const Camera& camera, const Tri
     DrawLine(surface, line2, mapped_color);
 }
 
-void DrawMesh(SDL_Surface *surface, DepthBuffer& depth_buffer, const Camera& camera, const Mesh &mesh, const Texture &texture) {
-
-    for (int i = 0; i < mesh.indices.size(); i += 3) {
-        const Vertex& v0 = mesh.vertices[mesh.indices[i]];
-        const Vertex& v1 = mesh.vertices[mesh.indices[i + 1]];
-        const Vertex& v2 = mesh.vertices[mesh.indices[i + 2]];
-        const Triangle triangle = Triangle {
-            v0,
-            v1,
-            v2
-        };
-        if (!wireframe) {
-            DrawTriangle(surface, depth_buffer, camera, triangle, texture);
-        } else {
+void DrawMesh(SDL_Surface *surface, ThreadPool &thread_pool, ScreenTileData tile_data, DepthBuffer& depth_buffer, const Camera& camera, const Mesh &mesh, const Texture &texture) {
+    if (!wireframe) {
+        const u32 num_tasks = tile_data.rows * tile_data.cols;
+        for (int tile_index = 0; tile_index < num_tasks; ++tile_index) {
+            const Rect2D tile_rect = tile_for_index(surface, tile_data, tile_index);
+            thread_pool.Schedule([=]() mutable {
+                for (int i = 0; i < mesh.indices.size(); i += 3) {
+                    const Vertex& v0 = mesh.vertices[mesh.indices[i]];
+                    const Vertex& v1 = mesh.vertices[mesh.indices[i + 1]];
+                    const Vertex& v2 = mesh.vertices[mesh.indices[i + 2]];
+                    const Triangle triangle = Triangle{
+                        v0,
+                        v1,
+                        v2
+                    };
+                    if (!wireframe) {
+                        DrawTriangle(surface, tile_rect, depth_buffer, camera, triangle, texture);
+                    }
+                }
+            });
+        }
+        thread_pool.Wait();
+    }
+    else {
+        for (int i = 0; i < mesh.indices.size(); i += 3) {
+            const Vertex& v0 = mesh.vertices[mesh.indices[i]];
+            const Vertex& v1 = mesh.vertices[mesh.indices[i + 1]];
+            const Vertex& v2 = mesh.vertices[mesh.indices[i + 2]];
+            const Triangle triangle = Triangle{
+                v0,
+                v1,
+                v2
+            };
             DrawTriangleWireframe(surface, camera, triangle);
         }
     }
@@ -353,6 +425,8 @@ int main(int argc, char *argv[]) {
         0.0,
         1.0
     });
+
+    const ScreenTileData tile_data = partition_screen_into_tiles();
 
     // Render loop
     // TODO: rotate stuff again
@@ -400,7 +474,7 @@ int main(int argc, char *argv[]) {
         
         depth_buffer.Clear();
         ClearSurface(surface, Color{100, 100, 100});
-        DrawMesh(surface, depth_buffer, camera, mesh, texture);
+        DrawMesh(surface, thread_pool, tile_data, depth_buffer, camera, mesh, texture);
         
         const std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
         printf("dt: %ld ms\n", (long) std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count());
