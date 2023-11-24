@@ -54,10 +54,9 @@ namespace {
         // TODO: Better View matrix stuff
         const Mat4f32 model_matrix = rotate_matrix(Vec3D_f{ 1.0, 0.0, 0 }, rotate_angle);
 
-        const Mat4f32 proj_model = proj_matrix * model_matrix;
-        const Vec4f32 pv0 = proj_model * Vec4f32(triangle.v0.p, 1.0));
-        const Vec4f32 pv1 = proj_model * Vec4f32(triangle.v1.p, 1.0));
-        const Vec4f32 pv2 = proj_model * Vec4f32(triangle.v2.p, 1.0));
+        const Vec4f32 pv0 = proj_matrix * (model_matrix * Vec4f32(triangle.v0.p, 1.0));
+        const Vec4f32 pv1 = proj_matrix * (model_matrix * Vec4f32(triangle.v1.p, 1.0));
+        const Vec4f32 pv2 = proj_matrix * (model_matrix * Vec4f32(triangle.v2.p, 1.0));
 
         // TODO: Cleanup
         const Point2D sv0 = hacky_project_to_surface(surface, Point3D_f(pv0.x(), pv0.y(), pv0.z()));
