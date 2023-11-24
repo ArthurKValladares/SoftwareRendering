@@ -54,9 +54,10 @@ namespace {
         // TODO: Better View matrix stuff
         const Mat4f32 model_matrix = rotate_matrix(Vec3D_f{ 1.0, 0.0, 0 }, rotate_angle);
 
-        const Vec4f32 pv0 = proj_matrix * (model_matrix * Vec4f32(triangle.v0.p, 1.0));
-        const Vec4f32 pv1 = proj_matrix * (model_matrix * Vec4f32(triangle.v1.p, 1.0));
-        const Vec4f32 pv2 = proj_matrix * (model_matrix * Vec4f32(triangle.v2.p, 1.0));
+        const Mat4f32 proj_model = proj_matrix * model_matrix;
+        const Vec4f32 pv0 = proj_model * Vec4f32(triangle.v0.p, 1.0));
+        const Vec4f32 pv1 = proj_model * Vec4f32(triangle.v1.p, 1.0));
+        const Vec4f32 pv2 = proj_model * Vec4f32(triangle.v2.p, 1.0));
 
         // TODO: Cleanup
         const Point2D sv0 = hacky_project_to_surface(surface, Point3D_f(pv0.x(), pv0.y(), pv0.z()));
@@ -162,17 +163,17 @@ void DrawTriangle(SDL_Surface* surface, DepthBuffer& depth_buffer, const Camera&
     const float c2_d = triangle.v2.p.z;
 
     EdgeFunction e01, e12, e20;
-    const Vec4i32 w0_init = e12.Init(st.p1, st.p2, min_point);
-    const Vec4i32 w1_init = e20.Init(st.p2, st.p0, min_point);
-    const Vec4i32 w2_init = e01.Init(st.p0, st.p1, min_point);
+    Vec4i32 w0_row = e12.Init(st.p1, st.p2, min_point);
+    Vec4i32 w1_row = e20.Init(st.p2, st.p0, min_point);
+    Vec4i32 w2_row = e01.Init(st.p0, st.p1, min_point);
     
     Point2D point = { 0, 0 };
     for (point.y = bounding_box.minY; point.y <= bounding_box.maxY; point.y += EdgeFunction::step_increment_y) {
         const Vec4i32 delta_y = Vec4i32(point.y - bounding_box.minY);
         
-        Vec4i32 w0 = w0_init + e12.step_size_y * delta_y;
-        Vec4i32 w1 = w1_init + e20.step_size_y * delta_y;
-        Vec4i32 w2 = w2_init + e01.step_size_y * delta_y;
+        Vec4i32 w0 = w0_row;
+        Vec4i32 w1 = w1_row;
+        Vec4i32 w2 = w2_row;
             
         for (point.x = bounding_box.minX; point.x <= bounding_box.maxX; point.x += EdgeFunction::step_increment_x) {
             const Vec4i32 mask = w0 | w1 | w2;
@@ -191,7 +192,7 @@ void DrawTriangle(SDL_Surface* surface, DepthBuffer& depth_buffer, const Camera&
                 const Vec4f32 u = u_0 + u_1 + u_2;
                 const Vec4f32 v = v_0 + v_1 + v_2;
                     
-                // THis is probably not right
+                // TODO: This is probably not right?
                 const Vec4f32 d_0 = Vec4f32(c0_d) * b0;
                 const Vec4f32 d_1 = Vec4f32(c1_d) * b1;
                 const Vec4f32 d_2 = Vec4f32(c2_d) * b2;
@@ -204,6 +205,10 @@ void DrawTriangle(SDL_Surface* surface, DepthBuffer& depth_buffer, const Camera&
             w1 += e20.step_size_x;
             w2 += e01.step_size_x;
         }
+
+        w0_row += e12.step_size_y;
+        w1_row += e20.step_size_y;
+        w2_row += e01.step_size_y;
     }
 }
 
