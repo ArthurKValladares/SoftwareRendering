@@ -4,6 +4,7 @@
 #include "defs.h"
 
 struct Point2D {
+    Point2D() {}
     Point2D(int x, int y)
         : x(x)
         , y(y) {}

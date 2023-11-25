@@ -54,5 +54,6 @@ Mesh load_obj(const std::string& dir, const std::string& obj_file) {
             mesh.indices.push_back(uniqueVertices[vertex]);
         }
     }
+    mesh.SetupTriangles();
     return mesh;
 }

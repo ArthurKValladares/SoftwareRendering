@@ -35,37 +35,6 @@ namespace {
     bool wireframe = false;
     float rotate_angle = 0.0;
 
-    struct ScreenTriangle {
-        Point2D p0;
-        Point2D p1;
-        Point2D p2;
-    };
-
-    Point2D hacky_project_to_surface(SDL_Surface* surface, Point3D_f point) {
-        const u32 w = surface->w;
-        const u32 h = surface->h;
-        const float sx = (point.x + 1.0) / (2.0) * w;
-        const float sy = (point.y + 1.0) / (2.0) * h;
-        return Point2D{ (int)round(sx), (int)round(sy) };
-    }
-
-    ScreenTriangle project_triangle_to_screen(SDL_Surface* surface, const Mat4f32& proj_model, const Triangle& triangle) {
-        const Vec4f32 pv0 = proj_model * Vec4f32(triangle.v0.p, 1.0);
-        const Vec4f32 pv1 = proj_model * Vec4f32(triangle.v1.p, 1.0);
-        const Vec4f32 pv2 = proj_model * Vec4f32(triangle.v2.p, 1.0);
-
-        // TODO: Cleanup
-        const Point2D sv0 = hacky_project_to_surface(surface, Point3D_f(pv0.x(), pv0.y(), pv0.z()));
-        const Point2D sv1 = hacky_project_to_surface(surface, Point3D_f(pv1.x(), pv1.y(), pv1.z()));
-        const Point2D sv2 = hacky_project_to_surface(surface, Point3D_f(pv2.x(), pv2.y(), pv2.z()));
-
-        return ScreenTriangle{
-            sv0,
-            sv1,
-            sv2
-        };
-    }
-
     float edge_function(const Point2D& a, const Point2D& b, const Point2D& c) {
         return (b.x - a.x) * (c.y - a.y) - (b.y - a.y) * (c.x - a.x);
     };
@@ -185,9 +154,7 @@ void RenderPixels(SDL_Surface *surface, DepthBuffer& depth_buffer, const Point2D
     }
 }
 
-void DrawTriangle(SDL_Surface* surface, const Mat4f32& proj_model,  Rect2D tile_rect, DepthBuffer& depth_buffer, const Triangle& triangle, const Texture& texture) {
-    ScreenTriangle st = project_triangle_to_screen(surface, proj_model, triangle);
-
+void DrawTriangle(SDL_Surface* surface, const Mat4f32& proj_model,  Rect2D tile_rect, DepthBuffer& depth_buffer, const Triangle& triangle, const ScreenTriangle& st, const Texture& texture) {
     // Early return if triangle has zero area
     if (edge_function(st.p0, st.p1, st.p2) == 0.0) {
         return;
@@ -348,23 +315,17 @@ void DrawTriangleWireframe(SDL_Surface* surface, const Mat4f32& proj_model, cons
     DrawLine(surface, line2, mapped_color);
 }
 
-void DrawMesh(SDL_Surface *surface, const Mat4f32& proj_model, ThreadPool &thread_pool, ScreenTileData tile_data, DepthBuffer& depth_buffer, const Mesh &mesh, const Texture &texture) {
+void DrawMesh(SDL_Surface *surface, const Mat4f32& proj_model, ThreadPool &thread_pool, ScreenTileData tile_data, DepthBuffer& depth_buffer, Mesh &mesh, const Texture &texture) {
+    mesh.SetupScreenTriangles(surface, proj_model);
+
     if (!wireframe) {
         const u32 num_tasks = tile_data.rows * tile_data.cols;
         for (int tile_index = 0; tile_index < num_tasks; ++tile_index) {
             const Rect2D tile_rect = tile_for_index(surface, tile_data, tile_index);
             thread_pool.Schedule([=]() mutable {
                 // TODO: This is very wasteful, can separate triangles into "buckets" ahead of time
-                for (int i = 0; i < mesh.indices.size(); i += 3) {
-                    const Vertex& v0 = mesh.vertices[mesh.indices[i]];
-                    const Vertex& v1 = mesh.vertices[mesh.indices[i + 1]];
-                    const Vertex& v2 = mesh.vertices[mesh.indices[i + 2]];
-                    const Triangle triangle = Triangle{
-                        v0,
-                        v1,
-                        v2
-                    };
-                    DrawTriangle(surface, proj_model, tile_rect, depth_buffer, triangle, texture);
+                for (int i = 0; i < mesh.triangles.size(); ++i) {
+                    DrawTriangle(surface, proj_model, tile_rect, depth_buffer, mesh.triangles[i], mesh.screen_triangles[i], texture);
                 }
             });
         }
@@ -410,7 +371,7 @@ int main(int argc, char *argv[]) {
     DepthBuffer depth_buffer = DepthBuffer(surface->w, surface->h);
 
     Texture texture = Texture("../assets/meshes/teapot/default.png", surface);
-    const Mesh mesh = load_obj("../assets/meshes/teapot", "teapot.obj");
+    Mesh mesh = load_obj("../assets/meshes/teapot", "teapot.obj");
 
     const Camera camera = Camera::orthographic(OrtographicCamera{
         -100.0,
