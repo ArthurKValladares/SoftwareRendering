@@ -12,7 +12,7 @@ Vec4i32::Vec4i32(i32 a) {
 }
 
 Vec4i32::Vec4i32(__m128i a) {
-    _mi = a;
+    _mi = std::move(a);
 }
 
 Vec4f32 Vec4i32::to_float() const {

@@ -53,7 +53,8 @@ float Vec4f32::w() const {
 
 float Vec4f32::dot(const Vec4f32& rhs) const {
     const Vec4f32 mul = *this * rhs;
-    return mul.x() + mul.y() + mul.z() + mul.w();
+    const __m128 hadd = _mm_hadd_ps(mul._mf, mul._mf);
+    return Vec4f32(_mm_hadd_ps(hadd, hadd)).x();
 }
 
 Vec4f32 Vec4f32::operator+(const Vec4f32& rhs) const {

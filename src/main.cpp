@@ -155,16 +155,18 @@ void RenderPixels(SDL_Surface *surface, DepthBuffer& depth_buffer, const Point2D
 }
 
 void DrawTriangle(SDL_Surface* surface, const Mat4f32& proj_model,  Rect2D tile_rect, DepthBuffer& depth_buffer, const Triangle& triangle, const ScreenTriangle& st, const Texture& texture) {
+    // TODO: Right now I have this hack since I'm not doing any preprocessing into buckets
+    const Rect2D triangle_bb = bounding_box(st.p0, st.p1, st.p2);
+    const std::optional<Rect2D> opt_bounding_box = Intersection(tile_rect, triangle_bb);
+    if (!opt_bounding_box.has_value()) {
+        return;
+    }
+
     // Early return if triangle has zero area
     if (edge_function(st.p0, st.p1, st.p2) == 0.0) {
         return;
     }
 
-    // TODO: Right now I have this hack since I'm not doing any preprocessing into buckets
-    const std::optional<Rect2D> opt_bounding_box = Intersection(tile_rect, ::bounding_box(st.p0, st.p1, st.p2));
-    if (!opt_bounding_box.has_value()) {
-        return;
-    }
     const Rect2D bounding_box = opt_bounding_box.value();
 
     const Point2D min_point = Point2D{bounding_box.minX, bounding_box.minY};
