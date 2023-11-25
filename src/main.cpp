@@ -114,10 +114,10 @@ namespace {
         const u32 col_start = col * tile_width;
 
         return Rect2D {
-            (int) row_start,
             (int) col_start,
-            (int) (row_start + tile_height),
-            (int) (col_start + tile_width)
+            (int) row_start,
+            (int) (col_start + tile_width),
+            (int) (row_start + tile_height)
         };
     }
 };
@@ -358,6 +358,7 @@ void DrawMesh(SDL_Surface *surface, ThreadPool &thread_pool, ScreenTileData tile
         for (int tile_index = 0; tile_index < num_tasks; ++tile_index) {
             const Rect2D tile_rect = tile_for_index(surface, tile_data, tile_index);
             thread_pool.Schedule([=]() mutable {
+                // TODO: This is very wasteful, can separate triangles into "buckets" ahead of time
                 for (int i = 0; i < mesh.indices.size(); i += 3) {
                     const Vertex& v0 = mesh.vertices[mesh.indices[i]];
                     const Vertex& v1 = mesh.vertices[mesh.indices[i + 1]];
@@ -367,9 +368,7 @@ void DrawMesh(SDL_Surface *surface, ThreadPool &thread_pool, ScreenTileData tile
                         v1,
                         v2
                     };
-                    if (!wireframe) {
-                        DrawTriangle(surface, tile_rect, depth_buffer, camera, triangle, texture);
-                    }
+                    DrawTriangle(surface, tile_rect, depth_buffer, camera, triangle, texture);
                 }
             });
         }
