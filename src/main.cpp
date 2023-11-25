@@ -49,11 +49,7 @@ namespace {
         return Point2D{ (int)round(sx), (int)round(sy) };
     }
 
-    ScreenTriangle project_triangle_to_screen(SDL_Surface* surface, const Camera& camera, const Triangle& triangle) {
-        const Mat4f32 proj_matrix = camera.GetProjMatrix();
-        // TODO: Better View matrix stuff
-        const Mat4f32 model_matrix = rotate_matrix(Vec3D_f{ 1.0, 0.0, 0 }, rotate_angle);
-
+    ScreenTriangle project_triangle_to_screen(SDL_Surface* surface, const Mat4f32& proj_matrix, const Mat4f32& model_matrix, const Triangle& triangle) {
         const Vec4f32 pv0 = proj_matrix * (model_matrix * Vec4f32(triangle.v0.p, 1.0));
         const Vec4f32 pv1 = proj_matrix * (model_matrix * Vec4f32(triangle.v1.p, 1.0));
         const Vec4f32 pv2 = proj_matrix * (model_matrix * Vec4f32(triangle.v2.p, 1.0));
@@ -189,8 +185,8 @@ void RenderPixels(SDL_Surface *surface, DepthBuffer& depth_buffer, const Point2D
     }
 }
 
-void DrawTriangle(SDL_Surface* surface, Rect2D tile_rect, DepthBuffer& depth_buffer, const Camera& camera, const Triangle& triangle, const Texture& texture) {
-    ScreenTriangle st = project_triangle_to_screen(surface, camera, triangle);
+void DrawTriangle(SDL_Surface* surface, const Mat4f32& proj_matrix, const Mat4f32& model_matrix, Rect2D tile_rect, DepthBuffer& depth_buffer, const Triangle& triangle, const Texture& texture) {
+    ScreenTriangle st = project_triangle_to_screen(surface, proj_matrix, model_matrix, triangle);
 
     // Early return if triangle has zero area
     if (edge_function(st.p0, st.p1, st.p2) == 0.0) {
@@ -337,8 +333,8 @@ void DrawLine(SDL_Surface* surface, const Line2D& line, const Uint32 mapped_colo
     }
 }
 
-void DrawTriangleWireframe(SDL_Surface* surface, const Camera& camera, const Triangle& triangle) {
-    const ScreenTriangle st = project_triangle_to_screen(surface, camera, triangle);
+void DrawTriangleWireframe(SDL_Surface* surface, const Mat4f32& proj_matrix, const Mat4f32& model_matrix, const Triangle& triangle) {
+    const ScreenTriangle st = project_triangle_to_screen(surface, proj_matrix, model_matrix, triangle);
 
     const Line2D line0 = Line2D{ st.p0, st.p1 };
     const Line2D line1 = Line2D{ st.p1, st.p2 };
@@ -352,7 +348,7 @@ void DrawTriangleWireframe(SDL_Surface* surface, const Camera& camera, const Tri
     DrawLine(surface, line2, mapped_color);
 }
 
-void DrawMesh(SDL_Surface *surface, ThreadPool &thread_pool, ScreenTileData tile_data, DepthBuffer& depth_buffer, const Camera& camera, const Mesh &mesh, const Texture &texture) {
+void DrawMesh(SDL_Surface *surface, const Mat4f32& proj_matrix, const Mat4f32& model_matrix, ThreadPool &thread_pool, ScreenTileData tile_data, DepthBuffer& depth_buffer, const Mesh &mesh, const Texture &texture) {
     if (!wireframe) {
         const u32 num_tasks = tile_data.rows * tile_data.cols;
         for (int tile_index = 0; tile_index < num_tasks; ++tile_index) {
@@ -368,7 +364,7 @@ void DrawMesh(SDL_Surface *surface, ThreadPool &thread_pool, ScreenTileData tile
                         v1,
                         v2
                     };
-                    DrawTriangle(surface, tile_rect, depth_buffer, camera, triangle, texture);
+                    DrawTriangle(surface,proj_matrix, model_matrix, tile_rect, depth_buffer, triangle, texture);
                 }
             });
         }
@@ -384,7 +380,7 @@ void DrawMesh(SDL_Surface *surface, ThreadPool &thread_pool, ScreenTileData tile
                 v1,
                 v2
             };
-            DrawTriangleWireframe(surface, camera, triangle);
+            DrawTriangleWireframe(surface, proj_matrix, model_matrix, triangle);
         }
     }
 }
@@ -469,11 +465,14 @@ int main(int argc, char *argv[]) {
             return 0;
         }
         
+        const Mat4f32 proj_matrix = camera.GetProjMatrix();
+        const Mat4f32 model_matrix = rotate_matrix(Vec3D_f{ 1.0, 0.0, 0 }, rotate_angle);
+
         const std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
         
         depth_buffer.Clear();
         ClearSurface(surface, Color{100, 100, 100});
-        DrawMesh(surface, thread_pool, tile_data, depth_buffer, camera, mesh, texture);
+        DrawMesh(surface, proj_matrix, model_matrix, thread_pool, tile_data, depth_buffer, mesh, texture);
         
         const std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
         printf("dt: %ld ms\n", (long) std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count());
