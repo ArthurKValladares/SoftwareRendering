@@ -38,53 +38,6 @@ namespace {
     float edge_function(const Point2D& a, const Point2D& b, const Point2D& c) {
         return (b.x - a.x) * (c.y - a.y) - (b.y - a.y) * (c.x - a.x);
     };
-
-    struct ScreenTileData {
-        u32 rows;
-        u32 cols;
-    };
-
-    u32 u_log2(u32 n) {
-        u32 l = 0;
-        while (n >>= 1) {
-            ++l;
-        }
-        return l;
-    }
-
-    ScreenTileData partition_screen_into_tiles() {
-        u32 num_tiles = std::thread::hardware_concurrency();
-        // Ensure that the total number of tiles is even so that it can easily be factored
-        if (num_tiles % 2 == 1) {
-            num_tiles *= 2;
-        }
-        const u32 rows = u_log2(num_tiles);
-        const u32 cols = num_tiles / rows;
-        return ScreenTileData{
-            rows,
-            cols
-        };
-    }
-
-    Rect2D tile_for_index(SDL_Surface* surface, ScreenTileData data, u32 index) {
-        // TODO: Should probably do some of this calculation up-front together with getting
-        // The data itself
-        const u32 tile_width = ceil(surface->w / data.cols);
-        const u32 tile_height = ceil(surface->h / data.rows);
-
-        const u32 row = index / data.cols;
-        const u32 col = index % data.cols;
-
-        const u32 row_start = row * tile_height;
-        const u32 col_start = col * tile_width;
-
-        return Rect2D {
-            (int) col_start,
-            (int) row_start,
-            (int) (col_start + tile_width),
-            (int) (row_start + tile_height)
-        };
-    }
 };
 
 Vec4i32 GetPixelOffsets(SDL_Surface* surface, Vec4i32 xs, Vec4i32 ys) {
@@ -101,14 +54,6 @@ Uint32* GetPixel(SDL_Surface *surface, u32 offset) {
 
 Uint32* GetPixel(SDL_Surface* surface, Point2D point) {
     return GetPixel(surface, GetPixelOffset(surface, point));
-}
-
-Rect2D bounding_box(Point2D p0, Point2D p1, Point2D p2) {
-    const int minY = MIN3(p0.y, p1.y, p2.y);
-    const int minX = MIN3(p0.x, p1.x, p2.x);
-    const int maxX = MAX3(p0.x, p1.x, p2.x);
-    const int maxY = MAX3(p0.y, p1.y, p2.y);
-    return Rect2D{minX, minY, maxX, maxY};
 }
 
 void ClearSurface(SDL_Surface *surface, Color color) {
@@ -154,20 +99,11 @@ void RenderPixels(SDL_Surface *surface, DepthBuffer& depth_buffer, const Point2D
     }
 }
 
-void DrawTriangle(SDL_Surface* surface, const Mat4f32& proj_model,  Rect2D tile_rect, DepthBuffer& depth_buffer, const Triangle& triangle, const ScreenTriangle& st, const Texture& texture) {
-    // TODO: Right now I have this hack since I'm not doing any preprocessing into buckets
-    const Rect2D triangle_bb = bounding_box(st.p0, st.p1, st.p2);
-    const std::optional<Rect2D> opt_bounding_box = Intersection(tile_rect, triangle_bb);
-    if (!opt_bounding_box.has_value()) {
-        return;
-    }
-
+void DrawTriangle(SDL_Surface* surface, const Mat4f32& proj_model,  Rect2D tile_rect, Rect2D bounding_box, DepthBuffer& depth_buffer, const Triangle& triangle, const ScreenTriangle& st, const Texture& texture) {
     // Early return if triangle has zero area
     if (edge_function(st.p0, st.p1, st.p2) == 0.0) {
         return;
     }
-
-    const Rect2D bounding_box = opt_bounding_box.value();
 
     const Point2D min_point = Point2D{bounding_box.minX, bounding_box.minY};
     
@@ -318,16 +254,14 @@ void DrawTriangleWireframe(SDL_Surface* surface, const Mat4f32& proj_model, cons
 }
 
 void DrawMesh(SDL_Surface *surface, const Mat4f32& proj_model, ThreadPool &thread_pool, ScreenTileData tile_data, DepthBuffer& depth_buffer, Mesh &mesh, const Texture &texture) {
-    mesh.SetupScreenTriangles(surface, proj_model);
+    TriangleTileMap triangle_tile_map = mesh.SetupScreenTriangles(surface, tile_data, proj_model);
 
     if (!wireframe) {
-        const u32 num_tasks = tile_data.rows * tile_data.cols;
-        for (int tile_index = 0; tile_index < num_tasks; ++tile_index) {
-            const Rect2D tile_rect = tile_for_index(surface, tile_data, tile_index);
+        const u32 num_tasks = tile_data.num_tasks();
+        for (auto const& [tile_index, tile_value] : triangle_tile_map) {
             thread_pool.Schedule([=]() mutable {
-                // TODO: This is very wasteful, can separate triangles into "buckets" ahead of time
-                for (int i = 0; i < mesh.triangles.size(); ++i) {
-                    DrawTriangle(surface, proj_model, tile_rect, depth_buffer, mesh.triangles[i], mesh.screen_triangles[i], texture);
+                for (const TriangleTileValueInner& val : tile_value.values) {
+                    DrawTriangle(surface, proj_model, tile_value.tile_rect, val.bounding_box, depth_buffer, mesh.triangles[val.index], mesh.screen_triangles[val.index], texture);
                 }
             });
         }

@@ -1,6 +1,14 @@
 #include "rect.h"
 #include "defs.h"
 
+Rect2D bounding_box(Point2D p0, Point2D p1, Point2D p2) {
+    const int minY = MIN3(p0.y, p1.y, p2.y);
+    const int minX = MIN3(p0.x, p1.x, p2.x);
+    const int maxX = MAX3(p0.x, p1.x, p2.x);
+    const int maxY = MAX3(p0.y, p1.y, p2.y);
+    return Rect2D{minX, minY, maxX, maxY};
+}
+
 Rect2D ClipRect(int width, int height, Rect2D rect) {
     const int minX = MAX(rect.minX, 0);
     const int minY = MAX(rect.minY, 0);
