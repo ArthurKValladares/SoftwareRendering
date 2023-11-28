@@ -33,20 +33,24 @@ TriangleTileMap Mesh::SetupScreenTriangles(SDL_Surface *surface, const ScreenTil
     for (u64 i = 0; i < triangles.size(); ++i) {
         const ScreenTriangle st = project_triangle_to_screen(surface, proj_model, triangles[i]);
         const Rect2D triangle_bb = bounding_box(st.p0, st.p1, st.p2);
-        for (u32 tile_index = 0; tile_index < num_tasks; ++tile_index) {
-            const Rect2D& tile_rect = tile_rects[tile_index];
-            const std::optional<Rect2D> opt_bounding_box = Intersection(tile_rect, triangle_bb);
-            if (opt_bounding_box.has_value()) {
-                if (!triangle_map.count(tile_index)) {
-                    triangle_map.insert({ 
-                        tile_index, 
-                        TriangleTileValue {
-                            tile_rect,
-                            {}
-                        } 
-                     });
+        const IndexBounds index_bounds = tile_data.index_bounds_for_bb(triangle_bb);
+        for (u32 row_index = index_bounds.min_row; row_index <= index_bounds.max_row; ++row_index) {
+            for (u32 col_index = index_bounds.min_col; col_index <= index_bounds.max_col; ++col_index) {
+                const u32 tile_index = row_index * (tile_data.cols) + col_index;
+                const Rect2D& tile_rect = tile_rects[tile_index];
+                const std::optional<Rect2D> opt_bounding_box = Intersection(tile_rect, triangle_bb);
+                if (opt_bounding_box.has_value()) {
+                    if (!triangle_map.count(tile_index)) {
+                        triangle_map.insert({
+                            tile_index,
+                            TriangleTileValue {
+                                tile_rect,
+                                {}
+                            }
+                            });
+                    }
+                    triangle_map[tile_index].values.push_back({ opt_bounding_box.value(),i });
                 }
-                triangle_map[tile_index].values.push_back({ opt_bounding_box.value(),i });
             }
         }
         screen_triangles[i] = st;

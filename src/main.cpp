@@ -318,7 +318,8 @@ int main(int argc, char *argv[]) {
         1.0
     });
 
-    const ScreenTileData tile_data = partition_screen_into_tiles();
+    // TODO: This will need to be re-done when resizing
+    const ScreenTileData tile_data = partition_screen_into_tiles(surface);
 
     // Render loop
     // TODO: rotate stuff again
