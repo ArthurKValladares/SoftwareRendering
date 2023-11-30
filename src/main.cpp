@@ -128,10 +128,13 @@ void DrawTriangle(SDL_Surface* surface, const Mat4f32& proj_model,  Rect2D tile_
         Vec4i32 w1 = w1_row;
         Vec4i32 w2 = w2_row;
             
+        bool is_in_triangle = false;
         for (point.x = bounding_box.minX; point.x <= bounding_box.maxX; point.x += EdgeFunction::step_increment_x) {
             const Vec4i32 mask = w0 | w1 | w2;
                 
             if (mask.any_gte(0)) {
+                is_in_triangle = true;
+
                 const Vec4f32 sum = (w0 + w1 + w2).to_float();
                     
                 const Vec4f32 b0 = w0.to_float() / sum;
@@ -152,6 +155,10 @@ void DrawTriangle(SDL_Surface* surface, const Mat4f32& proj_model,  Rect2D tile_
                 const Vec4f32 d = d_0 + d_1 + d_2;
 
                 RenderPixels(surface, depth_buffer, point, mask, u, v, d, texture);
+            }
+            else if (is_in_triangle) {
+                // Since we are drawing triangles, we can never go in and out of the shape in the same line
+                break;
             }
                 
             w0 += e12.step_size_x;
