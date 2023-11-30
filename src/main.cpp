@@ -99,7 +99,11 @@ void RenderPixels(SDL_Surface *surface, DepthBuffer& depth_buffer, const Point2D
     }
 }
 
-void DrawTriangle(SDL_Surface* surface, const Mat4f32& proj_model,  Rect2D tile_rect, Rect2D bounding_box, DepthBuffer& depth_buffer, const Triangle& triangle, const ScreenTriangle& st, const Texture& texture) {
+void FillBottomFlatTriangle() {
+
+}
+
+void DrawTriangle(SDL_Surface* surface, Rect2D tile_rect, Rect2D bounding_box, DepthBuffer& depth_buffer, const Triangle& triangle, const ScreenTriangle& st, const Texture& texture) {
     // Early return if triangle has zero area
     if (edge_function(st.p0, st.p1, st.p2) == 0.0) {
         return;
@@ -245,9 +249,7 @@ void DrawLine(SDL_Surface* surface, const Line2D& line, const Uint32 mapped_colo
     }
 }
 
-void DrawTriangleWireframe(SDL_Surface* surface, const Mat4f32& proj_model, const Triangle& triangle) {
-    const ScreenTriangle st = project_triangle_to_screen(surface, proj_model, triangle);
-
+void DrawTriangleWireframe(SDL_Surface* surface, const ScreenTriangle& st) {
     const Line2D line0 = Line2D{ st.p0, st.p1 };
     const Line2D line1 = Line2D{ st.p1, st.p2 };
     const Line2D line2 = Line2D{ st.p2, st.p0 };
@@ -263,30 +265,21 @@ void DrawTriangleWireframe(SDL_Surface* surface, const Mat4f32& proj_model, cons
 void DrawMesh(SDL_Surface *surface, const Mat4f32& proj_model, ThreadPool &thread_pool, ScreenTileData tile_data, DepthBuffer& depth_buffer, Mesh &mesh, const Texture &texture) {
     TriangleTileMap triangle_tile_map = mesh.SetupScreenTriangles(surface, tile_data, proj_model);
 
-    if (!wireframe) {
-        const u32 num_tasks = tile_data.num_tasks();
-        for (auto const& [tile_index, tile_value] : triangle_tile_map) {
-            thread_pool.Schedule([=]() mutable {
-                for (const TriangleTileValueInner& val : tile_value.values) {
-                    DrawTriangle(surface, proj_model, tile_value.tile_rect, val.bounding_box, depth_buffer, mesh.triangles[val.index], mesh.screen_triangles[val.index], texture);
+    const u32 num_tasks = tile_data.num_tasks();
+    for (auto const& [tile_index, tile_value] : triangle_tile_map) {
+        thread_pool.Schedule([=]() mutable {
+            for (const TriangleTileValueInner& val : tile_value.values) {
+                if (!wireframe) {
+                    DrawTriangle(surface, tile_value.tile_rect, val.bounding_box, depth_buffer, mesh.triangles[val.index], mesh.screen_triangles[val.index], texture);
                 }
-            });
-        }
-        thread_pool.Wait();
+                else {
+                    DrawTriangleWireframe(surface, mesh.screen_triangles[val.index]);
+                }
+            }
+        });
     }
-    else {
-        for (int i = 0; i < mesh.indices.size(); i += 3) {
-            const Vertex& v0 = mesh.vertices[mesh.indices[i]];
-            const Vertex& v1 = mesh.vertices[mesh.indices[i + 1]];
-            const Vertex& v2 = mesh.vertices[mesh.indices[i + 2]];
-            const Triangle triangle = Triangle{
-                v0,
-                v1,
-                v2
-            };
-            DrawTriangleWireframe(surface, proj_model, triangle);
-        }
-    }
+
+    thread_pool.Wait();
 }
 
 int main(int argc, char *argv[]) { 
