@@ -99,11 +99,86 @@ void RenderPixels(SDL_Surface *surface, DepthBuffer& depth_buffer, const Point2D
     }
 }
 
-void FillBottomFlatTriangle() {
+void FillBottomFlatTriangle(SDL_Surface* surface, Point2D p0, Point2D p1, Point2D p2) {
+    assert(p1.y == p2.y);
+    assert(p0.y < p1.y);
 
+    const float invslope1 = (float) (p1.x - p0.x) / (p1.y - p0.y);
+    const float invslope2 = (float) (p2.x - p0.x) / (p2.y - p0.y);
+    const float min_slope = MIN(invslope1, invslope2);
+    const float max_slope = MAX(invslope1, invslope2);
+
+    float curr_x_min = p0.x;
+    float curr_x_max = p0.x;
+
+    const Uint32 mapped_color = SDL_MapRGB(surface->format, 255, 0, 0);
+    for (int scanlineY = p0.y; scanlineY <= p1.y; scanlineY++) {
+        for (int x = curr_x_min; x <= curr_x_max; ++x) {
+            if (x >= surface->w || scanlineY >= surface->h) {
+                break;
+            }
+            *GetPixel(surface, GetPixelOffset(surface, Point2D{x, scanlineY})) = mapped_color;
+        }
+        curr_x_min += min_slope;
+        curr_x_max += max_slope;
+    }
+}
+
+void FillTopFlatTriangle(SDL_Surface* surface, Point2D p0, Point2D p1, Point2D p2) {
+    assert(p0.y == p1.y);
+    assert(p2.y > p1.y);
+
+    float invslope1 = (float) (p2.x - p0.x) / (p2.y - p0.y);
+    float invslope2 = (float) (p2.x - p1.x) / (p2.y - p1.y);
+    const float min_slope = MIN(invslope1, invslope2);
+    const float max_slope = MAX(invslope1, invslope2);
+
+    float curr_x_min = p2.x;
+    float curr_x_max = p2.x;
+
+    const Uint32 mapped_color = SDL_MapRGB(surface->format, 0, 255, 0);
+    for (int scanlineY = p2.y; scanlineY > p0.y; scanlineY--)
+    {
+        for (int x = curr_x_max; x >= curr_x_min; --x) {
+            if (x >= surface->w || scanlineY >= surface->h) {
+                break;
+            }
+            *GetPixel(surface, GetPixelOffset(surface, Point2D{ x, scanlineY })) = mapped_color;
+        }
+        curr_x_min -= max_slope;
+        curr_x_max -= min_slope;
+    }
 }
 
 void DrawTriangle(SDL_Surface* surface, Rect2D tile_rect, Rect2D bounding_box, DepthBuffer& depth_buffer, const Triangle& triangle, const ScreenTriangle& st, const Texture& texture) {
+    Point2D const* p0 = &st.p0;
+    Point2D const* p1 = &st.p1;
+    Point2D const* p2 = &st.p2;
+    if (p1->y < p0->y) {
+        std::swap(p1, p0);
+    }
+    if (p2->y < p0->y) {
+        std::swap(p2, p0);
+    }
+    if (p2->y < p1->y) {
+        std::swap(p2, p1);
+    }
+
+    if (p2->y == p1->y) {
+        FillBottomFlatTriangle(surface, *p0, *p1, *p2);
+    }
+    else if (p0->y == p1->y) {
+        FillTopFlatTriangle(surface, *p0, *p1, *p2);
+    }
+    else {
+        const Point2D p3 = Point2D{
+            (int)(p0->x + ((float)(p1->y - p0->y) / (float)(p2->y - p0->y)) * (p2->x - p0->x)), 
+            p1->y
+        };
+        FillBottomFlatTriangle(surface, *p0, *p1, p3);
+        FillTopFlatTriangle(surface, *p1, p3, *p2);
+    }
+    /*
     // Early return if triangle has zero area
     if (edge_function(st.p0, st.p1, st.p2) == 0.0) {
         return;
@@ -174,6 +249,7 @@ void DrawTriangle(SDL_Surface* surface, Rect2D tile_rect, Rect2D bounding_box, D
         w1_row += e20.step_size_y;
         w2_row += e01.step_size_y;
     }
+    */
 }
 
 // NOTE: I don't think this SIMD version is really worth it tbh,
