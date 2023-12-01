@@ -56,19 +56,32 @@ Uint32* GetPixel(SDL_Surface* surface, Point2D point) {
     return GetPixel(surface, GetPixelOffset(surface, point));
 }
 
-void ClearSurface(SDL_Surface *surface, Color color) {
-    const int width = surface->w;
-    const int height = surface->h;
+void ClearSurface(SDL_Surface *surface, ThreadPool& thread_pool, Color color) {
     const Uint32 pixel_color =
         SDL_MapRGB(surface->format, color.red, color.green, color.blue);
     const Vec4i32 pixel_colors = Vec4i32(pixel_color);
-    
-    for (int y = 0; y < height; y += 1) {
-        Point2D point = Point2D{ 0, y };
-        for (point.x = 0; point.x < width; point.x += EdgeFunction::step_increment_x) {
-            *(Vec4i32*)GetPixel(surface, point) = pixel_colors;
-        }
+
+    const int width = surface->w;
+    const int height = surface->h;
+
+    const int num_threads = std::thread::hardware_concurrency();
+    const int rows_per_thread = height / num_threads;
+
+    for (int i = 0; i < num_threads; ++i) {
+        const int min_y = i * rows_per_thread;
+        const int max_y = i == (num_threads - 1)
+            ? height
+            : (i + 1) * rows_per_thread;
+        thread_pool.Schedule([=] {
+            for (int y = min_y; y < max_y; ++y) {
+                Point2D point = Point2D{ 0, y };
+                for (point.x = 0; point.x < width; point.x += EdgeFunction::step_increment_x) {
+                    *(Vec4i32*)GetPixel(surface, point) = pixel_colors;
+                }
+            }
+        });
     }
+    thread_pool.Wait();
 }
 
 void RenderPixels(SDL_Surface *surface, DepthBuffer& depth_buffer, const Point2D &origin_point, Vec4i32 mask, Vec4f32 u, Vec4f32 v, Vec4f32 d, const Texture &texture) {
@@ -446,7 +459,7 @@ int main(int argc, char *argv[]) {
         const std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
         
         depth_buffer.Clear();
-        ClearSurface(surface, Color{100, 100, 100});
+        ClearSurface(surface, thread_pool, Color{100, 100, 100});
         DrawMesh(surface, proj_model, thread_pool, tile_data, depth_buffer, mesh, texture);
         
         const std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
