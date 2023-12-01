@@ -19,8 +19,8 @@ ScreenTriangle project_triangle_to_screen(SDL_Surface* surface, const Mat4f32& p
     const Point2D sv2 = hacky_project_to_surface(surface, Point3D_f(pv2.x(), pv2.y(), pv2.z()));
 
     return ScreenTriangle{
-        sv0,
-        sv1,
-        sv2
+        ScreenVertex{ sv0, triangle.v0.uv },
+        ScreenVertex{ sv1, triangle.v1.uv },
+        ScreenVertex{ sv2, triangle.v2.uv }
     };
 }

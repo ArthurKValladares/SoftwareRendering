@@ -15,10 +15,15 @@ struct Triangle {
     const Vertex& v2;
 };
 
+struct ScreenVertex {
+    Point2D p;
+    UV uv;
+};
+
 struct ScreenTriangle {
-    Point2D p0;
-    Point2D p1;
-    Point2D p2;
+    ScreenVertex v0;
+    ScreenVertex v1;
+    ScreenVertex v2;
 };
 
 

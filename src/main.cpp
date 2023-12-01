@@ -112,84 +112,106 @@ void RenderPixels(SDL_Surface *surface, DepthBuffer& depth_buffer, const Point2D
     }
 }
 
-void FillBottomFlatTriangle(SDL_Surface* surface, Point2D p0, Point2D p1, Point2D p2) {
-    assert(p1.y == p2.y);
-    assert(p0.y < p1.y);
+void FillBottomFlatTriangle(SDL_Surface* surface, const ScreenVertex* v0, const ScreenVertex* v1, const ScreenVertex* v2) {
+    assert(v1->p.y == v2->p.y);
+    assert(v0->p.y < v1->p.y);
 
-    const float invslope1 = (float) (p1.x - p0.x) / (p1.y - p0.y);
-    const float invslope2 = (float) (p2.x - p0.x) / (p2.y - p0.y);
+    const float invslope2 = (float) (v2->p.x - v0->p.x) / (v2->p.y - v0->p.y);
+    const float invslope1 = (float) (v1->p.x - v0->p.x) / (v1->p.y - v0->p.y);
+
     const float min_slope = MIN(invslope1, invslope2);
     const float max_slope = MAX(invslope1, invslope2);
 
-    float curr_x_min = p0.x;
-    float curr_x_max = p0.x;
+    float curr_x_min = v0->p.x;
+    float curr_x_max = v0->p.x;
 
     const Uint32 mapped_color = SDL_MapRGB(surface->format, 255, 0, 0);
-    for (int scanlineY = p0.y; scanlineY <= p1.y; scanlineY++) {
-        for (int x = curr_x_min; x <= curr_x_max; ++x) {
+    for (int scanlineY = v0->p.y; scanlineY <= v1->p.y; scanlineY++) {
+        for (int x = curr_x_min; x <= curr_x_max; x += EdgeFunction::step_increment_x) {
             if (x >= surface->w || scanlineY >= surface->h) {
                 break;
             }
-            *GetPixel(surface, GetPixelOffset(surface, Point2D{x, scanlineY})) = mapped_color;
+
+            const Vec4i32 xs = Vec4i32(x) + Vec4i32(0, 1, 2, 3);
+            const Vec4i32 ys = Vec4i32(scanlineY);
+            const Vec4i32 pixel_offsets = GetPixelOffsets(surface, xs, ys);
+
+            *GetPixel(surface, pixel_offsets.x()) = mapped_color;
+            *GetPixel(surface, pixel_offsets.y()) = mapped_color;
+            *GetPixel(surface, pixel_offsets.z()) = mapped_color;
+            *GetPixel(surface, pixel_offsets.w()) = mapped_color;
         }
         curr_x_min += min_slope;
         curr_x_max += max_slope;
     }
 }
 
-void FillTopFlatTriangle(SDL_Surface* surface, Point2D p0, Point2D p1, Point2D p2) {
-    assert(p0.y == p1.y);
-    assert(p2.y > p1.y);
+void FillTopFlatTriangle(SDL_Surface* surface, const ScreenVertex* v0, const ScreenVertex* v1, const ScreenVertex* v2) {
+    assert(v0->p.y == v1->p.y);
+    assert(v2->p.y > v1->p.y);
 
-    float invslope1 = (float) (p2.x - p0.x) / (p2.y - p0.y);
-    float invslope2 = (float) (p2.x - p1.x) / (p2.y - p1.y);
+    float invslope1 = (float) (v2->p.x - v0->p.x) / (v2->p.y - v0->p.y);
+    float invslope2 = (float) (v2->p.x - v1->p.x) / (v2->p.y - v1->p.y);
+
     const float min_slope = MIN(invslope1, invslope2);
     const float max_slope = MAX(invslope1, invslope2);
 
-    float curr_x_min = p2.x;
-    float curr_x_max = p2.x;
+    float curr_x_min = v2->p.x;
+    float curr_x_max = v2->p.x;
 
     const Uint32 mapped_color = SDL_MapRGB(surface->format, 0, 255, 0);
-    for (int scanlineY = p2.y; scanlineY > p0.y; scanlineY--)
+    for (int scanlineY = v2->p.y; scanlineY > v0->p.y; scanlineY--)
     {
-        for (int x = curr_x_max; x >= curr_x_min; --x) {
+        for (int x = curr_x_min; x <= curr_x_max; x += EdgeFunction::step_increment_x) {
             if (x >= surface->w || scanlineY >= surface->h) {
                 break;
             }
-            *GetPixel(surface, GetPixelOffset(surface, Point2D{ x, scanlineY })) = mapped_color;
+            
+            const Vec4i32 xs = Vec4i32(x) + Vec4i32(0, 1, 2, 3);
+            const Vec4i32 ys = Vec4i32(scanlineY);
+            const Vec4i32 pixel_offsets = GetPixelOffsets(surface, xs, ys);
+
+            *GetPixel(surface, pixel_offsets.x()) = mapped_color;
+            *GetPixel(surface, pixel_offsets.y()) = mapped_color;
+            *GetPixel(surface, pixel_offsets.z()) = mapped_color;
+            *GetPixel(surface, pixel_offsets.w()) = mapped_color;
         }
         curr_x_min -= max_slope;
         curr_x_max -= min_slope;
     }
 }
 
-void DrawTriangle(SDL_Surface* surface, Rect2D tile_rect, Rect2D bounding_box, DepthBuffer& depth_buffer, const Triangle& triangle, const ScreenTriangle& st, const Texture& texture) {
-    Point2D const* p0 = &st.p0;
-    Point2D const* p1 = &st.p1;
-    Point2D const* p2 = &st.p2;
-    if (p1->y < p0->y) {
-        std::swap(p1, p0);
+void DrawTriangle(SDL_Surface* surface, Rect2D tile_rect, Rect2D bounding_box, DepthBuffer& depth_buffer, const ScreenTriangle& st, const Texture& texture) {
+    ScreenVertex const* sv0 = &st.v0;
+    ScreenVertex const* sv1 = &st.v1;
+    ScreenVertex const* sv2 = &st.v2;
+    if (sv1->p.y < sv0->p.y) {
+        std::swap(sv1, sv0);
     }
-    if (p2->y < p0->y) {
-        std::swap(p2, p0);
+    if (sv2->p.y < sv0->p.y) {
+        std::swap(sv2, sv0);
     }
-    if (p2->y < p1->y) {
-        std::swap(p2, p1);
+    if (sv2->p.y < sv1->p.y) {
+        std::swap(sv2, sv1);
     }
 
-    if (p2->y == p1->y) {
-        FillBottomFlatTriangle(surface, *p0, *p1, *p2);
+    if (sv2->p.y == sv1->p.y) {
+        FillBottomFlatTriangle(surface, sv0, sv1, sv2);
     }
-    else if (p0->y == p1->y) {
-        FillTopFlatTriangle(surface, *p0, *p1, *p2);
+    else if (sv0->p.y == sv1->p.y) {
+        FillTopFlatTriangle(surface, sv0, sv1, sv2);
     }
     else {
         const Point2D p3 = Point2D{
-            (int)(p0->x + ((float)(p1->y - p0->y) / (float)(p2->y - p0->y)) * (p2->x - p0->x)), 
-            p1->y
+            (int)(sv0->p.x + ((float)(sv1->p.y - sv0->p.y) / (float)(sv2->p.y - sv0->p.y)) * (sv2->p.x - sv0->p.x)), 
+            sv1->p.y
         };
-        FillBottomFlatTriangle(surface, *p0, *p1, p3);
-        FillTopFlatTriangle(surface, *p1, p3, *p2);
+        const ScreenVertex sv3 = ScreenVertex{
+            p3,
+            UV{} // TODO: Gotta figure out UV here
+        };
+        FillBottomFlatTriangle(surface, sv0, sv1, &sv3);
+        FillTopFlatTriangle(surface, sv1, &sv3, sv2);
     }
     /*
     // Early return if triangle has zero area
@@ -339,9 +361,9 @@ void DrawLine(SDL_Surface* surface, const Line2D& line, const Uint32 mapped_colo
 }
 
 void DrawTriangleWireframe(SDL_Surface* surface, const ScreenTriangle& st) {
-    const Line2D line0 = Line2D{ st.p0, st.p1 };
-    const Line2D line1 = Line2D{ st.p1, st.p2 };
-    const Line2D line2 = Line2D{ st.p2, st.p0 };
+    const Line2D line0 = Line2D{ st.v0.p, st.v1.p };
+    const Line2D line1 = Line2D{ st.v1.p, st.v2.p };
+    const Line2D line2 = Line2D{ st.v2.p, st.v0.p };
 
     const Color wireframe_color = Color{ 255, 0, 0 };
     const auto mapped_color = SDL_MapRGB(surface->format, wireframe_color.red, wireframe_color.green, wireframe_color.blue);
@@ -359,7 +381,7 @@ void DrawMesh(SDL_Surface *surface, const Mat4f32& proj_model, ThreadPool &threa
         thread_pool.Schedule([=]() mutable {
             for (const TriangleTileValueInner& val : tile_value.values) {
                 if (!wireframe) {
-                    DrawTriangle(surface, tile_value.tile_rect, val.bounding_box, depth_buffer, mesh.triangles[val.index], mesh.screen_triangles[val.index], texture);
+                    DrawTriangle(surface, tile_value.tile_rect, val.bounding_box, depth_buffer, mesh.screen_triangles[val.index], texture);
                 }
                 else {
                     DrawTriangleWireframe(surface, mesh.screen_triangles[val.index]);
