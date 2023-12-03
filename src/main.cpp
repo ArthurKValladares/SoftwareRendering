@@ -307,7 +307,7 @@ void DrawTriangle(SDL_Surface* surface, Rect2D tile_rect, Rect2D bounding_box, D
     }
     else {
         const Point2D p3 = Point2D{
-            (int)(sv0->p.x + ((float)(sv1->p.y - sv0->p.y) / (float)(sv2->p.y - sv0->p.y)) * (sv2->p.x - sv0->p.x)), 
+            (int)(sv0->p.x + ((float)(sv1->p.y - sv0->p.y) / (float)(sv2->p.y - sv0->p.y)) * (sv2->p.x - sv0->p.x)),
             sv1->p.y
         };
         const EdgeFunctionWeights ws = weights_at_point(sv0, sv1, sv2, p3);
@@ -322,24 +322,24 @@ void DrawTriangle(SDL_Surface* surface, Rect2D tile_rect, Rect2D bounding_box, D
     }
     /*
     // Early return if triangle has zero area
-    if (edge_function(st.p0, st.p1, st.p2) == 0.0) {
+    if (edge_function(st.v0.p, st.v1.p, st.v2.p) == 0.0) {
         return;
     }
 
     const Point2D min_point = Point2D{bounding_box.minX, bounding_box.minY};
     
-    const float c0_u = triangle.v0.uv.u, c0_v = triangle.v0.uv.v;
-    const float c1_u = triangle.v1.uv.u, c1_v = triangle.v1.uv.v;
-    const float c2_u = triangle.v2.uv.u, c2_v = triangle.v2.uv.v;
+    const float c0_u = st.v0.uv.u, c0_v = st.v0.uv.v;
+    const float c1_u = st.v1.uv.u, c1_v = st.v1.uv.v;
+    const float c2_u = st.v2.uv.u, c2_v = st.v2.uv.v;
     
-    const float c0_d = triangle.v0.p.z;
-    const float c1_d = triangle.v1.p.z;
-    const float c2_d = triangle.v2.p.z;
+    const float c0_d = st.v0.depth;
+    const float c1_d = st.v1.depth;
+    const float c2_d = st.v2.depth;
 
     EdgeFunction e01, e12, e20;
-    Vec4i32 w0_row = e12.Init(st.p1, st.p2, min_point);
-    Vec4i32 w1_row = e20.Init(st.p2, st.p0, min_point);
-    Vec4i32 w2_row = e01.Init(st.p0, st.p1, min_point);
+    Vec4i32 w0_row = e12.Init(st.v1.p, st.v2.p, min_point);
+    Vec4i32 w1_row = e20.Init(st.v2.p, st.v0.p, min_point);
+    Vec4i32 w2_row = e01.Init(st.v0.p, st.v1.p, min_point);
     
     Point2D point = { 0, 0 };
     for (point.y = bounding_box.minY; point.y <= bounding_box.maxY; point.y += EdgeFunction::step_increment_y) {
@@ -587,10 +587,10 @@ int main(int argc, char *argv[]) {
 
         const std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
         
-        depth_buffer.Clear();
         ClearSurface(surface, thread_pool, Color{100, 100, 100});
         DrawMesh(surface, proj_model, thread_pool, tile_data, depth_buffer, mesh, texture);
-        
+        depth_buffer.Clear();
+
         const std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
         printf("dt: %ld ms\n", (long) std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count());
 
