@@ -17,6 +17,7 @@ struct Triangle {
 
 struct ScreenVertex {
     Point2D p;
+    float depth;
     UV uv;
 };
 
