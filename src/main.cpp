@@ -38,6 +38,22 @@ namespace {
     float edge_function(const Point2D& a, const Point2D& b, const Point2D& c) {
         return (b.x - a.x) * (c.y - a.y) - (b.y - a.y) * (c.x - a.x);
     };
+
+    UV uv_at_point(const ScreenVertex* sv0, const ScreenVertex* sv1, const ScreenVertex*  sv2, const Point2D& at) {
+        const float ef0 = edge_function(sv1->p, sv2->p, at);
+        const float ef1 = edge_function(sv2->p, sv0->p, at);
+        const float ef2 = edge_function(sv0->p, sv1->p, at);
+        const float sum = ef0 + ef1 + ef2;
+
+        const float b0 = ef0 / sum;
+        const float b1 = ef1 / sum;
+        const float b2 = ef2 / sum;
+
+        const float u = (sv0->uv.u * b0) + (sv0->uv.u * b1) + (sv0->uv.u * b2);
+        const float v = (sv0->uv.v * b0) + (sv0->uv.v * b1) + (sv0->uv.v * b2);
+
+        return UV{u, v};
+    }
 };
 
 Vec4i32 GetPixelOffsets(SDL_Surface* surface, Vec4i32 xs, Vec4i32 ys) {
@@ -112,7 +128,7 @@ void RenderPixels(SDL_Surface *surface, DepthBuffer& depth_buffer, const Point2D
     }
 }
 
-void FillBottomFlatTriangle(SDL_Surface* surface, const ScreenVertex* v0, const ScreenVertex* v1, const ScreenVertex* v2) {
+void FillBottomFlatTriangle(SDL_Surface* surface, const ScreenVertex* v0, const ScreenVertex* v1, const ScreenVertex* v2, const Texture& texture) {
     assert(v1->p.y == v2->p.y);
     assert(v0->p.y < v1->p.y);
 
@@ -125,7 +141,6 @@ void FillBottomFlatTriangle(SDL_Surface* surface, const ScreenVertex* v0, const 
     float curr_x_min = v0->p.x;
     float curr_x_max = v0->p.x;
 
-    const Uint32 mapped_color = SDL_MapRGB(surface->format, 255, 0, 0);
     for (int scanlineY = v0->p.y; scanlineY <= v1->p.y; scanlineY++) {
         for (int x = curr_x_min; x <= curr_x_max; x += EdgeFunction::step_increment_x) {
             if (x >= surface->w || scanlineY >= surface->h) {
@@ -136,20 +151,29 @@ void FillBottomFlatTriangle(SDL_Surface* surface, const ScreenVertex* v0, const 
             const Vec4i32 ys = Vec4i32(scanlineY);
             const Vec4i32 pixel_offsets = GetPixelOffsets(surface, xs, ys);
 
-            *GetPixel(surface, pixel_offsets.x()) = mapped_color;
-            if (xs.y() <= curr_x_max)
-                *GetPixel(surface, pixel_offsets.y()) = mapped_color;
-            if (xs.z() <= curr_x_max)
-                *GetPixel(surface, pixel_offsets.z()) = mapped_color;
-            if (xs.w() <= curr_x_max)
-                *GetPixel(surface, pixel_offsets.w()) = mapped_color;
+            {
+                const UV uv = uv_at_point(v0, v1, v2, Point2D{ xs.x(), scanlineY });
+                *GetPixel(surface, pixel_offsets.x()) = texture.get_pixel_uv(uv.u, uv.v);
+            }
+            if (xs.y() <= curr_x_max) {
+                const UV uv = uv_at_point(v0, v1, v2, Point2D{ xs.y(), scanlineY });
+                *GetPixel(surface, pixel_offsets.y()) = texture.get_pixel_uv(uv.u, uv.v);
+            }
+            if (xs.z() <= curr_x_max) {
+                const UV uv = uv_at_point(v0, v1, v2, Point2D{ xs.z(), scanlineY });
+                *GetPixel(surface, pixel_offsets.z()) = texture.get_pixel_uv(uv.u, uv.v);
+            }
+            if (xs.w() <= curr_x_max) {
+                const UV uv = uv_at_point(v0, v1, v2, Point2D{ xs.w(), scanlineY });
+                *GetPixel(surface, pixel_offsets.w()) = texture.get_pixel_uv(uv.u, uv.v);
+            }
         }
         curr_x_min += min_slope;
         curr_x_max += max_slope;
     }
 }
 
-void FillTopFlatTriangle(SDL_Surface* surface, const ScreenVertex* v0, const ScreenVertex* v1, const ScreenVertex* v2) {
+void FillTopFlatTriangle(SDL_Surface* surface, const ScreenVertex* v0, const ScreenVertex* v1, const ScreenVertex* v2, const Texture& texture) {
     assert(v0->p.y == v1->p.y);
     assert(v2->p.y > v1->p.y);
 
@@ -162,7 +186,6 @@ void FillTopFlatTriangle(SDL_Surface* surface, const ScreenVertex* v0, const Scr
     float curr_x_min = v2->p.x;
     float curr_x_max = v2->p.x;
 
-    const Uint32 mapped_color = SDL_MapRGB(surface->format, 0, 255, 0);
     for (int scanlineY = v2->p.y; scanlineY > v0->p.y; scanlineY--)
     {
         for (int x = curr_x_min; x <= curr_x_max; x += EdgeFunction::step_increment_x) {
@@ -174,13 +197,22 @@ void FillTopFlatTriangle(SDL_Surface* surface, const ScreenVertex* v0, const Scr
             const Vec4i32 ys = Vec4i32(scanlineY);
             const Vec4i32 pixel_offsets = GetPixelOffsets(surface, xs, ys);
 
-            *GetPixel(surface, pixel_offsets.x()) = mapped_color;
-            if (xs.y() <= curr_x_max)
-                *GetPixel(surface, pixel_offsets.y()) = mapped_color;
-            if (xs.z() <= curr_x_max)
-                *GetPixel(surface, pixel_offsets.z()) = mapped_color;
-            if (xs.w() <= curr_x_max)
-                *GetPixel(surface, pixel_offsets.w()) = mapped_color;
+            {
+                const UV uv = uv_at_point(v0, v1, v2, Point2D{ xs.z(), scanlineY });
+                *GetPixel(surface, pixel_offsets.x()) = texture.get_pixel_uv(uv.u, uv.v);
+            }
+            if (xs.y() <= curr_x_max) {
+                const UV uv = uv_at_point(v0, v1, v2, Point2D{ xs.y(), scanlineY });
+                *GetPixel(surface, pixel_offsets.y()) = texture.get_pixel_uv(uv.u, uv.v);
+            }
+            if (xs.z() <= curr_x_max) {
+                const UV uv = uv_at_point(v0, v1, v2, Point2D{ xs.z(), scanlineY });
+                *GetPixel(surface, pixel_offsets.z()) = texture.get_pixel_uv(uv.u, uv.v);
+            }
+            if (xs.w() <= curr_x_max) {
+                const UV uv = uv_at_point(v0, v1, v2, Point2D{ xs.w(), scanlineY });
+                *GetPixel(surface, pixel_offsets.w()) = texture.get_pixel_uv(uv.u, uv.v);
+            }
         }
         curr_x_min -= max_slope;
         curr_x_max -= min_slope;
@@ -202,22 +234,23 @@ void DrawTriangle(SDL_Surface* surface, Rect2D tile_rect, Rect2D bounding_box, D
     }
 
     if (sv2->p.y == sv1->p.y) {
-        FillBottomFlatTriangle(surface, sv0, sv1, sv2);
+        FillBottomFlatTriangle(surface, sv0, sv1, sv2, texture);
     }
     else if (sv0->p.y == sv1->p.y) {
-        FillTopFlatTriangle(surface, sv0, sv1, sv2);
+        FillTopFlatTriangle(surface, sv0, sv1, sv2, texture);
     }
     else {
         const Point2D p3 = Point2D{
             (int)(sv0->p.x + ((float)(sv1->p.y - sv0->p.y) / (float)(sv2->p.y - sv0->p.y)) * (sv2->p.x - sv0->p.x)), 
             sv1->p.y
         };
+        
         const ScreenVertex sv3 = ScreenVertex{
             p3,
-            UV{} // TODO: Gotta figure out UV here
+            uv_at_point(sv0, sv1, sv2, p3)
         };
-        FillBottomFlatTriangle(surface, sv0, sv1, &sv3);
-        FillTopFlatTriangle(surface, sv1, &sv3, sv2);
+        FillBottomFlatTriangle(surface, sv0, sv1, &sv3, texture);
+        FillTopFlatTriangle(surface, sv1, &sv3, sv2, texture);
     }
     /*
     // Early return if triangle has zero area
