@@ -137,9 +137,12 @@ void FillBottomFlatTriangle(SDL_Surface* surface, const ScreenVertex* v0, const 
             const Vec4i32 pixel_offsets = GetPixelOffsets(surface, xs, ys);
 
             *GetPixel(surface, pixel_offsets.x()) = mapped_color;
-            *GetPixel(surface, pixel_offsets.y()) = mapped_color;
-            *GetPixel(surface, pixel_offsets.z()) = mapped_color;
-            *GetPixel(surface, pixel_offsets.w()) = mapped_color;
+            if (xs.y() <= curr_x_max)
+                *GetPixel(surface, pixel_offsets.y()) = mapped_color;
+            if (xs.z() <= curr_x_max)
+                *GetPixel(surface, pixel_offsets.z()) = mapped_color;
+            if (xs.w() <= curr_x_max)
+                *GetPixel(surface, pixel_offsets.w()) = mapped_color;
         }
         curr_x_min += min_slope;
         curr_x_max += max_slope;
@@ -172,9 +175,12 @@ void FillTopFlatTriangle(SDL_Surface* surface, const ScreenVertex* v0, const Scr
             const Vec4i32 pixel_offsets = GetPixelOffsets(surface, xs, ys);
 
             *GetPixel(surface, pixel_offsets.x()) = mapped_color;
-            *GetPixel(surface, pixel_offsets.y()) = mapped_color;
-            *GetPixel(surface, pixel_offsets.z()) = mapped_color;
-            *GetPixel(surface, pixel_offsets.w()) = mapped_color;
+            if (xs.y() <= curr_x_max)
+                *GetPixel(surface, pixel_offsets.y()) = mapped_color;
+            if (xs.z() <= curr_x_max)
+                *GetPixel(surface, pixel_offsets.z()) = mapped_color;
+            if (xs.w() <= curr_x_max)
+                *GetPixel(surface, pixel_offsets.w()) = mapped_color;
         }
         curr_x_min -= max_slope;
         curr_x_max -= min_slope;
