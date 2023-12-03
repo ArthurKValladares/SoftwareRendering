@@ -49,8 +49,8 @@ namespace {
         const float b1 = ef1 / sum;
         const float b2 = ef2 / sum;
 
-        const float u = (sv0->uv.u * b0) + (sv0->uv.u * b1) + (sv0->uv.u * b2);
-        const float v = (sv0->uv.v * b0) + (sv0->uv.v * b1) + (sv0->uv.v * b2);
+        const float u = (sv0->uv.u * b0) + (sv1->uv.u * b1) + (sv2->uv.u * b2);
+        const float v = (sv0->uv.v * b0) + (sv1->uv.v * b1) + (sv2->uv.v * b2);
 
         return UV{u, v};
     }
