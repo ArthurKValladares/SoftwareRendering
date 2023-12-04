@@ -304,6 +304,11 @@ void FillTopFlatTriangle(SDL_Surface* surface, DepthBuffer& depth_buffer, const 
 }
 
 void DrawTriangle(SDL_Surface* surface, Rect2D tile_rect, Rect2D bounding_box, DepthBuffer& depth_buffer, const ScreenTriangle& st, const Texture& texture) {
+    // Early return if triangle has zero area
+    if (edge_function(st.v0.p, st.v1.p, st.v2.p) == 0.0) {
+        return;
+    }
+
     ScreenVertex const* sv0 = &st.v0;
     ScreenVertex const* sv1 = &st.v1;
     ScreenVertex const* sv2 = &st.v2;
