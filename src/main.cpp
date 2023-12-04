@@ -184,12 +184,13 @@ void FillBottomFlatTriangle(SDL_Surface* surface, DepthBuffer& depth_buffer, con
     for (p.y = v0->p.y; p.y <= v1->p.y; p.y++) {
         const Vec4i32 ys = Vec4i32(p.y);
 
-        for (p.x = curr_x_min; p.x <= curr_x_max; p.x += EdgeFunction::step_increment_x) {
-            EdgeFunction e01, e12, e20;
-            Vec4i32 w0 = e12.Init(v1->p, v2->p, p);
-            Vec4i32 w1 = e20.Init(v2->p, v0->p, p);
-            Vec4i32 w2 = e01.Init(v0->p, v1->p, p);
+        EdgeFunction e01, e12, e20;
+        const Point2D pe = Point2D{ (int)curr_x_min, p.y };
+        Vec4i32 w0 = e12.Init(v1->p, v2->p, pe);
+        Vec4i32 w1 = e20.Init(v2->p, v0->p, pe);
+        Vec4i32 w2 = e01.Init(v0->p, v1->p, pe);
 
+        for (p.x = curr_x_min; p.x <= curr_x_max; p.x += EdgeFunction::step_increment_x) {
             const Vec4i32 mask = w0 | w1 | w2;
 
             const Vec4f32 sum = (w0 + w1 + w2).to_float();
@@ -211,6 +212,10 @@ void FillBottomFlatTriangle(SDL_Surface* surface, DepthBuffer& depth_buffer, con
             const Vec4f32 d = d_0 + d_1 + d_2;
 
             RenderPixels(surface, depth_buffer, p, mask, u, v, d, texture);
+
+            w0 += e12.step_size_x;
+            w1 += e20.step_size_x;
+            w2 += e01.step_size_x;
         }
 
         curr_x_min += min_slope;
@@ -235,12 +240,13 @@ void FillTopFlatTriangle(SDL_Surface* surface, DepthBuffer& depth_buffer, const 
     for (p.y = v2->p.y; p.y >= v0->p.y; p.y--) {
         const Vec4i32 ys = Vec4i32(p.y);
 
-        for (p.x = curr_x_min; p.x <= curr_x_max; p.x += EdgeFunction::step_increment_x) {
-            EdgeFunction e01, e12, e20;
-            Vec4i32 w0 = e12.Init(v1->p, v2->p, p);
-            Vec4i32 w1 = e20.Init(v2->p, v0->p, p);
-            Vec4i32 w2 = e01.Init(v0->p, v1->p, p);
+        EdgeFunction e01, e12, e20;
+        const Point2D pe = Point2D{ (int)curr_x_min, p.y };
+        Vec4i32 w0 = e12.Init(v1->p, v2->p, pe);
+        Vec4i32 w1 = e20.Init(v2->p, v0->p, pe);
+        Vec4i32 w2 = e01.Init(v0->p, v1->p, pe);
 
+        for (p.x = curr_x_min; p.x <= curr_x_max; p.x += EdgeFunction::step_increment_x) {
             const Vec4i32 mask = w0 | w1 | w2;
 
             const Vec4f32 sum = (w0 + w1 + w2).to_float();
@@ -262,6 +268,10 @@ void FillTopFlatTriangle(SDL_Surface* surface, DepthBuffer& depth_buffer, const 
             const Vec4f32 d = d_0 + d_1 + d_2;
 
             RenderPixels(surface, depth_buffer, p, mask, u, v, d, texture);
+
+            w0 += e12.step_size_x;
+            w1 += e20.step_size_x;
+            w2 += e01.step_size_x;
         }
         curr_x_min -= max_slope;
         curr_x_max -= min_slope;
@@ -294,12 +304,12 @@ void DrawTriangle(SDL_Surface* surface, Rect2D tile_rect, Rect2D bounding_box, D
             sv1->p.y
         };
         const EdgeFunctionWeights ws = weights_at_point(sv0, sv1, sv2, p3);
-
         const ScreenVertex sv3 = ScreenVertex{
             p3,
             depth_for_weights(sv0, sv1, sv2, ws),
             uv_for_weights(sv0, sv1, sv2, ws)
         };
+
         FillBottomFlatTriangle(surface, depth_buffer, sv0, sv1, &sv3, texture);
         FillTopFlatTriangle(surface, depth_buffer, sv1, &sv3, sv2, texture);
     }
