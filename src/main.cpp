@@ -303,12 +303,75 @@ void FillTopFlatTriangle(SDL_Surface* surface, DepthBuffer& depth_buffer, const 
     }
 }
 
-void DrawTriangle(SDL_Surface* surface, Rect2D tile_rect, Rect2D bounding_box, DepthBuffer& depth_buffer, const ScreenTriangle& st, const Texture& texture) {
-    // Early return if triangle has zero area
-    if (edge_function(st.v0.p, st.v1.p, st.v2.p) == 0.0) {
-        return;
-    }
+void DrawTriangleBarycentric(SDL_Surface* surface, Rect2D tile_rect, Rect2D bounding_box, DepthBuffer& depth_buffer, const ScreenTriangle& st, const Texture& texture) {
+    const Point2D min_point = Point2D{ bounding_box.minX, bounding_box.minY };
 
+    const float c0_u = st.v0.uv.u, c0_v = st.v0.uv.v;
+    const float c1_u = st.v1.uv.u, c1_v = st.v1.uv.v;
+    const float c2_u = st.v2.uv.u, c2_v = st.v2.uv.v;
+
+    const float c0_d = st.v0.depth;
+    const float c1_d = st.v1.depth;
+    const float c2_d = st.v2.depth;
+
+    EdgeFunction e01, e12, e20;
+    Vec4i32 w0_row = e12.Init(st.v1.p, st.v2.p, min_point);
+    Vec4i32 w1_row = e20.Init(st.v2.p, st.v0.p, min_point);
+    Vec4i32 w2_row = e01.Init(st.v0.p, st.v1.p, min_point);
+
+    Point2D point = { 0, 0 };
+    for (point.y = bounding_box.minY; point.y <= bounding_box.maxY; point.y += EdgeFunction::step_increment_y) {
+        const Vec4i32 delta_y = Vec4i32(point.y - bounding_box.minY);
+
+        Vec4i32 w0 = w0_row;
+        Vec4i32 w1 = w1_row;
+        Vec4i32 w2 = w2_row;
+
+        bool is_in_triangle = false;
+        for (point.x = bounding_box.minX; point.x <= bounding_box.maxX; point.x += EdgeFunction::step_increment_x) {
+            const Vec4i32 mask = w0 | w1 | w2;
+
+            if (mask.any_gte(0)) {
+                is_in_triangle = true;
+
+                const Vec4f32 sum = (w0 + w1 + w2).to_float();
+
+                const Vec4f32 b0 = w0.to_float() / sum;
+                const Vec4f32 b1 = w1.to_float() / sum;
+                const Vec4f32 b2 = w2.to_float() / sum;
+
+                const Vec4f32 u_0 = Vec4f32(c0_u) * b0, v_0 = Vec4f32(c0_v) * b0;
+                const Vec4f32 u_1 = Vec4f32(c1_u) * b1, v_1 = Vec4f32(c1_v) * b1;
+                const Vec4f32 u_2 = Vec4f32(c2_u) * b2, v_2 = Vec4f32(c2_v) * b2;
+
+                const Vec4f32 u = u_0 + u_1 + u_2;
+                const Vec4f32 v = v_0 + v_1 + v_2;
+
+                // TODO: This is probably not right?
+                const Vec4f32 d_0 = Vec4f32(c0_d) * b0;
+                const Vec4f32 d_1 = Vec4f32(c1_d) * b1;
+                const Vec4f32 d_2 = Vec4f32(c2_d) * b2;
+                const Vec4f32 d = d_0 + d_1 + d_2;
+
+                RenderPixels(surface, depth_buffer, point, mask, u, v, d, texture);
+            }
+            else if (is_in_triangle) {
+                // Since we are drawing triangles, we can never go in and out of the shape in the same line
+                break;
+            }
+
+            w0 += e12.step_size_x;
+            w1 += e20.step_size_x;
+            w2 += e01.step_size_x;
+        }
+
+        w0_row += e12.step_size_y;
+        w1_row += e20.step_size_y;
+        w2_row += e01.step_size_y;
+    }
+}
+
+void DrawTriangleScanline(SDL_Surface* surface, Rect2D tile_rect, Rect2D bounding_box, DepthBuffer& depth_buffer, const ScreenTriangle& st, const Texture& texture) {
     ScreenVertex const* sv0 = &st.v0;
     ScreenVertex const* sv1 = &st.v1;
     ScreenVertex const* sv2 = &st.v2;
@@ -343,78 +406,16 @@ void DrawTriangle(SDL_Surface* surface, Rect2D tile_rect, Rect2D bounding_box, D
         FillBottomFlatTriangle(surface, depth_buffer, sv0, sv1, &sv3, texture);
         FillTopFlatTriangle(surface, depth_buffer, sv1, &sv3, sv2, texture);
     }
-    /*
+}
+
+void DrawTriangle(SDL_Surface* surface, Rect2D tile_rect, Rect2D bounding_box, DepthBuffer& depth_buffer, const ScreenTriangle& st, const Texture& texture) {
     // Early return if triangle has zero area
     if (edge_function(st.v0.p, st.v1.p, st.v2.p) == 0.0) {
         return;
     }
 
-    const Point2D min_point = Point2D{bounding_box.minX, bounding_box.minY};
-    
-    const float c0_u = st.v0.uv.u, c0_v = st.v0.uv.v;
-    const float c1_u = st.v1.uv.u, c1_v = st.v1.uv.v;
-    const float c2_u = st.v2.uv.u, c2_v = st.v2.uv.v;
-    
-    const float c0_d = st.v0.depth;
-    const float c1_d = st.v1.depth;
-    const float c2_d = st.v2.depth;
-
-    EdgeFunction e01, e12, e20;
-    Vec4i32 w0_row = e12.Init(st.v1.p, st.v2.p, min_point);
-    Vec4i32 w1_row = e20.Init(st.v2.p, st.v0.p, min_point);
-    Vec4i32 w2_row = e01.Init(st.v0.p, st.v1.p, min_point);
-    
-    Point2D point = { 0, 0 };
-    for (point.y = bounding_box.minY; point.y <= bounding_box.maxY; point.y += EdgeFunction::step_increment_y) {
-        const Vec4i32 delta_y = Vec4i32(point.y - bounding_box.minY);
-        
-        Vec4i32 w0 = w0_row;
-        Vec4i32 w1 = w1_row;
-        Vec4i32 w2 = w2_row;
-            
-        bool is_in_triangle = false;
-        for (point.x = bounding_box.minX; point.x <= bounding_box.maxX; point.x += EdgeFunction::step_increment_x) {
-            const Vec4i32 mask = w0 | w1 | w2;
-                
-            if (mask.any_gte(0)) {
-                is_in_triangle = true;
-
-                const Vec4f32 sum = (w0 + w1 + w2).to_float();
-                    
-                const Vec4f32 b0 = w0.to_float() / sum;
-                const Vec4f32 b1 = w1.to_float() / sum;
-                const Vec4f32 b2 = w2.to_float() / sum;
-                    
-                const Vec4f32 u_0 = Vec4f32(c0_u) * b0, v_0 = Vec4f32(c0_v) * b0;
-                const Vec4f32 u_1 = Vec4f32(c1_u) * b1, v_1 = Vec4f32(c1_v) * b1;
-                const Vec4f32 u_2 = Vec4f32(c2_u) * b2, v_2 = Vec4f32(c2_v) * b2;
-                    
-                const Vec4f32 u = u_0 + u_1 + u_2;
-                const Vec4f32 v = v_0 + v_1 + v_2;
-                    
-                // TODO: This is probably not right?
-                const Vec4f32 d_0 = Vec4f32(c0_d) * b0;
-                const Vec4f32 d_1 = Vec4f32(c1_d) * b1;
-                const Vec4f32 d_2 = Vec4f32(c2_d) * b2;
-                const Vec4f32 d = d_0 + d_1 + d_2;
-
-                RenderPixels(surface, depth_buffer, point, mask, u, v, d, texture);
-            }
-            else if (is_in_triangle) {
-                // Since we are drawing triangles, we can never go in and out of the shape in the same line
-                break;
-            }
-                
-            w0 += e12.step_size_x;
-            w1 += e20.step_size_x;
-            w2 += e01.step_size_x;
-        }
-
-        w0_row += e12.step_size_y;
-        w1_row += e20.step_size_y;
-        w2_row += e01.step_size_y;
-    }
-    */
+    //DrawTriangleBarycentric(surface, tile_rect, bounding_box, depth_buffer, st, texture);
+    DrawTriangleScanline(surface, tile_rect, bounding_box, depth_buffer, st, texture);
 }
 
 // NOTE: I don't think this SIMD version is really worth it tbh,
