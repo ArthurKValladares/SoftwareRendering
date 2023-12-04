@@ -27,13 +27,13 @@ Vec4i32 Vec4f32::to_int_round_down() const {
 }
 
 
-Vec4f32 Vec4f32::min(float val) {
+Vec4f32 Vec4f32::min(float val) const {
     return Vec4f32(_mm_min_ps(_mf, _mm_set1_ps(val)));
 }
-Vec4f32 Vec4f32::max(float val) {
+Vec4f32 Vec4f32::max(float val) const {
     return Vec4f32(_mm_max_ps(_mf, _mm_set1_ps(val)));
 }
-Vec4f32 Vec4f32::clamp(float min, float max) {
+Vec4f32 Vec4f32::clamp(float min, float max) const {
     const auto a_min = _mm_min_ps(_mf, _mm_set1_ps(max));
     return Vec4f32(_mm_max_ps(a_min, _mm_set1_ps(min)));
 }

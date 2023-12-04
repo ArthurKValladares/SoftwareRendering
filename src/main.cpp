@@ -33,6 +33,8 @@
 
 namespace {
     bool wireframe = false;
+    bool draw_uv = false;
+
     float rotate_angle = 0.0;
 
     float edge_function(const Point2D& a, const Point2D& b, const Point2D& c) {
@@ -125,23 +127,42 @@ void RenderPixels(SDL_Surface *surface, DepthBuffer& depth_buffer, const Point2D
 
     const Vec4i32 xs = Vec4i32(origin_point.x) + Vec4i32(0, 1, 2, 3);
     const Vec4i32 ys = Vec4i32(origin_point.y);
-
     const Vec4i32 pixel_offsets = GetPixelOffsets(surface, xs, ys);
 
     if (mask.x() && d.x() > depth_buffer.ValueAt(xs.x(), ys.x())) {
-        *GetPixel(surface, pixel_offsets.x()) = texture.get_pixel_from_idx(tex_idx.x());
+        if (draw_uv) {
+            *GetPixel(surface, pixel_offsets.x()) = SDL_MapRGB(surface->format, (u8)(u.x() * 255.0), (u8)(v.x() * 255.0), 0);
+        }
+        else {
+            *GetPixel(surface, pixel_offsets.x()) = texture.get_pixel_from_idx(tex_idx.x());
+        }
         depth_buffer.Write(xs.x(), ys.x(), d.x());
     }
     if (mask.y() && d.y() > depth_buffer.ValueAt(xs.y(), ys.y())) {
-        *GetPixel(surface, pixel_offsets.y()) = texture.get_pixel_from_idx(tex_idx.y());
+        if (draw_uv) {
+            *GetPixel(surface, pixel_offsets.y()) = SDL_MapRGB(surface->format, (u8)(u.y() * 255.0), (u8)(v.y() * 255.0), 0);
+        }
+        else {
+            *GetPixel(surface, pixel_offsets.y()) = texture.get_pixel_from_idx(tex_idx.y());
+        }
         depth_buffer.Write(xs.y(), ys.y(), d.y());
     }
     if (mask.z() && d.z() > depth_buffer.ValueAt(xs.z(), ys.z())) {
-        *GetPixel(surface, pixel_offsets.z()) = texture.get_pixel_from_idx(tex_idx.z());
+        if (draw_uv) {
+            *GetPixel(surface, pixel_offsets.z()) = SDL_MapRGB(surface->format, (u8)(u.z() * 255.0), (u8)(v.z() * 255.0), 0);
+        }
+        else {
+            *GetPixel(surface, pixel_offsets.z()) = texture.get_pixel_from_idx(tex_idx.z());
+        }
         depth_buffer.Write(xs.z(), ys.z(), d.z());
     }
     if (mask.w() && d.w() > depth_buffer.ValueAt(xs.w(), ys.w())) {
-        *GetPixel(surface, pixel_offsets.w()) = texture.get_pixel_from_idx(tex_idx.w());
+        if (draw_uv) {
+            *GetPixel(surface, pixel_offsets.w()) = SDL_MapRGB(surface->format, (u8)(u.w() * 255.0), (u8)(v.w() * 255.0), 0);
+        }
+        else {
+            *GetPixel(surface, pixel_offsets.w()) = texture.get_pixel_from_idx(tex_idx.w());
+        }
         depth_buffer.Write(xs.w(), ys.w(), d.w());
     }
 }
@@ -159,57 +180,39 @@ void FillBottomFlatTriangle(SDL_Surface* surface, DepthBuffer& depth_buffer, con
     float curr_x_min = v0->p.x;
     float curr_x_max = v0->p.x;
 
-    for (int scanlineY = v0->p.y; scanlineY <= v1->p.y; scanlineY++) {
-        for (int x = curr_x_min; x <= curr_x_max; x += EdgeFunction::step_increment_x) {
-            if (x >= surface->w || scanlineY >= surface->h) {
-                break;
-            }
+    Point2D p = {};
+    for (p.y = v0->p.y; p.y <= v1->p.y; p.y++) {
+        const Vec4i32 ys = Vec4i32(p.y);
 
-            const Vec4i32 xs = Vec4i32(x) + Vec4i32(0, 1, 2, 3);
-            const Vec4i32 ys = Vec4i32(scanlineY);
-            const Vec4i32 pixel_offsets = GetPixelOffsets(surface, xs, ys);
+        for (p.x = curr_x_min; p.x <= curr_x_max; p.x += EdgeFunction::step_increment_x) {
+            EdgeFunction e01, e12, e20;
+            Vec4i32 w0 = e12.Init(v1->p, v2->p, p);
+            Vec4i32 w1 = e20.Init(v2->p, v0->p, p);
+            Vec4i32 w2 = e01.Init(v0->p, v1->p, p);
 
-            {
-                const Point2D p = Point2D{ xs.x(), scanlineY };
-                const EdgeFunctionWeights ws = weights_at_point(v0, v1, v2, p);
-                const float depth = depth_for_weights(v0, v1, v2, ws);
-                if (depth > depth_buffer.ValueAt(p.x, p.y)) {
-                    const UV uv = uv_for_weights(v0, v1, v2, ws);
-                    *GetPixel(surface, pixel_offsets.x()) = texture.get_pixel_uv(uv.u, uv.v);
-                    depth_buffer.Write(p.x, p.y, depth);
-                }
-            }
-            if (xs.y() <= curr_x_max) {
-                const Point2D p = Point2D{ xs.y(), scanlineY };
-                const EdgeFunctionWeights ws = weights_at_point(v0, v1, v2, p);
-                const float depth = depth_for_weights(v0, v1, v2, ws);
-                if (depth > depth_buffer.ValueAt(p.x, p.y)) {
-                    const UV uv = uv_for_weights(v0, v1, v2, ws);
-                    *GetPixel(surface, pixel_offsets.y()) = texture.get_pixel_uv(uv.u, uv.v);
-                    depth_buffer.Write(p.x, p.y, depth);
-                }
-            }
-            if (xs.z() <= curr_x_max) {
-                const Point2D p = Point2D{ xs.z(), scanlineY };
-                const EdgeFunctionWeights ws = weights_at_point(v0, v1, v2, p);
-                const float depth = depth_for_weights(v0, v1, v2, ws);
-                if (depth > depth_buffer.ValueAt(p.x, p.y)) {
-                    const UV uv = uv_for_weights(v0, v1, v2, ws);
-                    *GetPixel(surface, pixel_offsets.z()) = texture.get_pixel_uv(uv.u, uv.v);
-                    depth_buffer.Write(p.x, p.y, depth);
-                }
-            }
-            if (xs.w() <= curr_x_max) {
-                const Point2D p = Point2D{ xs.w(), scanlineY };
-                const EdgeFunctionWeights ws = weights_at_point(v0, v1, v2, p);
-                const float depth = depth_for_weights(v0, v1, v2, ws);
-                if (depth > depth_buffer.ValueAt(p.x, p.y)) {
-                    const UV uv = uv_for_weights(v0, v1, v2, ws);
-                    *GetPixel(surface, pixel_offsets.w()) = texture.get_pixel_uv(uv.u, uv.v);
-                    depth_buffer.Write(p.x, p.y, depth);
-                }
-            }
+            const Vec4i32 mask = w0 | w1 | w2;
+
+            const Vec4f32 sum = (w0 + w1 + w2).to_float();
+
+            const Vec4f32 b0 = w0.to_float() / sum;
+            const Vec4f32 b1 = w1.to_float() / sum;
+            const Vec4f32 b2 = w2.to_float() / sum;
+
+            const Vec4f32 u_0 = Vec4f32(v0->uv.u) * b0, v_0 = Vec4f32(v0->uv.v) * b0;
+            const Vec4f32 u_1 = Vec4f32(v1->uv.u) * b1, v_1 = Vec4f32(v1->uv.v) * b1;
+            const Vec4f32 u_2 = Vec4f32(v2->uv.u) * b2, v_2 = Vec4f32(v2->uv.v) * b2;
+
+            const Vec4f32 u = u_0 + u_1 + u_2;
+            const Vec4f32 v = v_0 + v_1 + v_2;
+
+            const Vec4f32 d_0 = Vec4f32(v0->depth) * b0;
+            const Vec4f32 d_1 = Vec4f32(v1->depth) * b1;
+            const Vec4f32 d_2 = Vec4f32(v2->depth) * b2;
+            const Vec4f32 d = d_0 + d_1 + d_2;
+
+            RenderPixels(surface, depth_buffer, p, mask, u, v, d, texture);
         }
+
         curr_x_min += min_slope;
         curr_x_max += max_slope;
     }
@@ -228,57 +231,37 @@ void FillTopFlatTriangle(SDL_Surface* surface, DepthBuffer& depth_buffer, const 
     float curr_x_min = v2->p.x;
     float curr_x_max = v2->p.x;
 
-    for (int scanlineY = v2->p.y; scanlineY > v0->p.y; scanlineY--)
-    {
-        for (int x = curr_x_min; x <= curr_x_max; x += EdgeFunction::step_increment_x) {
-            if (x >= surface->w || scanlineY >= surface->h) {
-                break;
-            }
-            
-            const Vec4i32 xs = Vec4i32(x) + Vec4i32(0, 1, 2, 3);
-            const Vec4i32 ys = Vec4i32(scanlineY);
-            const Vec4i32 pixel_offsets = GetPixelOffsets(surface, xs, ys);
+    Point2D p = {};
+    for (p.y = v2->p.y; p.y >= v0->p.y; p.y--) {
+        const Vec4i32 ys = Vec4i32(p.y);
 
-            {
-                const Point2D p = Point2D{ xs.x(), scanlineY };
-                const EdgeFunctionWeights ws = weights_at_point(v0, v1, v2, p);
-                const float depth = depth_for_weights(v0, v1, v2, ws);
-                if (depth > depth_buffer.ValueAt(p.x, p.y)) {
-                    const UV uv = uv_for_weights(v0, v1, v2, ws);
-                    *GetPixel(surface, pixel_offsets.x()) = texture.get_pixel_uv(uv.u, uv.v);
-                    depth_buffer.Write(p.x, p.y, depth);
-                }
-            }
-            if (xs.y() <= curr_x_max) {
-                const Point2D p = Point2D{ xs.y(), scanlineY };
-                const EdgeFunctionWeights ws = weights_at_point(v0, v1, v2, p);
-                const float depth = depth_for_weights(v0, v1, v2, ws);
-                if (depth > depth_buffer.ValueAt(p.x, p.y)) {
-                    const UV uv = uv_for_weights(v0, v1, v2, ws);
-                    *GetPixel(surface, pixel_offsets.y()) = texture.get_pixel_uv(uv.u, uv.v);
-                    depth_buffer.Write(p.x, p.y, depth);
-                }
-            }
-            if (xs.z() <= curr_x_max) {
-                const Point2D p = Point2D{ xs.z(), scanlineY };
-                const EdgeFunctionWeights ws = weights_at_point(v0, v1, v2, p);
-                const float depth = depth_for_weights(v0, v1, v2, ws);
-                if (depth > depth_buffer.ValueAt(p.x, p.y)) {
-                    const UV uv = uv_for_weights(v0, v1, v2, ws);
-                    *GetPixel(surface, pixel_offsets.z()) = texture.get_pixel_uv(uv.u, uv.v);
-                    depth_buffer.Write(p.x, p.y, depth);
-                }
-            }
-            if (xs.w() <= curr_x_max) {
-                const Point2D p = Point2D{ xs.w(), scanlineY };
-                const EdgeFunctionWeights ws = weights_at_point(v0, v1, v2, p);
-                const float depth = depth_for_weights(v0, v1, v2, ws);
-                if (depth > depth_buffer.ValueAt(p.x, p.y)) {
-                    const UV uv = uv_for_weights(v0, v1, v2, ws);
-                    *GetPixel(surface, pixel_offsets.w()) = texture.get_pixel_uv(uv.u, uv.v);
-                    depth_buffer.Write(p.x, p.y, depth);
-                }
-            }
+        for (p.x = curr_x_min; p.x <= curr_x_max; p.x += EdgeFunction::step_increment_x) {
+            EdgeFunction e01, e12, e20;
+            Vec4i32 w0 = e12.Init(v1->p, v2->p, p);
+            Vec4i32 w1 = e20.Init(v2->p, v0->p, p);
+            Vec4i32 w2 = e01.Init(v0->p, v1->p, p);
+
+            const Vec4i32 mask = w0 | w1 | w2;
+
+            const Vec4f32 sum = (w0 + w1 + w2).to_float();
+
+            const Vec4f32 b0 = w0.to_float() / sum;
+            const Vec4f32 b1 = w1.to_float() / sum;
+            const Vec4f32 b2 = w2.to_float() / sum;
+
+            const Vec4f32 u_0 = Vec4f32(v0->uv.u) * b0, v_0 = Vec4f32(v0->uv.v) * b0;
+            const Vec4f32 u_1 = Vec4f32(v1->uv.u) * b1, v_1 = Vec4f32(v1->uv.v) * b1;
+            const Vec4f32 u_2 = Vec4f32(v2->uv.u) * b2, v_2 = Vec4f32(v2->uv.v) * b2;
+
+            const Vec4f32 u = u_0 + u_1 + u_2;
+            const Vec4f32 v = v_0 + v_1 + v_2;
+
+            const Vec4f32 d_0 = Vec4f32(v0->depth) * b0;
+            const Vec4f32 d_1 = Vec4f32(v1->depth) * b1;
+            const Vec4f32 d_2 = Vec4f32(v2->depth) * b2;
+            const Vec4f32 d = d_0 + d_1 + d_2;
+
+            RenderPixels(surface, depth_buffer, p, mask, u, v, d, texture);
         }
         curr_x_min -= max_slope;
         curr_x_max -= min_slope;
@@ -559,6 +542,10 @@ int main(int argc, char *argv[]) {
                         }
                         case SDLK_f: {
                             wireframe = !wireframe;
+                            break;
+                        }
+                        case SDLK_u: {
+                            draw_uv = !draw_uv;
                             break;
                         }
                         default: {
