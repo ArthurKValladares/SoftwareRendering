@@ -37,6 +37,8 @@ namespace {
 
     float rotate_angle = 0.0;
 
+    float cuttof_area = 10.0;
+
     float edge_function(const Point2D& a, const Point2D& b, const Point2D& c) {
         return (b.x - a.x) * (c.y - a.y) - (b.y - a.y) * (c.x - a.x);
     };
@@ -409,13 +411,17 @@ void DrawTriangleScanline(SDL_Surface* surface, Rect2D tile_rect, Rect2D boundin
 }
 
 void DrawTriangle(SDL_Surface* surface, Rect2D tile_rect, Rect2D bounding_box, DepthBuffer& depth_buffer, const ScreenTriangle& st, const Texture& texture) {
-    // Early return if triangle has zero area
-    if (edge_function(st.v0.p, st.v1.p, st.v2.p) == 0.0) {
+    const float double_area = edge_function(st.v0.p, st.v1.p, st.v2.p);
+    if (double_area <= 0.0) {
         return;
     }
 
-    //DrawTriangleBarycentric(surface, tile_rect, bounding_box, depth_buffer, st, texture);
-    DrawTriangleScanline(surface, tile_rect, bounding_box, depth_buffer, st, texture);
+    if (double_area < cuttof_area) {
+        DrawTriangleBarycentric(surface, tile_rect, bounding_box, depth_buffer, st, texture);
+    }
+    else {
+        DrawTriangleScanline(surface, tile_rect, bounding_box, depth_buffer, st, texture);
+    }
 }
 
 // NOTE: I don't think this SIMD version is really worth it tbh,
@@ -566,6 +572,7 @@ int main(int argc, char *argv[]) {
     // Render loop
     // TODO: rotate stuff again
     const float rotate_delta = 0.1;
+    const float cutoff_delta_area = 0.5;
     bool quit = false;
     while (!quit) {
         SDL_Event e;
@@ -587,6 +594,14 @@ int main(int argc, char *argv[]) {
                         }
                         case SDLK_u: {
                             draw_uv = !draw_uv;
+                            break;
+                        }
+                        case SDLK_EQUALS: {
+                            cuttof_area += cutoff_delta_area;
+                            break;
+                        }
+                        case SDLK_MINUS: {
+                            cuttof_area -= cutoff_delta_area;
                             break;
                         }
                         default: {
