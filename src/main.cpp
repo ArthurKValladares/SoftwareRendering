@@ -180,17 +180,25 @@ void FillBottomFlatTriangle(SDL_Surface* surface, DepthBuffer& depth_buffer, con
     float curr_x_min = v0->p.x;
     float curr_x_max = v0->p.x;
 
+    const int x_min = MIN3(v0->p.x, v1->p.x, v2->p.x);
+    const int y_min = v0->p.y;
+
+    EdgeFunction e01, e12, e20;
+    const Point2D p_start = Point2D{ x_min, y_min };
+    Vec4i32 w0_row = e12.Init(v1->p, v2->p, p_start);
+    Vec4i32 w1_row = e20.Init(v2->p, v0->p, p_start);
+    Vec4i32 w2_row = e01.Init(v0->p, v1->p, p_start);
+
     Point2D p = {};
     for (p.y = v0->p.y; p.y <= v1->p.y; p.y++) {
         const Vec4i32 ys = Vec4i32(p.y);
 
-        EdgeFunction e01, e12, e20;
-        const Point2D pe = Point2D{ (int)curr_x_min, p.y };
-        Vec4i32 w0 = e12.Init(v1->p, v2->p, pe);
-        Vec4i32 w1 = e20.Init(v2->p, v0->p, pe);
-        Vec4i32 w2 = e01.Init(v0->p, v1->p, pe);
+        const int delta_x = (curr_x_min - x_min) / EdgeFunction::step_increment_x;
+        Vec4i32 w0 = w0_row + e12.step_size_x * delta_x;
+        Vec4i32 w1 = w1_row + e20.step_size_x * delta_x;
+        Vec4i32 w2 = w2_row + e01.step_size_x * delta_x;
 
-        for (p.x = curr_x_min; p.x <= curr_x_max; p.x += EdgeFunction::step_increment_x) {
+        for (p.x = x_min + delta_x * EdgeFunction::step_increment_x; p.x <= curr_x_max; p.x += EdgeFunction::step_increment_x) {
             const Vec4i32 mask = w0 | w1 | w2;
 
             const Vec4f32 sum = (w0 + w1 + w2).to_float();
@@ -220,6 +228,10 @@ void FillBottomFlatTriangle(SDL_Surface* surface, DepthBuffer& depth_buffer, con
 
         curr_x_min += min_slope;
         curr_x_max += max_slope;
+
+        w0_row += e12.step_size_y;
+        w1_row += e20.step_size_y;
+        w2_row += e01.step_size_y;
     }
 }
 
@@ -236,17 +248,25 @@ void FillTopFlatTriangle(SDL_Surface* surface, DepthBuffer& depth_buffer, const 
     float curr_x_min = v2->p.x;
     float curr_x_max = v2->p.x;
 
+    const int x_min = MIN3(v0->p.x, v1->p.x, v2->p.x);
+    const int y_max = v2->p.y;
+
+    EdgeFunction e01, e12, e20;
+    const Point2D p_start = Point2D{ x_min, y_max };
+    Vec4i32 w0_row = e12.Init(v1->p, v2->p, p_start);
+    Vec4i32 w1_row = e20.Init(v2->p, v0->p, p_start);
+    Vec4i32 w2_row = e01.Init(v0->p, v1->p, p_start);
+
     Point2D p = {};
     for (p.y = v2->p.y; p.y >= v0->p.y; p.y--) {
         const Vec4i32 ys = Vec4i32(p.y);
 
-        EdgeFunction e01, e12, e20;
-        const Point2D pe = Point2D{ (int)curr_x_min, p.y };
-        Vec4i32 w0 = e12.Init(v1->p, v2->p, pe);
-        Vec4i32 w1 = e20.Init(v2->p, v0->p, pe);
-        Vec4i32 w2 = e01.Init(v0->p, v1->p, pe);
+        const int delta_x = (curr_x_min - x_min) / EdgeFunction::step_increment_x;
+        Vec4i32 w0 = w0_row + e12.step_size_x * delta_x;
+        Vec4i32 w1 = w1_row + e20.step_size_x * delta_x;
+        Vec4i32 w2 = w2_row + e01.step_size_x * delta_x;
 
-        for (p.x = curr_x_min; p.x <= curr_x_max; p.x += EdgeFunction::step_increment_x) {
+        for (p.x = x_min + delta_x * EdgeFunction::step_increment_x; p.x <= curr_x_max; p.x += EdgeFunction::step_increment_x) {
             const Vec4i32 mask = w0 | w1 | w2;
 
             const Vec4f32 sum = (w0 + w1 + w2).to_float();
@@ -273,8 +293,13 @@ void FillTopFlatTriangle(SDL_Surface* surface, DepthBuffer& depth_buffer, const 
             w1 += e20.step_size_x;
             w2 += e01.step_size_x;
         }
+
         curr_x_min -= max_slope;
         curr_x_max -= min_slope;
+
+        w0_row -= e12.step_size_y;
+        w1_row -= e20.step_size_y;
+        w2_row -= e01.step_size_y;
     }
 }
 
