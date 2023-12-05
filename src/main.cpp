@@ -34,6 +34,7 @@
 namespace {
     bool wireframe = false;
     bool draw_uv = false;
+    bool draw_raster_method = false;
 
     float rotate_angle = 0.0;
 
@@ -122,7 +123,7 @@ void ClearSurface(SDL_Surface *surface, ThreadPool& thread_pool, Color color) {
     thread_pool.Wait();
 }
 
-void RenderPixels(SDL_Surface *surface, DepthBuffer& depth_buffer, const Point2D &origin_point, Vec4i32 mask, Vec4f32 u, Vec4f32 v, Vec4f32 d, const Texture &texture) {
+void RenderPixels(SDL_Surface *surface, DepthBuffer& depth_buffer, const Point2D &origin_point, Vec4i32 mask, Vec4f32 u, Vec4f32 v, Vec4f32 d, const Texture &texture, bool barrycentric) {
     const Vec4i32 ui = (u.clamp(0.0, 1.0) * texture.m_width).to_int_nearest();
     const Vec4i32 vi = (v.clamp(0.0, 1.0) * texture.m_height).to_int_nearest();
     const Vec4i32 tex_idx = vi * Vec4i32(texture.m_width) + ui;
@@ -130,10 +131,15 @@ void RenderPixels(SDL_Surface *surface, DepthBuffer& depth_buffer, const Point2D
     const Vec4i32 xs = Vec4i32(origin_point.x) + Vec4i32(0, 1, 2, 3);
     const Vec4i32 ys = Vec4i32(origin_point.y);
     const Vec4i32 pixel_offsets = GetPixelOffsets(surface, xs, ys);
-
+    
+    const auto red = SDL_MapRGB(surface->format, 255, 0, 0);
+    const auto green = SDL_MapRGB(surface->format, 0, 255, 0);
     if (mask.x() && d.x() > depth_buffer.ValueAt(xs.x(), ys.x())) {
         if (draw_uv) {
             *GetPixel(surface, pixel_offsets.x()) = SDL_MapRGB(surface->format, (u8)(u.x() * 255.0), (u8)(v.x() * 255.0), 0);
+        }
+        else if (draw_raster_method) {
+            *GetPixel(surface, pixel_offsets.x()) = barrycentric ? red : green;
         }
         else {
             *GetPixel(surface, pixel_offsets.x()) = texture.get_pixel_from_idx(tex_idx.x());
@@ -144,6 +150,9 @@ void RenderPixels(SDL_Surface *surface, DepthBuffer& depth_buffer, const Point2D
         if (draw_uv) {
             *GetPixel(surface, pixel_offsets.y()) = SDL_MapRGB(surface->format, (u8)(u.y() * 255.0), (u8)(v.y() * 255.0), 0);
         }
+        else if (draw_raster_method) {
+            *GetPixel(surface, pixel_offsets.y()) = barrycentric ? red : green;
+        }
         else {
             *GetPixel(surface, pixel_offsets.y()) = texture.get_pixel_from_idx(tex_idx.y());
         }
@@ -153,6 +162,9 @@ void RenderPixels(SDL_Surface *surface, DepthBuffer& depth_buffer, const Point2D
         if (draw_uv) {
             *GetPixel(surface, pixel_offsets.z()) = SDL_MapRGB(surface->format, (u8)(u.z() * 255.0), (u8)(v.z() * 255.0), 0);
         }
+        else if (draw_raster_method) {
+            *GetPixel(surface, pixel_offsets.z()) = barrycentric ? red : green;
+        }
         else {
             *GetPixel(surface, pixel_offsets.z()) = texture.get_pixel_from_idx(tex_idx.z());
         }
@@ -161,6 +173,9 @@ void RenderPixels(SDL_Surface *surface, DepthBuffer& depth_buffer, const Point2D
     if (mask.w() && d.w() > depth_buffer.ValueAt(xs.w(), ys.w())) {
         if (draw_uv) {
             *GetPixel(surface, pixel_offsets.w()) = SDL_MapRGB(surface->format, (u8)(u.w() * 255.0), (u8)(v.w() * 255.0), 0);
+        }
+        else if (draw_raster_method) {
+            *GetPixel(surface, pixel_offsets.w()) = barrycentric ? red : green;
         }
         else {
             *GetPixel(surface, pixel_offsets.w()) = texture.get_pixel_from_idx(tex_idx.w());
@@ -221,7 +236,7 @@ void FillBottomFlatTriangle(SDL_Surface* surface, DepthBuffer& depth_buffer, con
             const Vec4f32 d_2 = Vec4f32(v2->depth) * b2;
             const Vec4f32 d = d_0 + d_1 + d_2;
 
-            RenderPixels(surface, depth_buffer, p, mask, u, v, d, texture);
+            RenderPixels(surface, depth_buffer, p, mask, u, v, d, texture, false);
 
             w0 += e12.step_size_x;
             w1 += e20.step_size_x;
@@ -289,7 +304,7 @@ void FillTopFlatTriangle(SDL_Surface* surface, DepthBuffer& depth_buffer, const 
             const Vec4f32 d_2 = Vec4f32(v2->depth) * b2;
             const Vec4f32 d = d_0 + d_1 + d_2;
 
-            RenderPixels(surface, depth_buffer, p, mask, u, v, d, texture);
+            RenderPixels(surface, depth_buffer, p, mask, u, v, d, texture, false);
 
             w0 += e12.step_size_x;
             w1 += e20.step_size_x;
@@ -355,7 +370,7 @@ void DrawTriangleBarycentric(SDL_Surface* surface, Rect2D tile_rect, Rect2D boun
                 const Vec4f32 d_2 = Vec4f32(c2_d) * b2;
                 const Vec4f32 d = d_0 + d_1 + d_2;
 
-                RenderPixels(surface, depth_buffer, point, mask, u, v, d, texture);
+                RenderPixels(surface, depth_buffer, point, mask, u, v, d, texture, true);
             }
             else if (is_in_triangle) {
                 // Since we are drawing triangles, we can never go in and out of the shape in the same line
@@ -572,7 +587,7 @@ int main(int argc, char *argv[]) {
     // Render loop
     // TODO: rotate stuff again
     const float rotate_delta = 0.1;
-    const float cutoff_delta_area = 0.5;
+    const float cutoff_delta_area = 2.5;
     bool quit = false;
     while (!quit) {
         SDL_Event e;
@@ -594,6 +609,10 @@ int main(int argc, char *argv[]) {
                         }
                         case SDLK_u: {
                             draw_uv = !draw_uv;
+                            break;
+                        }
+                        case SDLK_b: {
+                            draw_raster_method = !draw_raster_method;
                             break;
                         }
                         case SDLK_EQUALS: {
