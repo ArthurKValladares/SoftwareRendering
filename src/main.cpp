@@ -184,7 +184,7 @@ void RenderPixels(SDL_Surface *surface, DepthBuffer& depth_buffer, const Point2D
     }
 }
 
-void FillBottomFlatTriangle(SDL_Surface* surface, DepthBuffer& depth_buffer, const ScreenVertex* v0, const ScreenVertex* v1, const ScreenVertex* v2, const Texture& texture) {
+void FillBottomFlatTriangle(SDL_Surface* surface, DepthBuffer& depth_buffer, Rect2D bounding_box, const ScreenVertex* v0, const ScreenVertex* v1, const ScreenVertex* v2, const Texture& texture) {
     assert(v1->p.y == v2->p.y);
     assert(v0->p.y < v1->p.y);
 
@@ -198,7 +198,9 @@ void FillBottomFlatTriangle(SDL_Surface* surface, DepthBuffer& depth_buffer, con
     float curr_x_max = v0->p.x;
 
     const int x_min = MIN3(v0->p.x, v1->p.x, v2->p.x);
-    const int y_min = v0->p.y;
+
+    const int y_min = MAX(v0->p.y, bounding_box.minY);
+    const int y_max = MIN(v2->p.y, bounding_box.maxY - 1);
 
     EdgeFunction e01, e12, e20;
     const Point2D p_start = Point2D{ x_min, y_min };
@@ -207,7 +209,7 @@ void FillBottomFlatTriangle(SDL_Surface* surface, DepthBuffer& depth_buffer, con
     Vec4i32 w2_row = e01.Init(v0->p, v1->p, p_start);
 
     Point2D p = {};
-    for (p.y = v0->p.y; p.y <= v1->p.y; p.y++) {
+    for (p.y = y_min; p.y <= y_max; p.y++) {
         const Vec4i32 ys = Vec4i32(p.y);
 
         const int delta_x = (curr_x_min - x_min) / EdgeFunction::step_increment_x;
@@ -252,7 +254,7 @@ void FillBottomFlatTriangle(SDL_Surface* surface, DepthBuffer& depth_buffer, con
     }
 }
 
-void FillTopFlatTriangle(SDL_Surface* surface, DepthBuffer& depth_buffer, const ScreenVertex* v0, const ScreenVertex* v1, const ScreenVertex* v2, const Texture& texture) {
+void FillTopFlatTriangle(SDL_Surface* surface, DepthBuffer& depth_buffer, Rect2D bounding_box, const ScreenVertex* v0, const ScreenVertex* v1, const ScreenVertex* v2, const Texture& texture) {
     assert(v0->p.y == v1->p.y);
     assert(v2->p.y > v1->p.y);
 
@@ -266,7 +268,9 @@ void FillTopFlatTriangle(SDL_Surface* surface, DepthBuffer& depth_buffer, const 
     float curr_x_max = v2->p.x;
 
     const int x_min = MIN3(v0->p.x, v1->p.x, v2->p.x);
-    const int y_max = v2->p.y;
+
+    const int y_min = MAX(v0->p.y, bounding_box.minY);
+    const int y_max = MIN(v2->p.y, bounding_box.maxY - 1);
 
     EdgeFunction e01, e12, e20;
     const Point2D p_start = Point2D{ x_min, y_max };
@@ -275,7 +279,7 @@ void FillTopFlatTriangle(SDL_Surface* surface, DepthBuffer& depth_buffer, const 
     Vec4i32 w2_row = e01.Init(v0->p, v1->p, p_start);
 
     Point2D p = {};
-    for (p.y = v2->p.y; p.y >= v0->p.y; p.y--) {
+    for (p.y = y_max; p.y >= y_min; p.y--) {
         const Vec4i32 ys = Vec4i32(p.y);
 
         const int delta_x = (curr_x_min - x_min) / EdgeFunction::step_increment_x;
@@ -403,10 +407,10 @@ void DrawTriangleScanline(SDL_Surface* surface, Rect2D tile_rect, Rect2D boundin
     }
 
     if (sv2->p.y == sv1->p.y) {
-        FillBottomFlatTriangle(surface, depth_buffer, sv0, sv1, sv2, texture);
+        FillBottomFlatTriangle(surface, depth_buffer, bounding_box, sv0, sv1, sv2, texture);
     }
     else if (sv0->p.y == sv1->p.y) {
-        FillTopFlatTriangle(surface, depth_buffer, sv0, sv1, sv2, texture);
+        FillTopFlatTriangle(surface, depth_buffer, bounding_box, sv0, sv1, sv2, texture);
     }
     else {
         const Point2D p3 = Point2D{
@@ -420,8 +424,8 @@ void DrawTriangleScanline(SDL_Surface* surface, Rect2D tile_rect, Rect2D boundin
             uv_for_weights(sv0, sv1, sv2, ws)
         };
 
-        FillBottomFlatTriangle(surface, depth_buffer, sv0, sv1, &sv3, texture);
-        FillTopFlatTriangle(surface, depth_buffer, sv1, &sv3, sv2, texture);
+        FillBottomFlatTriangle(surface, depth_buffer, bounding_box, sv0, sv1, &sv3, texture);
+        FillTopFlatTriangle(surface, depth_buffer, bounding_box, sv1, &sv3, sv2, texture);
     }
 }
 
@@ -573,10 +577,10 @@ int main(int argc, char *argv[]) {
     Mesh mesh = load_obj("../assets/meshes/teapot", "teapot.obj");
 
     const Camera camera = Camera::orthographic(OrtographicCamera{
-        -100.0,
-        100.0,
-        -100.0,
-        100.0,
+        -50.0,
+        50.0,
+        -50.0,
+        50.0,
         0.0,
         1.0
     });
