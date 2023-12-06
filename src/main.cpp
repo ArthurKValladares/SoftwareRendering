@@ -431,16 +431,12 @@ void DrawTriangleScanline(SDL_Surface* surface, Rect2D tile_rect, Rect2D boundin
 
 void DrawTriangle(SDL_Surface* surface, Rect2D tile_rect, Rect2D bounding_box, DepthBuffer& depth_buffer, const ScreenTriangle& st, const Texture& texture) {
     const float double_area = edge_function(st.v0.p, st.v1.p, st.v2.p);
-    if (double_area <= 0.0) {
+    if (double_area == 0.0) {
         return;
     }
 
-    if (double_area < cuttof_area) {
-        DrawTriangleBarycentric(surface, tile_rect, bounding_box, depth_buffer, st, texture);
-    }
-    else {
-        DrawTriangleScanline(surface, tile_rect, bounding_box, depth_buffer, st, texture);
-    }
+
+    DrawTriangleScanline(surface, tile_rect, bounding_box, depth_buffer, st, texture);
 }
 
 // NOTE: I don't think this SIMD version is really worth it tbh,
@@ -577,10 +573,10 @@ int main(int argc, char *argv[]) {
     Mesh mesh = load_obj("../assets/meshes/teapot", "teapot.obj");
 
     const Camera camera = Camera::orthographic(OrtographicCamera{
-        -50.0,
-        50.0,
-        -50.0,
-        50.0,
+        -10.0,
+        10.0,
+        -10.0,
+        10.0,
         0.0,
         1.0
     });
@@ -648,7 +644,7 @@ int main(int argc, char *argv[]) {
         }
         
         const Mat4f32 proj_matrix = camera.GetProjMatrix();
-        const Mat4f32 model_matrix = rotate_matrix(Vec3D_f{ 1.0, 0.0, 0 }, rotate_angle);
+        const Mat4f32 model_matrix = Mat4f32::identity();
         const Mat4f32 proj_model = proj_matrix * model_matrix;
 
         const std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();

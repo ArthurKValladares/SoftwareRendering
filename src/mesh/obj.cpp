@@ -27,6 +27,7 @@ Mesh load_obj(const std::string& dir, const std::string& obj_file) {
 
     std::unordered_map<Vertex, u32> uniqueVertices{};
     Mesh mesh;
+    /*
     // Loop over shapes
     for (const auto& shape : shapes) {
         for (const auto& index : shape.mesh.indices) {
@@ -54,6 +55,23 @@ Mesh load_obj(const std::string& dir, const std::string& obj_file) {
             mesh.indices.push_back(uniqueVertices[vertex]);
         }
     }
+    */
+    mesh.vertices = { 
+        Vertex{
+            Point3D_f{-10.0, -10.0, 1.0},
+            UV{1.0, 0.0}
+        },
+        Vertex{
+            Point3D_f{0, -10.0, 1.0},
+            UV{0.0, 1.0}
+        },
+        Vertex{
+            Point3D_f{0.0, 0.0, 1.0},
+            UV{1.0, 1.0}
+        }
+    };
+    mesh.indices = { 0, 1, 2};
+
     mesh.SetupTriangles();
     return mesh;
 }
