@@ -439,12 +439,17 @@ void DrawTriangleScanline(SDL_Surface* surface, Rect2D tile_rect, Rect2D boundin
 
 void DrawTriangle(SDL_Surface* surface, Rect2D tile_rect, Rect2D bounding_box, DepthBuffer& depth_buffer, const ScreenTriangle& st, const Texture& texture) {
     const float double_area = edge_function(st.v0.p, st.v1.p, st.v2.p);
-    if (double_area == 0.0) {
+    if (double_area <= 0.0) {
         return;
     }
 
 
-    DrawTriangleScanline(surface, tile_rect, bounding_box, depth_buffer, st, texture);
+    if (double_area < cuttof_area) {
+        DrawTriangleBarycentric(surface, tile_rect, bounding_box, depth_buffer, st, texture);
+    }
+    else {
+        DrawTriangleScanline(surface, tile_rect, bounding_box, depth_buffer, st, texture);
+    }
 }
 
 // NOTE: I don't think this SIMD version is really worth it tbh,
