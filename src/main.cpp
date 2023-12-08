@@ -194,13 +194,17 @@ void FillBottomFlatTriangle(SDL_Surface* surface, DepthBuffer& depth_buffer, Rec
     const float min_slope = MIN(invslope1, invslope2);
     const float max_slope = MAX(invslope1, invslope2);
 
-    float curr_x_min = v0->p.x;
-    float curr_x_max = v0->p.x;
+    const float start_x_min = v0->p.x;
+    const float start_x_max = v0->p.x;
 
     const int x_min = MIN3(v0->p.x, v1->p.x, v2->p.x);
 
     const int y_min = MAX(v0->p.y, bounding_box.minY);
     const int y_max = MIN(v2->p.y, bounding_box.maxY - 1);
+
+    float start_y_offset = y_min - v0->p.y;
+    float curr_x_min = start_x_min + min_slope * start_y_offset;
+    float curr_x_max = start_x_min + max_slope * start_y_offset;
 
     EdgeFunction e01, e12, e20;
     const Point2D p_start = Point2D{ x_min, y_min };
@@ -264,13 +268,17 @@ void FillTopFlatTriangle(SDL_Surface* surface, DepthBuffer& depth_buffer, Rect2D
     const float min_slope = MIN(invslope1, invslope2);
     const float max_slope = MAX(invslope1, invslope2);
 
-    float curr_x_min = v2->p.x;
-    float curr_x_max = v2->p.x;
+    const float start_x_min = v2->p.x;
+    const float start_x_max = v2->p.x;
 
     const int x_min = MIN3(v0->p.x, v1->p.x, v2->p.x);
 
     const int y_min = MAX(v0->p.y, bounding_box.minY);
     const int y_max = MIN(v2->p.y, bounding_box.maxY - 1);
+
+    float start_y_offset = v2->p.y - y_max;
+    float curr_x_min = start_x_min - max_slope * start_y_offset;
+    float curr_x_max = start_x_min - min_slope * start_y_offset;
 
     EdgeFunction e01, e12, e20;
     const Point2D p_start = Point2D{ x_min, y_max };
@@ -573,10 +581,10 @@ int main(int argc, char *argv[]) {
     Mesh mesh = load_obj("../assets/meshes/teapot", "teapot.obj");
 
     const Camera camera = Camera::orthographic(OrtographicCamera{
-        -10.0,
-        10.0,
-        -10.0,
-        10.0,
+        -100.0,
+        100.0,
+        -100.0,
+        100.0,
         0.0,
         1.0
     });
@@ -644,7 +652,7 @@ int main(int argc, char *argv[]) {
         }
         
         const Mat4f32 proj_matrix = camera.GetProjMatrix();
-        const Mat4f32 model_matrix = Mat4f32::identity();
+        const Mat4f32 model_matrix = rotate_matrix(Vec3D_f{ 1.0, 0.0, 0 }, rotate_angle);
         const Mat4f32 proj_model = proj_matrix * model_matrix;
 
         const std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
