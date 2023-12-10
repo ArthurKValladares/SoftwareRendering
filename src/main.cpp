@@ -713,4 +713,3 @@ int main(int argc, char *argv[]) {
 }
 
 // TODO: Optimize how many pixels we try to draw per triangle
-// TODO: Overdraw indicator
