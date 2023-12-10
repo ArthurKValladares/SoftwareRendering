@@ -28,6 +28,7 @@ add_executable(${PROJECT_NAME}
     ${project_root}/src/main.cpp
     ${project_root}/src/transform.cpp
     ${project_root}/src/depth_buffer.cpp
+    ${project_root}/src/overdraw_indicator.cpp
     ${project_root}/src/screen_tile.cpp
     # mesh
     ${project_root}/src/mesh/mesh.cpp
