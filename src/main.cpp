@@ -33,10 +33,16 @@
 #define SCREEN_HEIGHT 800
 
 namespace {
-    bool wireframe = false;
-    bool draw_uv = false;
-    bool draw_raster_method = false;
-    bool overdraw_indicator = false;
+
+    enum class RenderingMethod {
+        Standard,
+        Wireframe,
+        RasterMethod,
+        Uv,
+        Overdraw
+    };
+
+    RenderingMethod render_method = RenderingMethod::Standard;
 
     float rotate_angle = 0.0;
 
@@ -148,62 +154,86 @@ void RenderPixels(SDL_Surface *surface, DepthBuffer& depth_buffer,  OverdrawBuff
     const auto red = SDL_MapRGB(surface->format, 255, 0, 0);
     const auto green = SDL_MapRGB(surface->format, 0, 255, 0);
     if (mask.x() && d.x() > depth_buffer.ValueAt(xs.x(), ys.x())) {
-        if (draw_uv) {
-            *GetPixel(surface, pixel_offsets.x()) = SDL_MapRGB(surface->format, (u8)(u.x() * 255.0), (u8)(v.x() * 255.0), 0);
-        }
-        else if (draw_raster_method) {
-            *GetPixel(surface, pixel_offsets.x()) = barrycentric ? red : green;
-        }
-        else if (overdraw_indicator) {
-            *GetPixel(surface, pixel_offsets.x()) = get_overdraw_color(overdraw_buffer.ValueAt(xs.x(), ys.x()));
-        }
-        else {
-            *GetPixel(surface, pixel_offsets.x()) = texture.get_pixel_from_idx(tex_idx.x());
+        switch (render_method) {
+            case RenderingMethod::Standard: {
+                *GetPixel(surface, pixel_offsets.x()) = texture.get_pixel_from_idx(tex_idx.x());
+                break;
+            }
+            case RenderingMethod::Uv: {
+                *GetPixel(surface, pixel_offsets.x()) = SDL_MapRGB(surface->format, (u8)(u.x() * 255.0), (u8)(v.x() * 255.0), 0);
+                break;
+            }
+            case RenderingMethod::RasterMethod: {
+                *GetPixel(surface, pixel_offsets.x()) = barrycentric ? red : green;
+                break;
+            }
+            case RenderingMethod::Overdraw: {
+                *GetPixel(surface, pixel_offsets.x()) = get_overdraw_color(overdraw_buffer.ValueAt(xs.x(), ys.x()));
+                break;
+            }
         }
         depth_buffer.Write(xs.x(), ys.x(), d.x());
     }
     if (mask.y() && d.y() > depth_buffer.ValueAt(xs.y(), ys.y())) {
-        if (draw_uv) {
-            *GetPixel(surface, pixel_offsets.y()) = SDL_MapRGB(surface->format, (u8)(u.y() * 255.0), (u8)(v.y() * 255.0), 0);
-        }
-        else if (draw_raster_method) {
-            *GetPixel(surface, pixel_offsets.y()) = barrycentric ? red : green;
-        } 
-        else if (overdraw_indicator) {
-            *GetPixel(surface, pixel_offsets.y()) = get_overdraw_color(overdraw_buffer.ValueAt(xs.y(), ys.y()));
-        }
-        else {
-            *GetPixel(surface, pixel_offsets.y()) = texture.get_pixel_from_idx(tex_idx.y());
+        switch (render_method) {
+            case RenderingMethod::Standard: {
+                *GetPixel(surface, pixel_offsets.y()) = texture.get_pixel_from_idx(tex_idx.y());
+                break;
+            }
+            case RenderingMethod::Uv: {
+                *GetPixel(surface, pixel_offsets.y()) = SDL_MapRGB(surface->format, (u8)(u.y() * 255.0), (u8)(v.y() * 255.0), 0);
+                break;
+            }
+            case RenderingMethod::RasterMethod: {
+                *GetPixel(surface, pixel_offsets.y()) = barrycentric ? red : green;
+                break;
+            }
+            case RenderingMethod::Overdraw: {
+                *GetPixel(surface, pixel_offsets.y()) = get_overdraw_color(overdraw_buffer.ValueAt(xs.y(), ys.y()));
+                break;
+            }
         }
         depth_buffer.Write(xs.y(), ys.y(), d.y());
     }
     if (mask.z() && d.z() > depth_buffer.ValueAt(xs.z(), ys.z())) {
-        if (draw_uv) {
-            *GetPixel(surface, pixel_offsets.z()) = SDL_MapRGB(surface->format, (u8)(u.z() * 255.0), (u8)(v.z() * 255.0), 0);
-        }
-        else if (draw_raster_method) {
-            *GetPixel(surface, pixel_offsets.z()) = barrycentric ? red : green;
-        }
-        else if (overdraw_indicator) {
-            *GetPixel(surface, pixel_offsets.z()) = get_overdraw_color(overdraw_buffer.ValueAt(xs.z(), ys.z()));
-        }
-        else {
-            *GetPixel(surface, pixel_offsets.z()) = texture.get_pixel_from_idx(tex_idx.z());
+        switch (render_method) {
+            case RenderingMethod::Standard: {
+                *GetPixel(surface, pixel_offsets.z()) = texture.get_pixel_from_idx(tex_idx.z());
+                break;
+            }
+            case RenderingMethod::Uv: {
+                *GetPixel(surface, pixel_offsets.z()) = SDL_MapRGB(surface->format, (u8)(u.z() * 255.0), (u8)(v.z() * 255.0), 0);
+                break;
+            }
+            case RenderingMethod::RasterMethod: {
+                *GetPixel(surface, pixel_offsets.z()) = barrycentric ? red : green;
+                break;
+            }
+            case RenderingMethod::Overdraw: {
+                *GetPixel(surface, pixel_offsets.z()) = get_overdraw_color(overdraw_buffer.ValueAt(xs.z(), ys.z()));
+                break;
+            }
         }
         depth_buffer.Write(xs.z(), ys.z(), d.z());
     }
     if (mask.w() && d.w() > depth_buffer.ValueAt(xs.w(), ys.w())) {
-        if (draw_uv) {
-            *GetPixel(surface, pixel_offsets.w()) = SDL_MapRGB(surface->format, (u8)(u.w() * 255.0), (u8)(v.w() * 255.0), 0);
-        }
-        else if (draw_raster_method) {
-            *GetPixel(surface, pixel_offsets.w()) = barrycentric ? red : green;
-        }
-        else if (overdraw_indicator) {
-            *GetPixel(surface, pixel_offsets.w()) = get_overdraw_color(overdraw_buffer.ValueAt(xs.w(), ys.w()));
-        }
-        else {
-            *GetPixel(surface, pixel_offsets.w()) = texture.get_pixel_from_idx(tex_idx.w());
+        switch (render_method) {
+            case RenderingMethod::Standard: {
+                *GetPixel(surface, pixel_offsets.w()) = texture.get_pixel_from_idx(tex_idx.w());
+                break;
+            }
+            case RenderingMethod::Uv: {
+                *GetPixel(surface, pixel_offsets.w()) = SDL_MapRGB(surface->format, (u8)(u.w() * 255.0), (u8)(v.w() * 255.0), 0);
+                break;
+            }
+            case RenderingMethod::RasterMethod: {
+                *GetPixel(surface, pixel_offsets.w()) = barrycentric ? red : green;
+                break;
+            }
+            case RenderingMethod::Overdraw: {
+                *GetPixel(surface, pixel_offsets.w()) = get_overdraw_color(overdraw_buffer.ValueAt(xs.w(), ys.w()));
+                break;
+            }
         }
         depth_buffer.Write(xs.w(), ys.w(), d.w());
     }
@@ -570,7 +600,7 @@ void DrawMesh(SDL_Surface *surface, const Mat4f32& proj_model, ThreadPool &threa
     for (auto const& [tile_index, tile_value] : triangle_tile_map) {
         thread_pool.Schedule([=]() mutable {
             for (const TriangleTileValueInner& val : tile_value.values) {
-                if (!wireframe) {
+                if (render_method != RenderingMethod::Wireframe) {
                     DrawTriangle(surface, tile_value.tile_rect, val.bounding_box, depth_buffer, overdraw_buffer, mesh.screen_triangles[val.index], texture);
                 }
                 else {
@@ -642,20 +672,24 @@ int main(int argc, char *argv[]) {
                             rotate_angle += rotate_delta;
                             break;
                         }
-                        case SDLK_f: {
-                            wireframe = !wireframe;
+                        case SDLK_w: {
+                            render_method = RenderingMethod::Wireframe;
                             break;
                         }
                         case SDLK_u: {
-                            draw_uv = !draw_uv;
+                            render_method = RenderingMethod::Uv;
                             break;
                         }
-                        case SDLK_b: {
-                            draw_raster_method = !draw_raster_method;
+                        case SDLK_m: {
+                            render_method = RenderingMethod::RasterMethod;
                             break;
                         }
                         case SDLK_o: {
-                            overdraw_indicator = !overdraw_indicator;
+                            render_method = RenderingMethod::Overdraw;
+                            break;
+                        }
+                        case SDLK_s: {
+                            render_method = RenderingMethod::Standard;
                             break;
                         }
                         case SDLK_EQUALS: {
