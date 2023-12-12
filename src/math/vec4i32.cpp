@@ -39,6 +39,10 @@ bool Vec4i32::any_gte(i32 val) const {
            this->w() >= val;
 }
 
+i32 Vec4i32::operator[](i32 index) const {
+    return _xyzw[index];
+}
+
 Vec4i32 Vec4i32::operator*(const i32& rhs) const {
     return *this * Vec4i32(rhs);
 }

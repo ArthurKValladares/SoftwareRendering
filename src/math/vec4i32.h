@@ -23,6 +23,8 @@ struct Vec4i32 {
 
     bool any_gte(i32 val) const;
     
+    i32 operator[](i32 index) const;
+
     Vec4i32 operator*(const i32& rhs) const;
 
     Vec4i32 operator+(const Vec4i32& rhs) const;
