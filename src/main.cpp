@@ -349,7 +349,7 @@ void DrawTriangleBarycentric(SDL_Surface* surface, Rect2D tile_rect, Rect2D boun
     Vec4i32 w2_row = e01.Init(st.v0.p, st.v1.p, min_point);
 
     Point2D point = { 0, 0 };
-    for (point.y = bounding_box.minY; point.y <= bounding_box.maxY; point.y += EdgeFunction::step_increment_y) {
+    for (point.y = bounding_box.minY; point.y <= MIN(bounding_box.maxY, surface->h - 1); point.y += EdgeFunction::step_increment_y) {
         const Vec4i32 delta_y = Vec4i32(point.y - bounding_box.minY);
 
         Vec4i32 w0 = w0_row;
@@ -357,7 +357,7 @@ void DrawTriangleBarycentric(SDL_Surface* surface, Rect2D tile_rect, Rect2D boun
         Vec4i32 w2 = w2_row;
 
         bool is_in_triangle = false;
-        for (point.x = bounding_box.minX; point.x <= bounding_box.maxX; point.x += EdgeFunction::step_increment_x) {
+        for (point.x = bounding_box.minX; point.x <= MIN(bounding_box.maxX, surface->w - 1); point.x += EdgeFunction::step_increment_x) {
             const Vec4i32 mask = w0 | w1 | w2;
 
             if (mask.any_gte(0)) {
@@ -587,11 +587,13 @@ int main(int argc, char *argv[]) {
     Mesh mesh = load_obj("../assets/meshes/teapot", "teapot.obj");
 
     const float depth_min = 0.0;
+    const float x_span = mesh.bb.maxX - mesh.bb.minX;
+    const float y_span = mesh.bb.maxY - mesh.bb.minY;
     const Camera camera = Camera::orthographic(OrtographicCamera{
-        -100.0,
-        100.0,
-        -100.0,
-        100.0,
+        mesh.bb.minX - x_span * 0.1f,
+        mesh.bb.maxX + x_span * 0.1f,
+        mesh.bb.minY - y_span * 0.1f,
+        mesh.bb.maxY + y_span * 0.1f,
         0.0,
         1.0
     });

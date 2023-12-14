@@ -6,6 +6,7 @@
 #include <iostream>
 #include <unordered_map>
 #include <string>
+#include <limits>
 
 Mesh load_obj(const std::string& dir, const std::string& obj_file) {
     tinyobj::ObjReaderConfig reader_config;
@@ -27,7 +28,14 @@ Mesh load_obj(const std::string& dir, const std::string& obj_file) {
 
     std::unordered_map<Vertex, u32> uniqueVertices{};
     Mesh mesh;
-
+    Rect3D_f bb {
+        std::numeric_limits<float>::max(),
+        std::numeric_limits<float>::max(),
+        std::numeric_limits<float>::max(),
+        std::numeric_limits<float>::min(),
+        std::numeric_limits<float>::min(),
+        std::numeric_limits<float>::min()
+    };
     // Loop over shapes
     for (const auto& shape : shapes) {
         for (const auto& index : shape.mesh.indices) {
@@ -38,6 +46,15 @@ Mesh load_obj(const std::string& dir, const std::string& obj_file) {
                 attrib.vertices[3 * index.vertex_index + 1],
                 attrib.vertices[3 * index.vertex_index + 2]
             };
+
+            bb.minX = MIN(bb.minX, vertex.p.x);
+            bb.maxX = MAX(bb.maxX, vertex.p.x);
+
+            bb.minY = MIN(bb.minY, vertex.p.y);
+            bb.maxY = MAX(bb.maxY, vertex.p.y);
+
+            bb.minZ = MIN(bb.minZ, vertex.p.z);
+            bb.maxZ = MAX(bb.maxZ, vertex.p.z);
 
             vertex.uv = {
                 attrib.texcoords[2 * index.texcoord_index + 0],
@@ -55,7 +72,7 @@ Mesh load_obj(const std::string& dir, const std::string& obj_file) {
             mesh.indices.push_back(uniqueVertices[vertex]);
         }
     }
-
+    mesh.bb = std::move(bb);
     mesh.SetupTriangles();
     return mesh;
 }
