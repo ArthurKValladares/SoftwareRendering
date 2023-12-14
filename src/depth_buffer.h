@@ -8,7 +8,7 @@ struct DepthBuffer {
     float ValueAt(u32 width, u32 height) const;
     void Write(u32 width, u32 height, float depth);
 
-    void Clear();
+    void Set(float val);
 
     u32 m_width;
     u32 m_height;

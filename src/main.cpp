@@ -586,6 +586,7 @@ int main(int argc, char *argv[]) {
     Texture texture = Texture("../assets/meshes/teapot/default.png", surface);
     Mesh mesh = load_obj("../assets/meshes/teapot", "teapot.obj");
 
+    const float depth_min = 0.0;
     const Camera camera = Camera::orthographic(OrtographicCamera{
         -100.0,
         100.0,
@@ -672,8 +673,8 @@ int main(int argc, char *argv[]) {
         const std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
         
         ClearSurface(surface, thread_pool, Color{100, 100, 100});
+        depth_buffer.Set(depth_min);
         DrawMesh(surface, proj_model, thread_pool, tile_data, depth_buffer, overdraw_buffer, mesh, texture);
-        depth_buffer.Clear();
         overdraw_buffer.Clear();
 
         const std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
@@ -690,5 +691,3 @@ int main(int argc, char *argv[]) {
     
     return 0;
 }
-
-// TODO: Optimize how many pixels we try to draw per triangle

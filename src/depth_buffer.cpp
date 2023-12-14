@@ -15,11 +15,11 @@ void DepthBuffer::Write(u32 width, u32 height, float depth) {
     m_pixels[height * m_width + width] = depth;
 }
 
-void DepthBuffer::Clear() {
+void DepthBuffer::Set(float val) {
     // TODO: just memset here later
     for (int h = 0; h < m_height; ++h) {
         for (int w = 0; w < m_width; ++w) {
-            this->Write(w, h, 0.0);
+            this->Write(w, h, val);
         }
     }
 }
