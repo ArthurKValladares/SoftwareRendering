@@ -594,7 +594,7 @@ int main(int argc, char *argv[]) {
         mesh.bb.maxX + x_span * 0.1f,
         mesh.bb.minY - y_span * 0.1f,
         mesh.bb.maxY + y_span * 0.1f,
-        0.0,
+        -10.0,
         1.0
     });
 
@@ -669,7 +669,7 @@ int main(int argc, char *argv[]) {
         }
         
         const Mat4f32 proj_matrix = camera.GetProjMatrix();
-        const Mat4f32 model_matrix = rotate_matrix(Vec3D_f{ 1.0, 0.0, 0 }, rotate_angle);
+        const Mat4f32 model_matrix = rotate_matrix(Vec3D_f{ 0.0, 1.0, 0 }, rotate_angle);
         const Mat4f32 proj_model = proj_matrix * model_matrix;
 
         const std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
