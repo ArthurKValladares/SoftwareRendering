@@ -584,7 +584,7 @@ int main(int argc, char *argv[]) {
     OverdrawBuffer overdraw_buffer = OverdrawBuffer(surface->w, surface->h);
 
     Texture texture = Texture("../assets/meshes/teapot/default.png", surface);
-    Mesh mesh = load_obj("../assets/meshes/teapot", "teapot.obj");
+    Mesh mesh = load_obj("../assets/meshes/sibenik", "sibenik.obj");
 
     const float depth_min = 0.0;
     const float x_span = mesh.bb.maxX - mesh.bb.minX;
