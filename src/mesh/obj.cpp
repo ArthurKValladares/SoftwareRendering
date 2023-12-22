@@ -8,7 +8,7 @@
 #include <string>
 #include <limits>
 
-Mesh load_obj(const std::string& dir, const std::string& obj_file) {
+Mesh load_obj(const std::string& dir, const std::string& obj_file, SDL_Surface* surface) {
     tinyobj::ObjReaderConfig reader_config;
     reader_config.mtl_search_path = dir; // Path to material files
     tinyobj::ObjReader reader;
@@ -26,6 +26,40 @@ Mesh load_obj(const std::string& dir, const std::string& obj_file) {
     auto& shapes = reader.GetShapes();
     auto& materials = reader.GetMaterials();
 
+    TextureMap texture_map;
+    for (const auto& material : materials) {
+        const auto add_to_map = [&](const std::string& str) {
+            if (texture_map.count(str) == 0) {
+                const std::string texture_path = dir + "/" + str;
+                Texture texture = Texture(texture_path.c_str(), surface);
+                texture_map.emplace(texture_path, texture);
+            }
+        };
+        if (material.ambient_texname != "") {
+            add_to_map(material.ambient_texname);
+        }
+        if (material.diffuse_texname != "") {
+            add_to_map(material.diffuse_texname);
+        }
+        if (material.specular_texname != "") {
+            add_to_map(material.specular_texname);
+        }
+        if (material.specular_highlight_texname != "") {
+            add_to_map(material.specular_highlight_texname);
+        }
+        if (material.bump_texname != "") {
+            add_to_map(material.bump_texname);
+        }
+        if (material.displacement_texname != "") {
+            add_to_map(material.displacement_texname);
+        }
+        if (material.alpha_texname != "") {
+            add_to_map(material.alpha_texname);
+        }
+        if (material.reflection_texname != "") {
+            add_to_map(material.reflection_texname);
+        }
+    }
     std::unordered_map<Vertex, u32> uniqueVertices{};
     Mesh mesh;
     Rect3D_f bb {
@@ -74,5 +108,6 @@ Mesh load_obj(const std::string& dir, const std::string& obj_file) {
     }
     mesh.bb = std::move(bb);
     mesh.SetupTriangles();
+    mesh.texture_map = std::move(texture_map);
     return mesh;
 }
