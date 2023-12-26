@@ -47,7 +47,13 @@ set_target_properties(${PROJECT_NAME} PROPERTIES
     CXX_STANDARD_REQUIRED YES
 )
 
-set(SDL2_DIR ${project_root}/vendor/SDL/cmake)
-find_package(SDL2 REQUIRED)
-target_link_libraries(${PROJECT_NAME} SDL2::SDL2)
-target_link_libraries(${PROJECT_NAME} SDL2::SDL2main)
+if (APPLE)
+    find_library(SDL2_LIBRARY NAME SDL2)
+    include_directories(${PROJECT_NAME} ${SDL2_INCLUDE_DIRS})
+    target_link_libraries(${PROJECT_NAME} ${SDL2_LIBRARIES})
+else()
+    set(SDL2_DIR ${project_root}/vendor/SDL/cmake)
+    find_package(SDL2 REQUIRED)
+    target_link_libraries(${PROJECT_NAME} SDL2::SDL2)
+    target_link_libraries(${PROJECT_NAME} SDL2::SDL2main)
+endif()
