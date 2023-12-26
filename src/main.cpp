@@ -173,6 +173,10 @@ void RenderPixels(SDL_Surface *surface, DepthBuffer& depth_buffer,  OverdrawBuff
                     *GetPixel(surface, pixel_offsets[index]) = get_overdraw_color(overdraw_buffer.ValueAt(xs[index], ys[index]));
                     break;
                 }
+                case RenderingMethod::Wireframe: {
+                    // NOTE: Handled separately
+                    break;
+                }
             }
             depth_buffer.Write(xs[index], ys[index], d[index]);
         }
@@ -542,7 +546,9 @@ void DrawMesh(SDL_Surface *surface, const Mat4f32& proj_model, ThreadPool &threa
     TriangleTileMap triangle_tile_map = mesh.SetupScreenTriangles(surface, tile_data, proj_model);
 
     const u32 num_tasks = tile_data.num_tasks();
-    for (auto const& [tile_index, tile_value] : triangle_tile_map) {
+    for (auto const& item : triangle_tile_map) {
+        auto const tile_index = item.first;
+        auto const tile_value = item.second;
         thread_pool.Schedule([=]() mutable {
             for (const TriangleTileValueInner& val : tile_value.values) {
                 if (render_method != RenderingMethod::Wireframe) {
