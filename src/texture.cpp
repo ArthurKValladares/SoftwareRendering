@@ -3,12 +3,13 @@
 #include "stb_image.h"
 
 #include <filesystem>
+#include <iostream>
 
-Texture::Texture(const char *path, SDL_Surface *surface) {
+Texture::Texture(const std::string& path, SDL_Surface *surface) {
     int channels;
-    unsigned char *img = stbi_load(path, &m_width, &m_height, &channels, 0);
+    unsigned char *img = stbi_load(path.c_str(), &m_width, &m_height, &channels, 0);
     if (img == NULL) {
-        printf("Error in loading the image: %s\n", path);
+        printf("Error in loading the image: %s\n", path.c_str());
         if(!std::filesystem::exists(path)) {
             printf("Path does not exist.");
         }

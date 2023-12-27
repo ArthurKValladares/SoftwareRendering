@@ -26,6 +26,7 @@
 #include "ThreadPool.h"
 #include "math/vec4f32.h"
 #include "math/vec4i32.h"
+#include "cmake_defs.h"
 
 // TODO: Will bring back non-SIMD versions
 #define SIMD true
@@ -589,8 +590,10 @@ int main(int argc, char *argv[]) {
     DepthBuffer depth_buffer = DepthBuffer(surface->w, surface->h);
     OverdrawBuffer overdraw_buffer = OverdrawBuffer(surface->w, surface->h);
 
-    Texture texture = Texture("../assets/meshes/teapot/default.png", surface);
-    Mesh mesh = load_obj("../assets/meshes/sibenik", "sibenik.obj", surface);
+    const std::string texture_path = std::string(PROJECT_ROOT) + std::string("/assets/meshes/teapot/default.png");
+    Texture texture = Texture(texture_path, surface);
+    const std::string mesh_path = std::string(PROJECT_ROOT) + std::string("/assets/meshes/sibenik");
+    Mesh mesh = load_obj(mesh_path, "sibenik.obj", surface);
 
     const float depth_min = 0.0;
     const float x_span = mesh.bb.maxX - mesh.bb.minX;

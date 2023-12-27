@@ -47,6 +47,9 @@ set_target_properties(${PROJECT_NAME} PROPERTIES
     CXX_STANDARD_REQUIRED YES
 )
 
+set(PROJECT_ROOT ${project_root})
+configure_file(${project_root}/src/cmake_defs.h.in ${project_root}/src/cmake_defs.h @ONLY)
+
 if (APPLE)
     find_package(SDL2 REQUIRED)
     include_directories(${PROJECT_NAME} ${SDL2_INCLUDE_DIRS})

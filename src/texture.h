@@ -6,7 +6,7 @@
 #include <string>
 
 struct Texture {
-    Texture(const char* path, SDL_Surface *surface);
+    Texture(const std::string& path, SDL_Surface *surface);
     void free();
 
     Uint32 get_pixel_from_idx(u32 idx) const;
