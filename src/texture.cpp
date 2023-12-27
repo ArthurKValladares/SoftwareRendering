@@ -6,7 +6,7 @@ Texture::Texture(const char *path, SDL_Surface *surface) {
     int channels;
     unsigned char *img = stbi_load(path, &m_width, &m_height, &channels, 0);
     if (img == NULL) {
-        printf("Error in loading the image\n");
+        printf("Error in loading the image: %s\n", path);
         exit(1);
     }
     const int stride = m_width * channels;
