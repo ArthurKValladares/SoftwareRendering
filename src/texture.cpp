@@ -2,11 +2,16 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 
+#include <filesystem>
+
 Texture::Texture(const char *path, SDL_Surface *surface) {
     int channels;
     unsigned char *img = stbi_load(path, &m_width, &m_height, &channels, 0);
     if (img == NULL) {
         printf("Error in loading the image: %s\n", path);
+        if(!std::filesystem::exists(path)) {
+            printf("Path does not exist.");
+        }
         exit(1);
     }
     const int stride = m_width * channels;
