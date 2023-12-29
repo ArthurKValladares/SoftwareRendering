@@ -35,30 +35,21 @@ Mesh load_obj(const std::string& dir, const std::string& obj_file, SDL_Surface* 
                 texture_map.emplace(texture_path, texture);
             }
         };
-        if (material.ambient_texname != "") {
-            add_to_map(material.ambient_texname);
-        }
-        if (material.diffuse_texname != "") {
-            add_to_map(material.diffuse_texname);
-        }
-        if (material.specular_texname != "") {
-            add_to_map(material.specular_texname);
-        }
-        if (material.specular_highlight_texname != "") {
-            add_to_map(material.specular_highlight_texname);
-        }
-        if (material.bump_texname != "") {
-            add_to_map(material.bump_texname);
-        }
-        if (material.displacement_texname != "") {
-            add_to_map(material.displacement_texname);
-        }
-        if (material.alpha_texname != "") {
-            add_to_map(material.alpha_texname);
-        }
-        if (material.reflection_texname != "") {
-            add_to_map(material.reflection_texname);
-        }
+
+#define ADD_TO_MAP(field)\
+if (material.field != "") {\
+    add_to_map(material.field);\
+}
+        ADD_TO_MAP(ambient_texname);
+        ADD_TO_MAP(diffuse_texname);
+        ADD_TO_MAP(specular_texname);
+        ADD_TO_MAP(specular_highlight_texname);
+        ADD_TO_MAP(bump_texname);
+        ADD_TO_MAP(displacement_texname);
+        ADD_TO_MAP(alpha_texname);
+        ADD_TO_MAP(reflection_texname);
+#undef ADD_TO_MAP
+
     }
     std::unordered_map<Vertex, u32> uniqueVertices{};
     Mesh mesh;
