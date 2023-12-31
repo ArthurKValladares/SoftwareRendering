@@ -35,6 +35,11 @@ struct Mesh {
     std::vector<ScreenTriangle> screen_triangles;
 
     TextureMap texture_map;
-
+    struct MaterialInfo {
+        u64 last_vertex;
+        int material_id;
+    };
+    std::vector<MaterialInfo> materials;
+    
     Rect3D_f bb;
 };

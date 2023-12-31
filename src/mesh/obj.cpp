@@ -51,6 +51,7 @@ if (material.field != "") {\
 #undef ADD_TO_MAP
 
     }
+    std::vector<Mesh::MaterialInfo> mesh_materials;
     std::unordered_map<Vertex, u32> uniqueVertices{};
     Mesh mesh;
     Rect3D_f bb {
@@ -96,9 +97,24 @@ if (material.field != "") {\
 
             mesh.indices.push_back(uniqueVertices[vertex]);
         }
+
+        u64 vertices_tracked = 0;
+        int prev_material_index = shape.mesh.material_ids[0];
+        for (int i = 0; i < shape.mesh.material_ids.size(); ++i) {
+            const auto current_material_index = shape.mesh.material_ids[i];
+            vertices_tracked += shape.mesh.num_face_vertices[i];
+            if (current_material_index != prev_material_index) {
+                mesh_materials.push_back(Mesh::MaterialInfo{
+                    vertices_tracked,
+                    current_material_index
+                });
+            }
+            prev_material_index = current_material_index;
+        }
     }
     mesh.bb = std::move(bb);
     mesh.SetupTriangles();
     mesh.texture_map = std::move(texture_map);
+    mesh.materials = std::move(mesh_materials);
     return mesh;
 }
