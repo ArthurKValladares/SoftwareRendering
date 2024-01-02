@@ -1,5 +1,5 @@
 mkdir build
 cd build
-cmake ..
+cmake -G Xcode ..
 cmake --build .
 cd ..

@@ -544,6 +544,7 @@ void DrawTriangleWireframe(SDL_Surface* surface, const ScreenTriangle& st) {
 }
 
 void DrawMesh(SDL_Surface *surface, const Mat4f32& proj_model, ThreadPool &thread_pool, ScreenTileData tile_data, DepthBuffer& depth_buffer, OverdrawBuffer& overdraw_buffer, Mesh &mesh, const Texture &texture) {
+    // TODO: Will need to modify this logic to take care of the material index stuff
     TriangleTileMap triangle_tile_map = mesh.SetupScreenTriangles(surface, tile_data, proj_model);
 
     const u32 num_tasks = tile_data.num_tasks();
@@ -594,7 +595,9 @@ int main(int argc, char *argv[]) {
     Texture texture = Texture(texture_path, surface);
     const std::string mesh_path = std::string(PROJECT_ROOT) + std::string("/assets/meshes/sibenik");
     Mesh mesh = load_obj(mesh_path, "sibenik.obj", surface);
-
+    for (const auto& it : mesh.diffuse_map) {
+        std::cout << it.first << " " << it.second << std::endl;
+    }
     const float depth_min = 0.0;
     const float x_span = mesh.bb.maxX - mesh.bb.minX;
     const float y_span = mesh.bb.maxY - mesh.bb.minY;
