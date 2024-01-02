@@ -21,6 +21,7 @@ ScreenTriangle project_triangle_to_screen(SDL_Surface* surface, const Mat4f32& p
     return ScreenTriangle{
         ScreenVertex{ sv0, pv0.z(), triangle.v0.uv },
         ScreenVertex{ sv1, pv1.z(), triangle.v1.uv },
-        ScreenVertex{ sv2, pv2.z(), triangle.v2.uv }
+        ScreenVertex{ sv2, pv2.z(), triangle.v2.uv },
+        triangle.material_id
     };
 }

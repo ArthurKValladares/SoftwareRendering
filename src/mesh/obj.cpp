@@ -104,14 +104,14 @@ Mesh load_obj(const std::string& dir, const std::string& obj_file, SDL_Surface* 
             mesh.indices.push_back(uniqueVertices[vertex]);
         }
 
-        u64 vertices_tracked = 0;
+        u64 indices_tracked = 0;
         int prev_material_index = shape.mesh.material_ids[0];
         for (int i = 0; i < shape.mesh.material_ids.size(); ++i) {
             const auto current_material_index = shape.mesh.material_ids[i];
-            vertices_tracked += shape.mesh.num_face_vertices[i];
+            indices_tracked += shape.mesh.num_face_vertices[i];
             if (current_material_index != prev_material_index) {
                 mesh_materials.push_back(Mesh::MaterialInfo{
-                    vertices_tracked,
+                    indices_tracked,
                     current_material_index
                 });
             }
@@ -119,9 +119,9 @@ Mesh load_obj(const std::string& dir, const std::string& obj_file, SDL_Surface* 
         }
     }
     mesh.bb = std::move(bb);
-    mesh.SetupTriangles();
     mesh.texture_map = std::move(texture_map);
     mesh.materials = std::move(mesh_materials);
     mesh.diffuse_map = std::move(diffuse_map);
+    mesh.SetupTriangles();
     return mesh;
 }

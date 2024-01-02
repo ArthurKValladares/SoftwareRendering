@@ -543,7 +543,7 @@ void DrawTriangleWireframe(SDL_Surface* surface, const ScreenTriangle& st) {
     DrawLine(surface, line2, mapped_color);
 }
 
-void DrawMesh(SDL_Surface *surface, const Mat4f32& proj_model, ThreadPool &thread_pool, ScreenTileData tile_data, DepthBuffer& depth_buffer, OverdrawBuffer& overdraw_buffer, Mesh &mesh, const Texture &texture) {
+void DrawMesh(SDL_Surface *surface, const Mat4f32& proj_model, ThreadPool &thread_pool, ScreenTileData tile_data, DepthBuffer& depth_buffer, OverdrawBuffer& overdraw_buffer, Mesh &mesh) {
     // TODO: Will need to modify this logic to take care of the material index stuff
     TriangleTileMap triangle_tile_map = mesh.SetupScreenTriangles(surface, tile_data, proj_model);
 
@@ -554,6 +554,8 @@ void DrawMesh(SDL_Surface *surface, const Mat4f32& proj_model, ThreadPool &threa
         thread_pool.Schedule([=]() mutable {
             for (const TriangleTileValueInner& val : tile_value.values) {
                 if (render_method != RenderingMethod::Wireframe) {
+                    const std::string& material_id = mesh.diffuse_map.at(mesh.screen_triangles[val.index].material_id);
+                    const Texture& texture = mesh.texture_map.at(material_id);
                     DrawTriangle(surface, tile_value.tile_rect, val.bounding_box, depth_buffer, overdraw_buffer, mesh.screen_triangles[val.index], texture);
                 }
                 else {
@@ -591,8 +593,6 @@ int main(int argc, char *argv[]) {
     DepthBuffer depth_buffer = DepthBuffer(surface->w, surface->h);
     OverdrawBuffer overdraw_buffer = OverdrawBuffer(surface->w, surface->h);
 
-    const std::string texture_path = std::string(PROJECT_ROOT) + std::string("/assets/meshes/teapot/default.png");
-    Texture texture = Texture(texture_path, surface);
     const std::string mesh_path = std::string(PROJECT_ROOT) + std::string("/assets/meshes/sibenik");
     Mesh mesh = load_obj(mesh_path, "sibenik.obj", surface);
     for (const auto& it : mesh.diffuse_map) {
@@ -688,7 +688,7 @@ int main(int argc, char *argv[]) {
         
         ClearSurface(surface, thread_pool, Color{100, 100, 100});
         depth_buffer.Set(depth_min);
-        DrawMesh(surface, proj_model, thread_pool, tile_data, depth_buffer, overdraw_buffer, mesh, texture);
+        DrawMesh(surface, proj_model, thread_pool, tile_data, depth_buffer, overdraw_buffer, mesh);
         overdraw_buffer.Clear();
 
         const std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
@@ -701,7 +701,7 @@ int main(int argc, char *argv[]) {
     // Cleanup
     SDL_DestroyWindow(window);
     SDL_Quit();
-    texture.free();
+    // TODO: Free Mesh
     
     return 0;
 }

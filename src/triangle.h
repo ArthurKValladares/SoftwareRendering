@@ -13,8 +13,10 @@ struct Triangle {
     const Vertex& v0;
     const Vertex& v1;
     const Vertex& v2;
+    int material_id;
 };
 
+// TODO: Not sure I like This ScreenVertex/ScreenTriangle stuff
 struct ScreenVertex {
     Point2D p;
     float depth;
@@ -25,6 +27,7 @@ struct ScreenTriangle {
     ScreenVertex v0;
     ScreenVertex v1;
     ScreenVertex v2;
+    int material_id;
 };
 
 

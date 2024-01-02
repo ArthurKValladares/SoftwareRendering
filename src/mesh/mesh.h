@@ -39,7 +39,7 @@ struct Mesh {
     MaterialMap diffuse_map;
 
     struct MaterialInfo {
-        u64 last_vertex;
+        u64 last_index;
         int material_id;
     };
     std::vector<MaterialInfo> materials;
