@@ -24,6 +24,7 @@ struct TriangleTileValue {
 
 using TriangleTileMap = std::unordered_map<u32, TriangleTileValue>;
 using TextureMap = std::unordered_map<std::string, Texture>;
+using MaterialMap = std::unordered_map<u64, std::string>;
 
 struct Mesh {
     void SetupTriangles();
@@ -35,11 +36,13 @@ struct Mesh {
     std::vector<ScreenTriangle> screen_triangles;
 
     TextureMap texture_map;
+    MaterialMap diffuse_map;
+
     struct MaterialInfo {
         u64 last_vertex;
         int material_id;
     };
     std::vector<MaterialInfo> materials;
-    
+
     Rect3D_f bb;
 };

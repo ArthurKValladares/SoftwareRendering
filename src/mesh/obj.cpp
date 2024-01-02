@@ -27,7 +27,9 @@ Mesh load_obj(const std::string& dir, const std::string& obj_file, SDL_Surface* 
     auto& materials = reader.GetMaterials();
 
     TextureMap texture_map;
-    for (const auto& material : materials) {
+    MaterialMap diffuse_map;
+    for (u64 idx = 0; idx < materials.size(); ++idx) {
+        const auto& material = materials[idx];
         const auto add_to_map = [&](const std::string& str) {
             if (texture_map.count(str) == 0) {
                 const std::string texture_path = dir + "/" + str;
@@ -36,19 +38,23 @@ Mesh load_obj(const std::string& dir, const std::string& obj_file, SDL_Surface* 
             }
         };
 
-#define ADD_TO_MAP(field)\
-if (material.field != "") {\
-    add_to_map(material.field);\
-}
+        #define ADD_TO_MAP(field)\
+        if (material.field != "") {\
+            add_to_map(material.field);\
+        }
         ADD_TO_MAP(ambient_texname);
         ADD_TO_MAP(diffuse_texname);
+        // TODO: Maybe a macro for this too later?
+        if (material.diffuse_texname != "") {
+            diffuse_map.emplace(idx, material.diffuse_texname);
+        }
         ADD_TO_MAP(specular_texname);
         ADD_TO_MAP(specular_highlight_texname);
         ADD_TO_MAP(bump_texname);
         ADD_TO_MAP(displacement_texname);
         ADD_TO_MAP(alpha_texname);
         ADD_TO_MAP(reflection_texname);
-#undef ADD_TO_MAP
+        #undef ADD_TO_MAP
 
     }
     std::vector<Mesh::MaterialInfo> mesh_materials;
@@ -116,5 +122,6 @@ if (material.field != "") {\
     mesh.SetupTriangles();
     mesh.texture_map = std::move(texture_map);
     mesh.materials = std::move(mesh_materials);
+    mesh.diffuse_map = std::move(diffuse_map);
     return mesh;
 }
