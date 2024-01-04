@@ -34,7 +34,7 @@ Mesh load_obj(const std::string& dir, const std::string& obj_file, SDL_Surface* 
             if (texture_map.count(str) == 0) {
                 const std::string texture_path = dir + "/" + str;
                 Texture texture = Texture(texture_path.c_str(), surface);
-                texture_map.emplace(str, texture);
+                texture_map.emplace(str, std::move(texture));
             }
         };
 
