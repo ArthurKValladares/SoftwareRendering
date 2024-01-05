@@ -40,7 +40,6 @@ Mesh load_obj(const std::string& dir, const std::string& obj_file, SDL_Surface* 
 
         #define ADD_TO_MAP(field)\
         if (material.field != "") {\
-            std::cout << idx << " --- " << material.field << std::endl;\
             add_to_map(material.field);\
         }
         ADD_TO_MAP(ambient_texname);
