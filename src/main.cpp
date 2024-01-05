@@ -556,11 +556,11 @@ void DrawMesh(SDL_Surface *surface, const Mat4f32& proj_model, ThreadPool &threa
                     const int material_id = mesh.screen_triangles[val.index].material_id;
                     // TODO: Debug logs
                     if (mesh.diffuse_map.count(material_id) == 0) {
-                        std::cout << material_id << std::endl;
+                        std::cout << "material_id not in map: " << material_id << std::endl;
                     }
                     const std::string& diffuse_texture = mesh.diffuse_map.at(material_id);
                     if (mesh.texture_map.count(diffuse_texture) == 0) {
-                        std::cout << diffuse_texture << std::endl;
+                        std::cout << "diffuse_texture not in map: " << diffuse_texture << std::endl;
                     }
                     const Texture& texture = mesh.texture_map.at(diffuse_texture);
                     DrawTriangle(surface, tile_value.tile_rect, val.bounding_box, depth_buffer, overdraw_buffer, mesh.screen_triangles[val.index], texture);

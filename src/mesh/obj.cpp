@@ -40,6 +40,7 @@ Mesh load_obj(const std::string& dir, const std::string& obj_file, SDL_Surface* 
 
         #define ADD_TO_MAP(field)\
         if (material.field != "") {\
+            std::cout << idx << " --- " << material.field << std::endl;\
             add_to_map(material.field);\
         }
         ADD_TO_MAP(ambient_texname);
@@ -54,6 +55,11 @@ Mesh load_obj(const std::string& dir, const std::string& obj_file, SDL_Surface* 
         ADD_TO_MAP(displacement_texname);
         ADD_TO_MAP(alpha_texname);
         ADD_TO_MAP(reflection_texname);
+        ADD_TO_MAP(roughness_texname);
+        ADD_TO_MAP(metallic_texname);
+        ADD_TO_MAP(sheen_texname);
+        ADD_TO_MAP(emissive_texname);
+        ADD_TO_MAP(normal_texname);
         #undef ADD_TO_MAP
 
     }
