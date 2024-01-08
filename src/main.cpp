@@ -554,7 +554,7 @@ void DrawMesh(SDL_Surface *surface, const Mat4f32& proj_model, ThreadPool &threa
             for (const TriangleTileValueInner& val : tile_value.values) {
                 if (render_method != RenderingMethod::Wireframe) {
                     const int material_id = mesh.screen_triangles[val.index].material_id;
-                    // TODO: Debug logs
+                    // TODO: If material does not have diffuse texture, use diffuse values
                     if (mesh.diffuse_map.count(material_id) == 0) {
                         std::cout << "material_id not in map: " << material_id << std::endl;
                     }
