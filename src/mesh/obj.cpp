@@ -26,8 +26,9 @@ Mesh load_obj(const std::string& dir, const std::string& obj_file, SDL_Surface* 
     auto& shapes = reader.GetShapes();
     auto& materials = reader.GetMaterials();
 
+    std::vector<Mesh::Material> mesh_materials;
+    mesh_materials.reserve(materials.size());
     TextureMap texture_map;
-    MaterialMap diffuse_map;
     for (u64 idx = 0; idx < materials.size(); ++idx) {
         const auto& material = materials[idx];
         const auto add_to_map = [&](const std::string& str) {
@@ -44,10 +45,6 @@ Mesh load_obj(const std::string& dir, const std::string& obj_file, SDL_Surface* 
         }
         ADD_TO_MAP(ambient_texname);
         ADD_TO_MAP(diffuse_texname);
-        // TODO: Maybe a macro for this too later?
-        if (material.diffuse_texname != "") {
-            diffuse_map.emplace(idx, material.diffuse_texname);
-        }
         ADD_TO_MAP(specular_texname);
         ADD_TO_MAP(specular_highlight_texname);
         ADD_TO_MAP(bump_texname);
@@ -61,8 +58,12 @@ Mesh load_obj(const std::string& dir, const std::string& obj_file, SDL_Surface* 
         ADD_TO_MAP(normal_texname);
         #undef ADD_TO_MAP
 
+        mesh_materials.emplace_back(Mesh::Material {
+            material.diffuse_texname,
+            {material.diffuse[0], material.diffuse[1], material.diffuse[2]}
+        });
     }
-    std::vector<Mesh::MaterialInfo> mesh_materials;
+    std::vector<Mesh::MaterialInfo> mesh_material_info;
     std::unordered_map<Vertex, u32> uniqueVertices{};
     Mesh mesh;
     Rect3D_f bb {
@@ -115,7 +116,7 @@ Mesh load_obj(const std::string& dir, const std::string& obj_file, SDL_Surface* 
             const auto current_material_index = shape.mesh.material_ids[i];
             indices_tracked += shape.mesh.num_face_vertices[i];
             if (current_material_index != prev_material_index) {
-                mesh_materials.push_back(Mesh::MaterialInfo{
+                mesh_material_info.push_back(Mesh::MaterialInfo{
                     indices_tracked,
                     current_material_index
                 });
@@ -125,8 +126,7 @@ Mesh load_obj(const std::string& dir, const std::string& obj_file, SDL_Surface* 
     }
     mesh.bb = std::move(bb);
     mesh.texture_map = std::move(texture_map);
-    mesh.materials = std::move(mesh_materials);
-    mesh.diffuse_map = std::move(diffuse_map);
+    mesh.material_info = std::move(mesh_material_info);
     mesh.SetupTriangles();
     return mesh;
 }

@@ -4,7 +4,7 @@ void Mesh::SetupTriangles() {
     int mat_idx = 0;
 	triangles.reserve(indices.size() / 3);
 	for (int i = 0; i < indices.size(); i += 3) {
-        while (i > materials[mat_idx].last_index) {
+        while (i > material_info[mat_idx].last_index) {
             ++mat_idx;
         }
 
@@ -16,7 +16,7 @@ void Mesh::SetupTriangles() {
             v0,
             v1,
             v2,
-            materials[mat_idx].material_id
+            material_info[mat_idx].material_id
         };
         
         triangles.push_back(triangle);
