@@ -562,13 +562,7 @@ void DrawMesh(SDL_Surface *surface, const Mat4f32& proj_model, ThreadPool &threa
             for (const TriangleTileValueInner& val : tile_value.values) {
                 if (render_method != RenderingMethod::Wireframe) {
                     const int material_id = mesh.screen_triangles[val.index].material_id;
-                    // TODO: If material does not have diffuse texture, use diffuse values
                     const Mesh::Material& material = mesh.materials[material_id];
-                    const std::string& diffuse_texture = material.diff_texture;
-                    if (diffuse_texture != "" && mesh.texture_map.count(diffuse_texture) == 0) {
-                        std::cout << "diffuse_texture not in map: " << diffuse_texture << std::endl;
-                    }
-                    const Texture& texture = mesh.texture_map.at(diffuse_texture);
                     DrawTriangle(surface, tile_value.tile_rect, val.bounding_box, depth_buffer, overdraw_buffer, mesh.screen_triangles[val.index], material);
                 }
                 else {
