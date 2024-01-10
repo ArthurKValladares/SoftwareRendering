@@ -123,6 +123,10 @@ Mesh load_obj(const std::string& dir, const std::string& obj_file, SDL_Surface* 
             }
             prev_material_index = current_material_index;
         }
+        mesh_material_info.push_back(Mesh::MaterialInfo{
+            indices_tracked,
+            prev_material_index
+        });
     }
     mesh.bb = std::move(bb);
     mesh.texture_map = std::move(texture_map);
