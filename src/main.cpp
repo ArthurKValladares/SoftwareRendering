@@ -601,7 +601,7 @@ int main(int argc, char *argv[]) {
     OverdrawBuffer overdraw_buffer = OverdrawBuffer(surface->w, surface->h);
 
     const std::string mesh_path = std::string(PROJECT_ROOT) + std::string("/assets/meshes/sibenik");
-    Mesh mesh = load_obj(mesh_path, "sibenik.obj", surface);
+    Mesh mesh = load_obj(mesh_path, "sibenik.obj", surface, true);
     std::cout << "--- Textures ---" << std::endl;
     for (const auto& it : mesh.texture_map) {
         std::cout << it.first << std::endl;

@@ -3,4 +3,4 @@
 #include "mesh.h"
 
 // TODO: string_view?
-Mesh load_obj(const std::string& dir, const std::string& obj_file, SDL_Surface *surface);
+Mesh load_obj(const std::string& dir, const std::string& obj_file, SDL_Surface *surface, bool flip_y = false);

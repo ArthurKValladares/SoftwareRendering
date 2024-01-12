@@ -8,7 +8,7 @@
 #include <string>
 #include <limits>
 
-Mesh load_obj(const std::string& dir, const std::string& obj_file, SDL_Surface* surface) {
+Mesh load_obj(const std::string& dir, const std::string& obj_file, SDL_Surface* surface, bool flip_y) {
     tinyobj::ObjReaderConfig reader_config;
     reader_config.mtl_search_path = dir; // Path to material files
     tinyobj::ObjReader reader;
@@ -79,9 +79,13 @@ Mesh load_obj(const std::string& dir, const std::string& obj_file, SDL_Surface* 
         for (const auto& index : shape.mesh.indices) {
             Vertex vertex{};
 
+            auto y = attrib.vertices[3 * index.vertex_index + 1];
+            if (flip_y) {
+                y = -y;
+            }
             vertex.p = {
                 attrib.vertices[3 * index.vertex_index + 0],
-                attrib.vertices[3 * index.vertex_index + 1],
+                y,
                 attrib.vertices[3 * index.vertex_index + 2]
             };
 
