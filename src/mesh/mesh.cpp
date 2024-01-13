@@ -1,13 +1,8 @@
 #include "mesh/mesh.h"
 
 void Mesh::SetupTriangles() {
-    int mat_idx = 0;
 	triangles.reserve(indices.size() / 3);
 	for (int i = 0; i < indices.size(); i += 3) {
-        while (i > material_info[mat_idx].last_index) {
-            ++mat_idx;
-        }
-
         const Vertex& v0 = vertices[indices[i]];
         const Vertex& v1 = vertices[indices[i + 1]];
         const Vertex& v2 = vertices[indices[i + 2]];
@@ -16,7 +11,7 @@ void Mesh::SetupTriangles() {
             v0,
             v1,
             v2,
-            material_info[mat_idx].material_id
+            material_ids[i / 3]
         };
         
         triangles.push_back(triangle);

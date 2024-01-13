@@ -63,7 +63,7 @@ Mesh load_obj(const std::string& dir, const std::string& obj_file, SDL_Surface* 
             {material.diffuse[0], material.diffuse[1], material.diffuse[2]}
         });
     }
-    std::vector<Mesh::MaterialInfo> mesh_material_info;
+    std::vector<int> material_ids;
     std::unordered_map<Vertex, u32> uniqueVertices{};
     Mesh mesh;
     Rect3D_f bb {
@@ -114,27 +114,11 @@ Mesh load_obj(const std::string& dir, const std::string& obj_file, SDL_Surface* 
             mesh.indices.push_back(uniqueVertices[vertex]);
         }
 
-        u64 indices_tracked = 0;
-        int prev_material_index = shape.mesh.material_ids[0];
-        for (int i = 0; i < shape.mesh.material_ids.size(); ++i) {
-            const auto current_material_index = shape.mesh.material_ids[i];
-            indices_tracked += shape.mesh.num_face_vertices[i];
-            if (current_material_index != prev_material_index) {
-                mesh_material_info.push_back(Mesh::MaterialInfo{
-                    indices_tracked,
-                    current_material_index
-                });
-            }
-            prev_material_index = current_material_index;
-        }
-        mesh_material_info.push_back(Mesh::MaterialInfo{
-            indices_tracked,
-            prev_material_index
-        });
+        material_ids.insert(material_ids.end(), shape.mesh.material_ids.begin(), shape.mesh.material_ids.end());
     }
     mesh.bb = std::move(bb);
     mesh.texture_map = std::move(texture_map);
-    mesh.material_info = std::move(mesh_material_info);
+    mesh.material_ids = std::move(material_ids);
     mesh.materials = std::move(mesh_materials);
     mesh.SetupTriangles();
     return mesh;

@@ -31,21 +31,18 @@ struct Mesh {
 
     std::vector<Vertex> vertices;
     std::vector<int> indices;
+
     std::vector<Triangle> triangles;
     std::vector<ScreenTriangle> screen_triangles;
 
     TextureMap texture_map;
 
-    struct MaterialInfo {
-        u64 last_index;
-        int material_id;
-    };
-    std::vector<MaterialInfo> material_info;
     struct Material {
         std::string diff_texture;
         float diffuse[3];
     };
     std::vector<Material> materials;
+    std::vector<int> material_ids;
 
     Rect3D_f bb;
 };
