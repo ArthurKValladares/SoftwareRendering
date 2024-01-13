@@ -159,8 +159,8 @@ void RenderPixels(SDL_Surface *surface, DepthBuffer& depth_buffer,  OverdrawBuff
                     if (material.diff_texture != "") {
                         const Texture& texture = mesh.texture_map.at(material.diff_texture);
 
-                        const Vec4i32 ui = (u.clamp(0.0, 1.0) * texture.m_width).to_int_nearest();
-                        const Vec4i32 vi = (v.clamp(0.0, 1.0) * texture.m_height).to_int_nearest();
+                        const Vec4i32 ui = (u.clamp(0.0, 1.0) * texture.m_width).to_int_round_down();
+                        const Vec4i32 vi = (v.clamp(0.0, 1.0) * texture.m_height).to_int_round_down();
                         const Vec4i32 tex_idx = vi * Vec4i32(texture.m_width) + ui;
 
                         *GetPixel(surface, pixel_offsets[index]) = texture.get_pixel_from_idx(tex_idx[index]);
@@ -601,7 +601,7 @@ int main(int argc, char *argv[]) {
     OverdrawBuffer overdraw_buffer = OverdrawBuffer(surface->w, surface->h);
 
     const std::string mesh_path = std::string(PROJECT_ROOT) + std::string("/assets/meshes/teapot");
-    Mesh mesh = load_obj(mesh_path, "teapot.obj", surface, true);
+    Mesh mesh = load_obj(mesh_path, "teapot.obj", surface);
     std::cout << "--- Textures ---" << std::endl;
     for (const auto& it : mesh.texture_map) {
         std::cout << it.first << std::endl;
