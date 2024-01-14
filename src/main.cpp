@@ -159,8 +159,10 @@ void RenderPixels(SDL_Surface *surface, DepthBuffer& depth_buffer,  OverdrawBuff
                     if (material.diff_texture != "") {
                         const Texture& texture = mesh.texture_map.at(material.diff_texture);
 
-                        const Vec4i32 ui = (u.clamp(0.0, 1.0) * texture.m_width).to_int_round_down();
-                        const Vec4i32 vi = (v.clamp(0.0, 1.0) * texture.m_height).to_int_round_down();
+                        const auto tu = u.fraction();
+                        const auto tv = v.fraction();
+                        const Vec4i32 ui = (u.fraction() * texture.m_width).to_int_round_down();
+                        const Vec4i32 vi = (v.fraction() * texture.m_height).to_int_round_down();
                         const Vec4i32 tex_idx = vi * Vec4i32(texture.m_width) + ui;
 
                         *GetPixel(surface, pixel_offsets[index]) = texture.get_pixel_from_idx(tex_idx[index]);

@@ -22,6 +22,7 @@ struct Vec4f32 {
     Vec4f32 min(float val) const;
     Vec4f32 max(float val) const;
     Vec4f32 clamp(float min, float max) const;
+    Vec4f32 modf1() const;
 
     float x() const;
 	float y() const;

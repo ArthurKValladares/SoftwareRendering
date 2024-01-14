@@ -37,6 +37,23 @@ Vec4f32 Vec4f32::clamp(float min, float max) const {
     const auto a_min = _mm_min_ps(_mf, _mm_set1_ps(max));
     return Vec4f32(_mm_max_ps(a_min, _mm_set1_ps(min)));
 }
+Vec4f32 Vec4f32::modf1() const {
+    __m128 integer = _mm_round_ps(_mf, _MM_FROUND_TRUNC);
+    Vec4f32 fraction = Vec4f32(_mm_sub_ps(_mf, integer));
+    if (fraction.x() < 0.0) {
+        fraction._xyzw[0] = 1.0 + fraction.x();
+    }
+    if (fraction.y() < 0.0) {
+        fraction._xyzw[1] = 1.0 + fraction.y();
+    }
+    if (fraction.z() < 0.0) {
+        fraction._xyzw[2] = 1.0 + fraction.z();
+    }
+    if (fraction.w() < 0.0) {
+        fraction._xyzw[3] = 1.0 + fraction.w();
+    }
+    return fraction;
+}
 
 float Vec4f32::x() const {
     return _xyzw[0];
