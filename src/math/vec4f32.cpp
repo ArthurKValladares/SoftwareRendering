@@ -26,7 +26,10 @@ Vec4i32 Vec4f32::to_int_round_down() const {
     return Vec4i32(_mm_cvttps_epi32(_mf));
 }
 
-
+Vec4f32 Vec4f32::normalized() const {
+    const auto sum = x() + y() + z() + w();
+    return Vec4f32(x() / sum, y() / sum, z() / sum, w() / sum);
+}
 Vec4f32 Vec4f32::min(float val) const {
     return Vec4f32(_mm_min_ps(_mf, _mm_set1_ps(val)));
 }
@@ -69,6 +72,7 @@ float Vec4f32::w() const {
 }
 
 float Vec4f32::dot(const Vec4f32& rhs) const {
+    // TODO: can this be better?
     const Vec4f32 mul = *this * rhs;
     const __m128 hadd = _mm_hadd_ps(mul._mf, mul._mf);
     return Vec4f32(_mm_hadd_ps(hadd, hadd)).x();

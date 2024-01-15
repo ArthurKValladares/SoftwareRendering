@@ -19,6 +19,7 @@ struct Vec4f32 {
     Vec4i32 to_int_nearest() const;
     Vec4i32 to_int_round_down() const;
 
+    Vec4f32 normalized() const;
     Vec4f32 min(float val) const;
     Vec4f32 max(float val) const;
     Vec4f32 clamp(float min, float max) const;

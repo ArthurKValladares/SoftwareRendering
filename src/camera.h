@@ -19,11 +19,14 @@ struct OrtographicCamera {
 };
 
 struct PerspectiveCamera {
-    // TODO
+    Vec3D_f position;
+    Vec3D_f front;
+    Vec3D_f world_up;
 };
 
 struct Camera {
     static Camera orthographic(OrtographicCamera data);
+    static Camera perspective(PerspectiveCamera data);
 
     Mat4f32 GetProjMatrix() const;
 
