@@ -159,10 +159,8 @@ void RenderPixels(SDL_Surface *surface, DepthBuffer& depth_buffer,  OverdrawBuff
                     if (material.diff_texture != "") {
                         const Texture& texture = mesh.texture_map.at(material.diff_texture);
 
-                        const auto tu = u.fraction();
-                        const auto tv = v.fraction();
-                        const Vec4i32 ui = (u.fraction() * texture.m_width).to_int_round_down();
-                        const Vec4i32 vi = (v.fraction() * texture.m_height).to_int_round_down();
+                        const Vec4i32 ui = (u.modf1() * texture.m_width).to_int_round_down();
+                        const Vec4i32 vi = (v.modf1() * texture.m_height).to_int_round_down();
                         const Vec4i32 tex_idx = vi * Vec4i32(texture.m_width) + ui;
 
                         *GetPixel(surface, pixel_offsets[index]) = texture.get_pixel_from_idx(tex_idx[index]);
@@ -691,8 +689,9 @@ int main(int argc, char *argv[]) {
         }
         
         const Mat4f32 proj_matrix = camera.GetProjMatrix();
+        const Mat4f32 view_matrix = camera.GetViewMatrix();
         const Mat4f32 model_matrix = rotate_matrix(Vec3D_f{ 0.0, 1.0, 0 }, rotate_angle);
-        const Mat4f32 proj_model = proj_matrix * model_matrix;
+        const Mat4f32 proj_model = proj_matrix * view_matrix * model_matrix;
 
         const std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
         

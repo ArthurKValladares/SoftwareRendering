@@ -12,14 +12,14 @@ namespace {
     }
 
     Mat4f32 look_to(Vec3D_f eye, Vec3D_f front, Vec3D_f world_up) {
-        const Vec3D_f front = front.normalized();
+        const Vec3D_f front_n = front.normalized();
         const Vec3D_f side = world_up.cross(front).normalized();
-        const Vec3D_f up = front.cross(side);
+        const Vec3D_f up = front_n.cross(side);
 
         return Mat4f32(
-            Vec4f32(side.x,  side.y,  side.z,  -side.dot(eye)),
-            Vec4f32(up.x,    up.y,    up.z,    -up.dot(eye)),
-            Vec4f32(front.x, front.y, front.z, -front.dot(eye)),
+            Vec4f32(side.x,    side.y,    side.z,    -side.dot(eye)),
+            Vec4f32(up.x,      up.y,      up.z,      -up.dot(eye)),
+            Vec4f32(front_n.x, front_n.y, front_n.z, -front_n.dot(eye)),
             Vec4f32(0.0,     0.0,     0.0,      1.0)
         );
     }
