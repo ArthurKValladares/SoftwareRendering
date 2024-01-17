@@ -233,7 +233,7 @@ void FillBottomFlatTriangle(SDL_Surface* surface, DepthBuffer& depth_buffer, Ove
         Vec4i32 w1 = w1_row + e20.step_size_x * delta_x;
         Vec4i32 w2 = w2_row + e01.step_size_x * delta_x;
 
-        for (p.x = x_min + delta_x * EdgeFunction::step_increment_x; p.x <= curr_x_max; p.x += EdgeFunction::step_increment_x) {
+        for (p.x = x_min + delta_x * EdgeFunction::step_increment_x; p.x <= MIN(curr_x_max, bounding_box.maxX - 1); p.x += EdgeFunction::step_increment_x) {
             const Vec4i32 mask = w0 | w1 | w2;
 
             const Vec4f32 sum = (w0 + w1 + w2).to_float();
@@ -307,7 +307,7 @@ void FillTopFlatTriangle(SDL_Surface* surface, DepthBuffer& depth_buffer, Overdr
         Vec4i32 w1 = w1_row + e20.step_size_x * delta_x;
         Vec4i32 w2 = w2_row + e01.step_size_x * delta_x;
 
-        for (p.x = x_min + delta_x * EdgeFunction::step_increment_x; p.x <= curr_x_max; p.x += EdgeFunction::step_increment_x) {
+        for (p.x = x_min + delta_x * EdgeFunction::step_increment_x; p.x <= MIN(curr_x_max, bounding_box.maxX - 1); p.x += EdgeFunction::step_increment_x) {
             const Vec4i32 mask = w0 | w1 | w2;
 
             const Vec4f32 sum = (w0 + w1 + w2).to_float();
@@ -609,13 +609,13 @@ int main(int argc, char *argv[]) {
     const float depth_min = 0.0;
     const float x_span = mesh.bb.maxX - mesh.bb.minX;
     const float y_span = mesh.bb.maxY - mesh.bb.minY;
-    const Camera camera = Camera::orthographic(OrtographicCamera{
-        mesh.bb.minX - x_span * 0.1f,
-        mesh.bb.maxX + x_span * 0.1f,
-        mesh.bb.minY - y_span * 0.1f,
-        mesh.bb.maxY + y_span * 0.1f,
-        -10.0,
-        1.0
+    const Camera camera = Camera::perspective(PerspectiveCamera{
+        Vec3D_f{ -5.0, 0.0, 0.0},
+        Vec3D_f{1.0, 0.0, 0.0 },
+        Vec3D_f{0.0, 1.0, 0.0},
+        30.0,
+        0.1,
+        (float) surface->w / surface->h
     });
 
     // TODO: This will need to be re-done when resizing
