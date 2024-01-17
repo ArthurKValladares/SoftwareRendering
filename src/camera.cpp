@@ -57,8 +57,18 @@ Mat4f32 Camera::GetProjMatrix() const {
             );
         }
         case CameraType::Perspective: {
-            // TODO
+            return infinite_perspectice_proj(m_perspective.aspect_ratio, m_perspective.y_fov, m_perspective.z_near);
+        }
+    }
+}
+
+Mat4f32 Camera::GetViewMatrix() const {
+    switch (this->m_ty) {
+        case CameraType::Ortographic: {
             return Mat4f32::identity();
+        }
+        case CameraType::Perspective: {
+            return look_to(m_perspective.position, m_perspective.front, m_perspective.world_up);
         }
     }
 }

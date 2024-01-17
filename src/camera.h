@@ -22,6 +22,11 @@ struct PerspectiveCamera {
     Vec3D_f position;
     Vec3D_f front;
     Vec3D_f world_up;
+    float y_fov;
+    float z_near;
+    // TODO: change this when resizing window, if I support it
+    // Also take it from surface in a constructor
+    float aspect_ratio;
 };
 
 struct Camera {
@@ -29,6 +34,7 @@ struct Camera {
     static Camera perspective(PerspectiveCamera data);
 
     Mat4f32 GetProjMatrix() const;
+    Mat4f32 GetViewMatrix() const;
 
     CameraType m_ty;
     union {
