@@ -89,11 +89,11 @@ namespace {
 };
 
 Vec4i32 GetPixelOffsets(SDL_Surface* surface, Vec4i32 xs, Vec4i32 ys) {
-    return (Vec4i32(surface->h - 1) - ys) * Vec4i32(surface->pitch) + xs * Vec4i32(surface->format->BytesPerPixel);
+    return ys * Vec4i32(surface->pitch) + xs * Vec4i32(surface->format->BytesPerPixel);
 }
 
 u32 GetPixelOffset(SDL_Surface* surface, Point2D point) {
-    return (surface->h - 1 - point.y) * surface->pitch + point.x * surface->format->BytesPerPixel;
+    return point.y * surface->pitch + point.x * surface->format->BytesPerPixel;
 }
 
 Uint32* GetPixel(SDL_Surface *surface, u32 offset) {
@@ -611,16 +611,16 @@ int main(int argc, char *argv[]) {
     const float y_span = mesh.bb.maxY - mesh.bb.minY;
 
     const Vec3D_f world_up = Vec3D_f{ 0.0, 1.0, 0.0};
-    const Vec3D_f camera_pos = Vec3D_f{ -500.0, 0.0, 0.0 };
+    const Vec3D_f camera_pos = Vec3D_f{ 1.0, 0.0, 0.0 };
     const Vec3D_f target = Vec3D_f{ 0.0, 0.0, 0.0 };
     const Vec3D_f front = target - camera_pos;
     const Camera camera = Camera::perspective(PerspectiveCamera{
         camera_pos,
         front,
         world_up,
-        30.0,
+        60.0,
         0.1,
-        (float) surface->w / surface->h
+        ((float) surface->w) / surface->h
     });
 
     // TODO: This will need to be re-done when resizing
