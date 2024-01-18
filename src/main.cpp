@@ -610,7 +610,7 @@ int main(int argc, char *argv[]) {
     const float x_span = mesh.bb.maxX - mesh.bb.minX;
     const float y_span = mesh.bb.maxY - mesh.bb.minY;
     const Camera camera = Camera::perspective(PerspectiveCamera{
-        Vec3D_f{ -5.0, 0.0, 0.0},
+        Vec3D_f{ -500.0, 0.0, 0.0},
         Vec3D_f{1.0, 0.0, 0.0 },
         Vec3D_f{0.0, 1.0, 0.0},
         30.0,
@@ -691,7 +691,7 @@ int main(int argc, char *argv[]) {
         const Mat4f32 proj_matrix = camera.GetProjMatrix();
         const Mat4f32 view_matrix = camera.GetViewMatrix();
         const Mat4f32 model_matrix = rotate_matrix(Vec3D_f{ 0.0, 1.0, 0 }, rotate_angle);
-        const Mat4f32 proj_model = proj_matrix * view_matrix * model_matrix;
+        const Mat4f32 proj_model = proj_matrix * (view_matrix * model_matrix);
 
         const std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
         

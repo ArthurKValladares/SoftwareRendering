@@ -20,7 +20,7 @@ namespace {
             Vec4f32(side.x,    side.y,    side.z,    -side.dot(eye)),
             Vec4f32(up.x,      up.y,      up.z,      -up.dot(eye)),
             Vec4f32(front_n.x, front_n.y, front_n.z, -front_n.dot(eye)),
-            Vec4f32(0.0,     0.0,     0.0,      1.0)
+            Vec4f32(0.0,       0.0,       0.0,        1.0)
         );
     }
 }
