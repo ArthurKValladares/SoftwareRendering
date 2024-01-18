@@ -20,3 +20,18 @@ Vec3D_f Vec3D_f::cross(const Vec3D_f& rhs) const {
         x * rhs.y - y * rhs.x,
     };
 }
+
+Vec3D_f Vec3D_f::operator+(const Vec3D_f& rhs) const {
+    return Vec3D_f{
+        x + rhs.x,
+        y + rhs.y,
+        z + rhs.z
+    };
+}
+Vec3D_f Vec3D_f::operator-(const Vec3D_f& rhs) const {
+    return Vec3D_f{
+        x - rhs.x,
+        y - rhs.y,
+        z - rhs.z
+    };
+}

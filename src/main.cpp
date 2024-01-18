@@ -609,10 +609,15 @@ int main(int argc, char *argv[]) {
     const float depth_min = 0.0;
     const float x_span = mesh.bb.maxX - mesh.bb.minX;
     const float y_span = mesh.bb.maxY - mesh.bb.minY;
+
+    const Vec3D_f world_up = Vec3D_f{ 0.0, 1.0, 0.0};
+    const Vec3D_f camera_pos = Vec3D_f{ -500.0, 0.0, 0.0 };
+    const Vec3D_f target = Vec3D_f{ 0.0, 0.0, 0.0 };
+    const Vec3D_f front = target - camera_pos;
     const Camera camera = Camera::perspective(PerspectiveCamera{
-        Vec3D_f{ -500.0, 0.0, 0.0},
-        Vec3D_f{1.0, 0.0, 0.0 },
-        Vec3D_f{0.0, 1.0, 0.0},
+        camera_pos,
+        front,
+        world_up,
         30.0,
         0.1,
         (float) surface->w / surface->h
