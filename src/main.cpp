@@ -35,12 +35,13 @@
 
 namespace {
 
-    enum class RenderingMethod {
+    enum class RenderingMethod : u8 {
         Standard,
         Wireframe,
         RasterMethod,
         Uv,
-        Overdraw
+        Overdraw,
+        Count
     };
 
     RenderingMethod render_method = RenderingMethod::Standard;
@@ -645,31 +646,19 @@ int main(int argc, char *argv[]) {
                             rotate_angle += rotate_delta;
                             break;
                         }
-                        case SDLK_w: {
-                            render_method = RenderingMethod::Wireframe;
-                            break;
-                        }
-                        case SDLK_u: {
-                            render_method = RenderingMethod::Uv;
-                            break;
-                        }
-                        case SDLK_m: {
-                            render_method = RenderingMethod::RasterMethod;
-                            break;
-                        }
-                        case SDLK_o: {
-                            render_method = RenderingMethod::Overdraw;
-                            break;
-                        }
-                        case SDLK_s: {
-                            render_method = RenderingMethod::Standard;
-                            break;
-                        }
                         case SDLK_EQUALS: {
-                            cuttof_area += cutoff_delta_area;
+                            render_method = static_cast<RenderingMethod>((static_cast<u8>(render_method) + 1) % static_cast<u8>(RenderingMethod::Count));
                             break;
                         }
                         case SDLK_MINUS: {
+                            render_method = static_cast<RenderingMethod>((static_cast<u8>(render_method) - 1) % static_cast<u8>(RenderingMethod::Count));
+                            break;
+                        }
+                        case SDLK_LEFTBRACKET: {
+                            cuttof_area += cutoff_delta_area;
+                            break;
+                        }
+                        case SDLK_RIGHTBRACKET: {
                             cuttof_area -= cutoff_delta_area;
                             break;
                         }

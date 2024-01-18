@@ -2,15 +2,12 @@
 
 namespace {
     Mat4f32 infinite_perspectice_proj(float aspect_ratio, float y_fov, float z_near) {
-        const auto far = 1000.0;
-
         const auto g = 1.0 / tan(y_fov * 0.5); 
-        const auto k = far / (far - z_near);
 
         return Mat4f32(
             Vec4f32(g / aspect_ratio, 0., 0.0, 0.0),
             Vec4f32(0.0,              g,  0.0, 0.0),
-            Vec4f32(0.0,              0., k, -z_near * k),
+            Vec4f32(0.0,              0., 0.0, z_near),
             Vec4f32(0.0,              0., 1.0, 0.0)
         );
     }
