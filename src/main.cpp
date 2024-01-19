@@ -41,6 +41,7 @@ namespace {
         RasterMethod,
         Uv,
         Overdraw,
+        Depth,
         Count
     };
 
@@ -152,7 +153,8 @@ void RenderPixels(SDL_Surface *surface, DepthBuffer& depth_buffer,  OverdrawBuff
     const auto diffuse = SDL_MapRGB(surface->format, material.diffuse[0] * 255.0, material.diffuse[1] * 255.0, material.diffuse[2] * 255.0);
 
     const auto render_pixel = [&](int index) {
-        if (mask[index] && d[index] > depth_buffer.ValueAt(xs[index], ys[index])) {
+        const auto curr_depth = d[index];
+        if (mask[index] && curr_depth > depth_buffer.ValueAt(xs[index], ys[index])) {
             switch (render_method) {
                 case RenderingMethod::Standard: {
                     if (material.diff_texture != "") {
@@ -179,6 +181,11 @@ void RenderPixels(SDL_Surface *surface, DepthBuffer& depth_buffer,  OverdrawBuff
                 case RenderingMethod::Overdraw: {
                     *GetPixel(surface, pixel_offsets[index]) = get_overdraw_color(overdraw_buffer.ValueAt(xs[index], ys[index]));
                     overdraw_buffer.Increase(xs[index], ys[index]);
+                    break;
+                }
+                case RenderingMethod::Depth: {
+                    const u8 depth_greyscale = (u8) std::max(255.0, curr_depth * 255.0);
+                    *GetPixel(surface, pixel_offsets[index]) = SDL_MapRGB(surface->format, depth_greyscale, depth_greyscale, depth_greyscale);
                     break;
                 }
                 case RenderingMethod::Wireframe: {
@@ -606,10 +613,8 @@ int main(int argc, char *argv[]) {
     for (const auto& it : mesh.texture_map) {
         std::cout << it.first << std::endl;
     }
-    const float depth_min = 0.0;
-    const float x_span = mesh.bb.maxX - mesh.bb.minX;
-    const float y_span = mesh.bb.maxY - mesh.bb.minY;
 
+    /*
     const Vec3D_f world_up = Vec3D_f{ 0.0, 1.0, 0.0};
     const Vec3D_f camera_pos = Vec3D_f{ 1.0, 0.0, 0.0 };
     const Vec3D_f target = Vec3D_f{ 0.0, 0.0, 0.0 };
@@ -621,6 +626,18 @@ int main(int argc, char *argv[]) {
         60.0,
         0.1,
         ((float) surface->w) / surface->h
+    });
+    //*/
+    const float depth_min = 0.0;
+    const float x_span = mesh.bb.maxX - mesh.bb.minX;
+    const float y_span = mesh.bb.maxY - mesh.bb.minY;
+    const Camera camera = Camera::orthographic(OrtographicCamera{
+        mesh.bb.minX - x_span * 0.1f,
+        mesh.bb.maxX + x_span * 0.1f,
+        mesh.bb.minY - y_span * 0.1f,
+        mesh.bb.maxY + y_span * 0.1f,
+        -10.0,
+        1.0
     });
 
     // TODO: This will need to be re-done when resizing
