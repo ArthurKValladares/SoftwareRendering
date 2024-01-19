@@ -139,9 +139,7 @@ void RenderPixels(SDL_Surface *surface, DepthBuffer& depth_buffer,  OverdrawBuff
             return SDL_MapRGB(surface->format, 0, 255, 0);
         }
         else {
-            const u8 normalized_count = draw_count - 1;
-            const u8 red = normalized_count * 50;
-            return SDL_MapRGB(surface->format, red, 0, 0);
+            return SDL_MapRGB(surface->format, 255, 0, 0);
         }
     };
 
@@ -180,6 +178,7 @@ void RenderPixels(SDL_Surface *surface, DepthBuffer& depth_buffer,  OverdrawBuff
                 }
                 case RenderingMethod::Overdraw: {
                     *GetPixel(surface, pixel_offsets[index]) = get_overdraw_color(overdraw_buffer.ValueAt(xs[index], ys[index]));
+                    overdraw_buffer.Increase(xs[index], ys[index]);
                     break;
                 }
                 case RenderingMethod::Wireframe: {
