@@ -184,7 +184,7 @@ void RenderPixels(SDL_Surface *surface, DepthBuffer& depth_buffer,  OverdrawBuff
                     break;
                 }
                 case RenderingMethod::Depth: {
-                    const u8 depth_greyscale = (u8) std::max(255.0, curr_depth * 255.0);
+                    const u8 depth_greyscale = (u8) std::min(255.0, curr_depth * 255.0);
                     *GetPixel(surface, pixel_offsets[index]) = SDL_MapRGB(surface->format, depth_greyscale, depth_greyscale, depth_greyscale);
                     break;
                 }
