@@ -614,37 +614,22 @@ int main(int argc, char *argv[]) {
         std::cout << it.first << std::endl;
     }
 
-    /*
-    const Vec3D_f world_up = Vec3D_f{ 0.0, 1.0, 0.0};
-    const Vec3D_f camera_pos = Vec3D_f{ 1.0, 0.0, 0.0 };
-    const Vec3D_f target = Vec3D_f{ 0.0, 0.0, 0.0 };
-    const Vec3D_f front = target - camera_pos;
-    const Camera camera = Camera::perspective(PerspectiveCamera{
-        camera_pos,
-        front,
-        world_up,
-        60.0,
-        0.1,
-        ((float) surface->w) / surface->h
-    });
-    //*/
     const float depth_min = 0.0;
     const float x_span = mesh.bb.maxX - mesh.bb.minX;
     const float y_span = mesh.bb.maxY - mesh.bb.minY;
-    const Camera camera = Camera::orthographic(OrtographicCamera{
+    const Camera camera = Camera{OrtographicData{
         mesh.bb.minX - x_span * 0.1f,
         mesh.bb.maxX + x_span * 0.1f,
         mesh.bb.minY - y_span * 0.1f,
         mesh.bb.maxY + y_span * 0.1f,
         -10.0,
         1.0
-    });
+    }};
 
     // TODO: This will need to be re-done when resizing
     const ScreenTileData tile_data = partition_screen_into_tiles(surface);
 
     // Render loop
-    // TODO: rotate stuff again
     const float rotate_delta = 0.1;
     const float cutoff_delta_area = 2.5;
     bool quit = false;
@@ -699,9 +684,8 @@ int main(int argc, char *argv[]) {
         }
         
         const Mat4f32 proj_matrix = camera.GetProjMatrix();
-        const Mat4f32 view_matrix = camera.GetViewMatrix();
         const Mat4f32 model_matrix = rotate_matrix(Vec3D_f{ 0.0, 1.0, 0 }, rotate_angle);
-        const Mat4f32 proj_model = proj_matrix * (view_matrix * model_matrix);
+        const Mat4f32 proj_model = proj_matrix * model_matrix;
 
         const std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
         
