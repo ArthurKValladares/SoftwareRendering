@@ -44,12 +44,16 @@ namespace {
         Depth,
         Count
     };
-
     RenderingMethod render_method = RenderingMethod::Standard;
 
+    const float rotate_delta = 0.1;
     float rotate_angle = 0.0;
 
+    const float cutoff_area_delta = 2.5;
     float cuttof_area = 10.0;
+
+    const float scale_delta = 0.1;
+    float scale = 1.0;
 
     float edge_function(const Point2D& a, const Point2D& b, const Point2D& c) {
         return (b.x - a.x) * (c.y - a.y) - (b.y - a.y) * (c.x - a.x);
@@ -630,8 +634,6 @@ int main(int argc, char *argv[]) {
     const ScreenTileData tile_data = partition_screen_into_tiles(surface);
 
     // Render loop
-    const float rotate_delta = 0.1;
-    const float cutoff_delta_area = 2.5;
     bool quit = false;
     while (!quit) {
         SDL_Event e;
@@ -656,11 +658,19 @@ int main(int argc, char *argv[]) {
                             break;
                         }
                         case SDLK_LEFTBRACKET: {
-                            cuttof_area += cutoff_delta_area;
+                            cuttof_area -= cutoff_area_delta;
                             break;
                         }
                         case SDLK_RIGHTBRACKET: {
-                            cuttof_area -= cutoff_delta_area;
+                            cuttof_area += cutoff_area_delta;
+                            break;
+                        }
+                        case SDLK_9: {
+                            scale -= scale_delta;
+                            break;
+                        }
+                        case SDLK_0: {
+                            scale += scale_delta;
                             break;
                         }
                         default: {
@@ -684,7 +694,7 @@ int main(int argc, char *argv[]) {
         }
         
         const Mat4f32 proj_matrix = camera.GetProjMatrix();
-        const Mat4f32 model_matrix = rotate_matrix(Vec3D_f{ 0.0, 1.0, 0 }, rotate_angle);
+        const Mat4f32 model_matrix = rotate_matrix(Vec3D_f{ 0.0, 1.0, 0 }, rotate_angle) * uniform_scale_matrix(scale);
         const Mat4f32 proj_model = proj_matrix * model_matrix;
 
         const std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();

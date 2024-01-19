@@ -22,3 +22,12 @@ Mat4f32 rotate_matrix(Vec3D_f axis, float angle) {
         Vec4f32(0.0,            0.0,            0.0,            1.0)
     );
 }
+
+Mat4f32 uniform_scale_matrix(float scale) {
+    return Mat4f32(
+        Vec4f32(scale, 0.0,   0.0,   0.0),
+        Vec4f32(0.0,   scale, 0.0,   0.0),
+        Vec4f32(0.0,   0.0,   scale, 0.0),
+        Vec4f32(0.0,   0.0,   0.0,   1.0)
+    );
+}
