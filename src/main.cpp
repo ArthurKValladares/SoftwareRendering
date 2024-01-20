@@ -484,7 +484,7 @@ void DrawLine(SDL_Surface* surface, const Line2D& line, const Uint32 mapped_colo
     // Since we know the slope, we can be smarter about breaking out early when we go out of bounds
     // Maybe the testing can be SIMD too
 
-    const auto is_in_bounds = [=](u32 x, u32 y) {
+    const auto is_in_bounds = [=](i32 x, i32 y) {
         return x > 0 && x < surface->w && y > 0 && y < surface->h;
     };
 
@@ -500,10 +500,10 @@ void DrawLine(SDL_Surface* surface, const Line2D& line, const Uint32 mapped_colo
         }
         const float slope = dy / (float)dx;
 
-        const u32 x_start = MAX(p0.x, 0);
-        const u32 x_end = MIN(p1.x, surface->w);
-        for (u32 x = x_start; x <= x_end; x += 4) {
-            const u32 x_delta = x - p0.x;
+        const i32 x_start = MAX(p0.x, 0);
+        const i32 x_end = MIN(p1.x, surface->w);
+        for (i32 x = x_start; x <= x_end; x += 4) {
+            const i32 x_delta = x - p0.x;
 
             const Vec4i32 xs = Vec4i32(x) + Vec4i32(0, 1, 2, 3);
             const Vec4i32 ys = (Vec4f32(p0.y) + Vec4f32(slope) * Vec4f32(x_delta, x_delta + 1, x_delta + 2, x_delta + 3)).to_int_nearest();
@@ -527,10 +527,10 @@ void DrawLine(SDL_Surface* surface, const Line2D& line, const Uint32 mapped_colo
         }
         const float slope = dx / (float)dy;
 
-        const u32 y_start = MAX(p0.y, 0);
-        const u32 y_end = MIN(p1.y, surface->h);
+        const i32 y_start = MAX(p0.y, 0);
+        const i32 y_end = MIN(p1.y, surface->h);
         for (i32 y = y_start; y <= y_end; y += 4) {
-            const u32 y_delta = y - p0.y;
+            const i32 y_delta = y - p0.y;
 
             const Vec4i32 ys = Vec4i32(y) + Vec4i32(0, 1, 2, 3);
             const Vec4i32 xs = (Vec4f32(p0.x) + Vec4f32(slope) * Vec4f32(y_delta, y_delta + 1, y_delta + 2, y_delta + 3)).to_int_nearest();
