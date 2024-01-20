@@ -31,3 +31,12 @@ Mat4f32 uniform_scale_matrix(float scale) {
         Vec4f32(0.0,   0.0,   0.0,   1.0)
     );
 }
+
+Mat4f32 translation_matrix(float x, float y, float z) {
+    return Mat4f32(
+        Vec4f32(1.0, 0.0, 0.0, x),
+        Vec4f32(0.0, 1.0, 0.0, y),
+        Vec4f32(0.0, 0.0, 1.0, z),
+        Vec4f32(0.0, 0.0, 0.0, 1.0)
+    );
+}

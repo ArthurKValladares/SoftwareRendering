@@ -47,12 +47,14 @@ namespace {
     RenderingMethod render_method = RenderingMethod::Standard;
 
     const float rotate_delta = 0.1;
-    float rotate_angle = 0.0;
+    float rotate_angle_x = 0.0;
+    float rotate_angle_y = 0.0;
+    float rotate_angle_z = 0.0;
 
     const float cutoff_area_delta = 2.5;
     float cuttof_area = 10.0;
 
-    const float scale_delta = 0.1;
+    const float scale_delta = 0.5;
     float scale = 1.0;
 
     float edge_function(const Point2D& a, const Point2D& b, const Point2D& c) {
@@ -645,10 +647,7 @@ int main(int argc, char *argv[]) {
                             quit = true;
                             break;
                         }
-                        case SDLK_r: {
-                            rotate_angle += rotate_delta;
-                            break;
-                        }
+                        //
                         case SDLK_EQUALS: {
                             render_method = static_cast<RenderingMethod>((static_cast<u8>(render_method) + 1) % static_cast<u8>(RenderingMethod::Count));
                             break;
@@ -657,6 +656,7 @@ int main(int argc, char *argv[]) {
                             render_method = static_cast<RenderingMethod>((static_cast<u8>(render_method) - 1) % static_cast<u8>(RenderingMethod::Count));
                             break;
                         }
+                        //
                         case SDLK_LEFTBRACKET: {
                             cuttof_area -= cutoff_area_delta;
                             break;
@@ -665,6 +665,7 @@ int main(int argc, char *argv[]) {
                             cuttof_area += cutoff_area_delta;
                             break;
                         }
+                        //
                         case SDLK_9: {
                             scale -= scale_delta;
                             break;
@@ -673,6 +674,20 @@ int main(int argc, char *argv[]) {
                             scale += scale_delta;
                             break;
                         }
+                        //
+                        case SDLK_q: {
+                            rotate_angle_x += rotate_delta;
+                            break;
+                        }
+                        case SDLK_w: {
+                            rotate_angle_y += rotate_delta;
+                            break;
+                        }
+                        case SDLK_e: {
+                            rotate_angle_z += rotate_delta;
+                            break;
+                        }
+                        //
                         default: {
                             break;
                         }
@@ -694,7 +709,11 @@ int main(int argc, char *argv[]) {
         }
         
         const Mat4f32 proj_matrix = camera.GetProjMatrix();
-        const Mat4f32 model_matrix = rotate_matrix(Vec3D_f{ 0.0, 1.0, 0 }, rotate_angle) * uniform_scale_matrix(scale);
+        // TODO: Can optimize this with a single matrix, will do later
+        const Mat4f32 rotations = rotate_matrix(Vec3D_f{ 1.0, 0.0, 0.0 }, rotate_angle_x) *
+            rotate_matrix(Vec3D_f{ 0.0, 1.0, 0.0 }, rotate_angle_y) *
+            rotate_matrix(Vec3D_f{ 0.0, 0.0, 1.0 }, rotate_angle_z);
+        const Mat4f32 model_matrix = rotations * uniform_scale_matrix(scale);
         const Mat4f32 proj_model = proj_matrix * model_matrix;
 
         const std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
