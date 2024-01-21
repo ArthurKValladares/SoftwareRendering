@@ -4,10 +4,10 @@
 #include "rect.h"
 
 struct IndexBounds {
-    u32 min_row;
-    u32 max_row;
-    u32 min_col;
-    u32 max_col;
+    i32 min_row;
+    i32 max_row;
+    i32 min_col;
+    i32 max_col;
 };
 
 struct ScreenTileData {

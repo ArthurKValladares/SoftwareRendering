@@ -53,12 +53,12 @@ u32 ScreenTileData::num_tasks() const {
 }
 
 IndexBounds ScreenTileData::index_bounds_for_bb(Rect2D bounding_box) const {
-    const u32 min_col = bounding_box.minX / tile_width;
-    const u32 max_col = bounding_box.maxX / tile_width;
+    const i32 min_col = MAX(0, bounding_box.minX / (i32) tile_width);
+    const i32 min_row = MAX(0, bounding_box.minY / (i32) tile_height);
 
-    const u32 min_row = bounding_box.minY / tile_height;
-    const u32 max_row = bounding_box.maxY / tile_height;
-
+    const i32 max_col = MIN(bounding_box.maxX / tile_width, cols - 1);
+    const i32 max_row = MIN(bounding_box.maxY / tile_height, rows - 1);
+    
     return IndexBounds {
         min_row,
         max_row,
