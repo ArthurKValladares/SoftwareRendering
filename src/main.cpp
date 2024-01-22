@@ -154,14 +154,12 @@ void RenderPixels(SDL_Surface *surface, DepthBuffer& depth_buffer,  OverdrawBuff
     const Vec4i32 ys = Vec4i32(origin_point.y);
     const Vec4i32 pixel_offsets = GetPixelOffsets(surface, xs, ys);
 
-    const auto red = SDL_MapRGB(surface->format, 255, 0, 0);
-    const auto green = SDL_MapRGB(surface->format, 0, 255, 0);
-    const auto diffuse = SDL_MapRGB(surface->format, material.diffuse[0] * 255.0, material.diffuse[1] * 255.0, material.diffuse[2] * 255.0);
-
     const Texture& texture = mesh.texture_map[material.texture_id];
     const Vec4i32 ui = (u.modf1() * texture.m_width).to_int_round_down();
     const Vec4i32 vi = (v.modf1() * texture.m_height).to_int_round_down();
     const Vec4i32 tex_idx = vi * Vec4i32(texture.m_width) + ui;
+
+    const auto diffuse = SDL_MapRGB(surface->format, material.diffuse[0] * 255.0, material.diffuse[1] * 255.0, material.diffuse[2] * 255.0);
 
     for (int index = 0; index < 4; ++index) {
         const auto curr_depth = d[index];
@@ -180,6 +178,10 @@ void RenderPixels(SDL_Surface *surface, DepthBuffer& depth_buffer,  OverdrawBuff
                     break;
                 }
                 case RenderingMethod::RasterMethod: {
+                    // Note: The invariants for debug drawing methods are not calculated in advance to save on compute time for the main path
+                    const auto red = SDL_MapRGB(surface->format, 255, 0, 0);
+                    const auto green = SDL_MapRGB(surface->format, 0, 255, 0);
+
                     *GetPixel(surface, pixel_offsets[index]) = barrycentric ? red : green;
                     break;
                 }
