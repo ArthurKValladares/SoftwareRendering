@@ -158,7 +158,7 @@ void RenderPixels(SDL_Surface *surface, DepthBuffer& depth_buffer,  OverdrawBuff
     const auto green = SDL_MapRGB(surface->format, 0, 255, 0);
     const auto diffuse = SDL_MapRGB(surface->format, material.diffuse[0] * 255.0, material.diffuse[1] * 255.0, material.diffuse[2] * 255.0);
 
-    const auto render_pixel = [&](int index) {
+    for (int index = 0; index < 4; ++index) {
         const auto curr_depth = d[index];
         if (mask[index] && curr_depth > depth_buffer.ValueAt(xs[index], ys[index])) {
             switch (render_method) {
@@ -201,12 +201,7 @@ void RenderPixels(SDL_Surface *surface, DepthBuffer& depth_buffer,  OverdrawBuff
             }
             depth_buffer.Write(xs[index], ys[index], d[index]);
         }
-    };
-
-    render_pixel(0);
-    render_pixel(1);
-    render_pixel(2);
-    render_pixel(3);
+    }
 }
 
 void FillBottomFlatTriangle(SDL_Surface* surface, DepthBuffer& depth_buffer, OverdrawBuffer& overdraw_buffer, Rect2D bounding_box, const ScreenVertex* v0, const ScreenVertex* v1, const ScreenVertex* v2, const Mesh& mesh, const Mesh::Material& material) {
