@@ -41,21 +41,14 @@ Vec4f32 Vec4f32::clamp(float min, float max) const {
     return Vec4f32(_mm_max_ps(a_min, _mm_set1_ps(min)));
 }
 Vec4f32 Vec4f32::modf1() const {
+    // Emulating UV sampling where values outside [0.0, 1.0] repeat the sampled texture.
+    // In this case, positive values simply use the fractional part of the value for sampling,
+    // but negative values use (1.0 - fractional part). This is a slightly optimized way of doing that.
     __m128 integer = _mm_round_ps(_mf, _MM_FROUND_TRUNC);
-    Vec4f32 fraction = Vec4f32(_mm_sub_ps(_mf, integer));
-    if (fraction.x() < 0.0) {
-        fraction._xyzw[0] = 1.0 + fraction.x();
-    }
-    if (fraction.y() < 0.0) {
-        fraction._xyzw[1] = 1.0 + fraction.y();
-    }
-    if (fraction.z() < 0.0) {
-        fraction._xyzw[2] = 1.0 + fraction.z();
-    }
-    if (fraction.w() < 0.0) {
-        fraction._xyzw[3] = 1.0 + fraction.w();
-    }
-    return fraction;
+    __m128 fraction = _mm_sub_ps(_mf, integer);
+    fraction = _mm_add_ps(fraction, _mm_set1_ps(1.0));
+    integer = _mm_round_ps(fraction, _MM_FROUND_TRUNC);
+    return Vec4f32(_mm_sub_ps(fraction, integer));
 }
 
 float Vec4f32::x() const {
