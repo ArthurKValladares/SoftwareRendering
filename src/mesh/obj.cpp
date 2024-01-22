@@ -26,16 +26,19 @@ Mesh load_obj(const std::string& dir, const std::string& obj_file, SDL_Surface* 
     auto& shapes = reader.GetShapes();
     auto& materials = reader.GetMaterials();
 
+    std::unordered_map<std::string, int> mesh_textures;
     std::vector<Mesh::Material> mesh_materials;
     mesh_materials.reserve(materials.size());
     TextureMap texture_map;
     for (u64 idx = 0; idx < materials.size(); ++idx) {
         const auto& material = materials[idx];
         const auto add_to_map = [&](const std::string& str) {
-            if (texture_map.count(str) == 0) {
+            if (mesh_textures.count(str) == 0) {
+                const int texture_id = mesh_textures.size();
                 const std::string texture_path = dir + "/" + str;
                 Texture texture = Texture(texture_path.c_str(), surface);
-                texture_map.emplace(str, std::move(texture));
+                mesh_textures.emplace(str, texture_id);
+                texture_map.push_back(std::move(texture));
             }
         };
 
@@ -58,8 +61,12 @@ Mesh load_obj(const std::string& dir, const std::string& obj_file, SDL_Surface* 
         ADD_TO_MAP(normal_texname);
         #undef ADD_TO_MAP
 
+        int texture_id = -1;
+        if (mesh_textures.count(material.diffuse_texname) != 0) {
+            texture_id = mesh_textures.at(material.diffuse_texname);
+        }
         mesh_materials.emplace_back(Mesh::Material {
-            material.diffuse_texname,
+            texture_id,
             {material.diffuse[0], material.diffuse[1], material.diffuse[2]}
         });
     }

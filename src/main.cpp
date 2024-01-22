@@ -163,8 +163,8 @@ void RenderPixels(SDL_Surface *surface, DepthBuffer& depth_buffer,  OverdrawBuff
         if (mask[index] && curr_depth > depth_buffer.ValueAt(xs[index], ys[index])) {
             switch (render_method) {
                 case RenderingMethod::Standard: {
-                    if (material.diff_texture != "") {
-                        const Texture& texture = mesh.texture_map.at(material.diff_texture);
+                    if (material.texture_id >= 0) {
+                        const Texture& texture = mesh.texture_map[material.texture_id];
 
                         const Vec4i32 ui = (u.modf1() * texture.m_width).to_int_round_down();
                         const Vec4i32 vi = (v.modf1() * texture.m_height).to_int_round_down();
@@ -616,10 +616,6 @@ int main(int argc, char *argv[]) {
 
     const std::string mesh_path = std::string(PROJECT_ROOT) + std::string("/assets/meshes/sibenik");
     Mesh mesh = load_obj(mesh_path, "sibenik.obj", surface);
-    std::cout << "--- Textures ---" << std::endl;
-    for (const auto& it : mesh.texture_map) {
-        std::cout << it.first << std::endl;
-    }
 
     const float depth_min = 0.0;
     const float x_span = mesh.bb.maxX - mesh.bb.minX;
