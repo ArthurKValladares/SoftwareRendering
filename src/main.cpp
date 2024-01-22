@@ -619,8 +619,8 @@ int main(int argc, char *argv[]) {
     DepthBuffer depth_buffer = DepthBuffer(surface->w, surface->h);
     OverdrawBuffer overdraw_buffer = OverdrawBuffer(surface->w, surface->h);
 
-    const std::string mesh_path = std::string(PROJECT_ROOT) + std::string("/assets/meshes/sibenik");
-    Mesh mesh = load_obj(mesh_path, "sibenik.obj", surface);
+    const std::string mesh_path = std::string(PROJECT_ROOT) + std::string("/assets/meshes/teapot");
+    Mesh mesh = load_obj(mesh_path, "teapot.obj", surface);
     std::cout << "--- Textures ---" << std::endl;
     for (const auto& it : mesh.texture_map) {
         std::cout << it.first << std::endl;
