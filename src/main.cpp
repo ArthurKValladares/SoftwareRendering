@@ -158,18 +158,17 @@ void RenderPixels(SDL_Surface *surface, DepthBuffer& depth_buffer,  OverdrawBuff
     const auto green = SDL_MapRGB(surface->format, 0, 255, 0);
     const auto diffuse = SDL_MapRGB(surface->format, material.diffuse[0] * 255.0, material.diffuse[1] * 255.0, material.diffuse[2] * 255.0);
 
+    const Texture& texture = mesh.texture_map[material.texture_id];
+    const Vec4i32 ui = (u.modf1() * texture.m_width).to_int_round_down();
+    const Vec4i32 vi = (v.modf1() * texture.m_height).to_int_round_down();
+
     for (int index = 0; index < 4; ++index) {
         const auto curr_depth = d[index];
         if (mask[index] && curr_depth > depth_buffer.ValueAt(xs[index], ys[index])) {
             switch (render_method) {
                 case RenderingMethod::Standard: {
                     if (material.texture_id >= 0) {
-                        const Texture& texture = mesh.texture_map[material.texture_id];
-
-                        const Vec4i32 ui = (u.modf1() * texture.m_width).to_int_round_down();
-                        const Vec4i32 vi = (v.modf1() * texture.m_height).to_int_round_down();
                         const Vec4i32 tex_idx = vi * Vec4i32(texture.m_width) + ui;
-
                         *GetPixel(surface, pixel_offsets[index]) = texture.get_pixel_from_idx(tex_idx[index]);
                     } else {
                         *GetPixel(surface, pixel_offsets[index]) = diffuse;

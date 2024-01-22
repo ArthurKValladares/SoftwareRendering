@@ -5,7 +5,7 @@ Point2D hacky_project_to_surface(SDL_Surface* surface, Point3D_f point) {
     const u32 h = surface->h;
     const float sx = (point.x + 1.0) / (2.0) * w;
     const float sy = (point.y + 1.0) / (2.0) * h;
-    // NOTE: It's fine to just truncate the float to the pixel (int) value it is in
+    // NOTE: It's fine to just truncate the float to the pixel (int) value it is
     return Point2D{ (int) sx, (int) sy };
 }
 
