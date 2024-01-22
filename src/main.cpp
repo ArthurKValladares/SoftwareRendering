@@ -614,8 +614,8 @@ int main(int argc, char *argv[]) {
     DepthBuffer depth_buffer = DepthBuffer(surface->w, surface->h);
     OverdrawBuffer overdraw_buffer = OverdrawBuffer(surface->w, surface->h);
 
-    const std::string mesh_path = std::string(PROJECT_ROOT) + std::string("/assets/meshes/sibenik");
-    Mesh mesh = load_obj(mesh_path, "sibenik.obj", surface);
+    const std::string mesh_path = std::string(PROJECT_ROOT) + std::string("/assets/meshes/teapot");
+    Mesh mesh = load_obj(mesh_path, "teapot.obj", surface);
 
     const float depth_min = 0.0;
     const float x_span = mesh.bb.maxX - mesh.bb.minX;

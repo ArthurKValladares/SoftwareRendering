@@ -5,7 +5,8 @@ Point2D hacky_project_to_surface(SDL_Surface* surface, Point3D_f point) {
     const u32 h = surface->h;
     const float sx = (point.x + 1.0) / (2.0) * w;
     const float sy = (point.y + 1.0) / (2.0) * h;
-    return Point2D{ (int)round(sx), (int)round(sy) };
+    // NOTE: It's fine to just truncate the float to the pixel (int) value it is in
+    return Point2D{ (int) sx, (int) sy };
 }
 
 ScreenTriangle project_triangle_to_screen(SDL_Surface* surface, const Mat4f32& proj_model, const Triangle& triangle) {
