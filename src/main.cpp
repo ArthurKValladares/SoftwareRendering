@@ -503,9 +503,6 @@ void DrawLine(SDL_Surface* surface, const Line2D& line, const Uint32 mapped_colo
         const float slope = dy / (float)dx;
 
         const i32 x_start = MAX(p0.x, 0);
-        if (x_start < 0) {
-            const auto test = 0;
-        }
         const i32 x_end = MIN(p1.x, surface->w);
         for (i32 x = x_start; x <= x_end; x += 4) {
             const i32 x_delta = x - p0.x;
@@ -533,9 +530,6 @@ void DrawLine(SDL_Surface* surface, const Line2D& line, const Uint32 mapped_colo
         const float slope = dx / (float)dy;
 
         const i32 y_start = MAX(p0.y, 0);
-        if (y_start < 0) {
-            const auto test = 0;
-        }
         const i32 y_end = MIN(p1.y, surface->h);
         for (i32 y = y_start; y <= y_end; y += 4) {
             const i32 y_delta = y - p0.y;
@@ -634,7 +628,7 @@ int main(int argc, char *argv[]) {
         mesh.bb.minY - y_span * span_padding,
         mesh.bb.maxY + y_span * span_padding,
         -10.0,
-        1.0
+        10.0
     }};
 
     // TODO: This will need to be re-done when resizing
