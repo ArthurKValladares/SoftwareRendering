@@ -97,11 +97,11 @@ namespace {
 };
 
 Vec4i32 GetPixelOffsets(SDL_Surface* surface, Vec4i32 xs, Vec4i32 ys) {
-    return ys * Vec4i32(surface->pitch) + xs * Vec4i32(surface->format->BytesPerPixel);
+    return (Vec4i32(surface->h - 1) - ys) * Vec4i32(surface->pitch) + xs * Vec4i32(surface->format->BytesPerPixel);
 }
 
 u32 GetPixelOffset(SDL_Surface* surface, Point2D point) {
-    return point.y * surface->pitch + point.x * surface->format->BytesPerPixel;
+    return (surface->h - 1 - point.y) * surface->pitch + point.x * surface->format->BytesPerPixel;
 }
 
 Uint32* GetPixel(SDL_Surface *surface, u32 offset) {
