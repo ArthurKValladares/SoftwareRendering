@@ -621,11 +621,12 @@ int main(int argc, char *argv[]) {
     const float depth_min = 0.0;
     const float x_span = mesh.bb.maxX - mesh.bb.minX;
     const float y_span = mesh.bb.maxY - mesh.bb.minY;
+    const float span_padding = 0.1f;
     const Camera camera = Camera{OrtographicData{
-        mesh.bb.minX - x_span * 0.1f,
-        mesh.bb.maxX + x_span * 0.1f,
-        mesh.bb.minY - y_span * 0.1f,
-        mesh.bb.maxY + y_span * 0.1f,
+        mesh.bb.minX - x_span * span_padding,
+        mesh.bb.maxX + x_span * span_padding,
+        mesh.bb.minY - y_span * span_padding,
+        mesh.bb.maxY + y_span * span_padding,
         -10.0,
         1.0
     }};
