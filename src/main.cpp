@@ -163,7 +163,10 @@ void RenderPixels(SDL_Surface *surface, DepthBuffer& depth_buffer,  OverdrawBuff
 
     for (int index = 0; index < 4; ++index) {
         const auto curr_depth = d[index];
-        if (mask[index] && curr_depth > depth_buffer.ValueAt(xs[index], ys[index])) {
+        if (mask[index] && 
+            xs[index] >= 0 && ys[index] >= 0 && 
+            curr_depth > depth_buffer.ValueAt(xs[index], ys[index])) 
+        {
             switch (render_method) {
                 case RenderingMethod::Standard: {
                     if (material.texture_id >= 0) {
@@ -243,28 +246,30 @@ void FillBottomFlatTriangle(SDL_Surface* surface, DepthBuffer& depth_buffer, Ove
         Vec4i32 w2 = w2_row + e01.step_size_x * delta_x;
 
         for (p.x = x_min + delta_x * EdgeFunction::step_increment_x; p.x <= MIN(curr_x_max, bounding_box.maxX - 1); p.x += EdgeFunction::step_increment_x) {
-            const Vec4i32 mask = w0 | w1 | w2;
+            // TODO: Maybe a way to optimize draws on the bounds
+            if (p.x + EdgeFunction::step_increment_x >= 0) {
+                const Vec4i32 mask = w0 | w1 | w2;
 
-            const Vec4f32 sum = (w0 + w1 + w2).to_float();
+                const Vec4f32 sum = (w0 + w1 + w2).to_float();
 
-            const Vec4f32 b0 = w0.to_float() / sum;
-            const Vec4f32 b1 = w1.to_float() / sum;
-            const Vec4f32 b2 = w2.to_float() / sum;
+                const Vec4f32 b0 = w0.to_float() / sum;
+                const Vec4f32 b1 = w1.to_float() / sum;
+                const Vec4f32 b2 = w2.to_float() / sum;
 
-            const Vec4f32 u_0 = Vec4f32(v0->uv.u) * b0, v_0 = Vec4f32(v0->uv.v) * b0;
-            const Vec4f32 u_1 = Vec4f32(v1->uv.u) * b1, v_1 = Vec4f32(v1->uv.v) * b1;
-            const Vec4f32 u_2 = Vec4f32(v2->uv.u) * b2, v_2 = Vec4f32(v2->uv.v) * b2;
+                const Vec4f32 u_0 = Vec4f32(v0->uv.u) * b0, v_0 = Vec4f32(v0->uv.v) * b0;
+                const Vec4f32 u_1 = Vec4f32(v1->uv.u) * b1, v_1 = Vec4f32(v1->uv.v) * b1;
+                const Vec4f32 u_2 = Vec4f32(v2->uv.u) * b2, v_2 = Vec4f32(v2->uv.v) * b2;
 
-            const Vec4f32 u = u_0 + u_1 + u_2;
-            const Vec4f32 v = v_0 + v_1 + v_2;
+                const Vec4f32 u = u_0 + u_1 + u_2;
+                const Vec4f32 v = v_0 + v_1 + v_2;
 
-            const Vec4f32 d_0 = Vec4f32(v0->depth) * b0;
-            const Vec4f32 d_1 = Vec4f32(v1->depth) * b1;
-            const Vec4f32 d_2 = Vec4f32(v2->depth) * b2;
-            const Vec4f32 d = d_0 + d_1 + d_2;
+                const Vec4f32 d_0 = Vec4f32(v0->depth) * b0;
+                const Vec4f32 d_1 = Vec4f32(v1->depth) * b1;
+                const Vec4f32 d_2 = Vec4f32(v2->depth) * b2;
+                const Vec4f32 d = d_0 + d_1 + d_2;
 
-            RenderPixels(surface, depth_buffer, overdraw_buffer, p, mask, u, v, d, mesh, material, false);
-
+                RenderPixels(surface, depth_buffer, overdraw_buffer, p, mask, u, v, d, mesh, material, false);
+            }
             w0 += e12.step_size_x;
             w1 += e20.step_size_x;
             w2 += e01.step_size_x;
@@ -317,28 +322,29 @@ void FillTopFlatTriangle(SDL_Surface* surface, DepthBuffer& depth_buffer, Overdr
         Vec4i32 w2 = w2_row + e01.step_size_x * delta_x;
 
         for (p.x = x_min + delta_x * EdgeFunction::step_increment_x; p.x <= MIN(curr_x_max, bounding_box.maxX - 1); p.x += EdgeFunction::step_increment_x) {
-            const Vec4i32 mask = w0 | w1 | w2;
+            if (p.x + EdgeFunction::step_increment_x >= 0) {
+                const Vec4i32 mask = w0 | w1 | w2;
 
-            const Vec4f32 sum = (w0 + w1 + w2).to_float();
+                const Vec4f32 sum = (w0 + w1 + w2).to_float();
 
-            const Vec4f32 b0 = w0.to_float() / sum;
-            const Vec4f32 b1 = w1.to_float() / sum;
-            const Vec4f32 b2 = w2.to_float() / sum;
+                const Vec4f32 b0 = w0.to_float() / sum;
+                const Vec4f32 b1 = w1.to_float() / sum;
+                const Vec4f32 b2 = w2.to_float() / sum;
 
-            const Vec4f32 u_0 = Vec4f32(v0->uv.u) * b0, v_0 = Vec4f32(v0->uv.v) * b0;
-            const Vec4f32 u_1 = Vec4f32(v1->uv.u) * b1, v_1 = Vec4f32(v1->uv.v) * b1;
-            const Vec4f32 u_2 = Vec4f32(v2->uv.u) * b2, v_2 = Vec4f32(v2->uv.v) * b2;
+                const Vec4f32 u_0 = Vec4f32(v0->uv.u) * b0, v_0 = Vec4f32(v0->uv.v) * b0;
+                const Vec4f32 u_1 = Vec4f32(v1->uv.u) * b1, v_1 = Vec4f32(v1->uv.v) * b1;
+                const Vec4f32 u_2 = Vec4f32(v2->uv.u) * b2, v_2 = Vec4f32(v2->uv.v) * b2;
 
-            const Vec4f32 u = u_0 + u_1 + u_2;
-            const Vec4f32 v = v_0 + v_1 + v_2;
+                const Vec4f32 u = u_0 + u_1 + u_2;
+                const Vec4f32 v = v_0 + v_1 + v_2;
 
-            const Vec4f32 d_0 = Vec4f32(v0->depth) * b0;
-            const Vec4f32 d_1 = Vec4f32(v1->depth) * b1;
-            const Vec4f32 d_2 = Vec4f32(v2->depth) * b2;
-            const Vec4f32 d = d_0 + d_1 + d_2;
+                const Vec4f32 d_0 = Vec4f32(v0->depth) * b0;
+                const Vec4f32 d_1 = Vec4f32(v1->depth) * b1;
+                const Vec4f32 d_2 = Vec4f32(v2->depth) * b2;
+                const Vec4f32 d = d_0 + d_1 + d_2;
 
-            RenderPixels(surface, depth_buffer, overdraw_buffer, p, mask, u, v, d, mesh, material, false);
-
+                RenderPixels(surface, depth_buffer, overdraw_buffer, p, mask, u, v, d, mesh, material, false);
+            }
             w0 += e12.step_size_x;
             w1 += e20.step_size_x;
             w2 += e01.step_size_x;
