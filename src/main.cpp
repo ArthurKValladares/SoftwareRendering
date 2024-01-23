@@ -709,7 +709,8 @@ int main(int argc, char *argv[]) {
         
         const Mat4f32 proj_matrix = camera.GetProjMatrix();
         // TODO: Can optimize this with a single matrix, will do later
-        const Mat4f32 rotations = rotate_matrix(Vec3D_f{ 1.0, 0.0, 0.0 }, rotate_angle_x) *
+        const Mat4f32 rotations = 
+            rotate_matrix(Vec3D_f{ 1.0, 0.0, 0.0 }, rotate_angle_x) *
             rotate_matrix(Vec3D_f{ 0.0, 1.0, 0.0 }, rotate_angle_y) *
             rotate_matrix(Vec3D_f{ 0.0, 0.0, 1.0 }, rotate_angle_z);
         const Mat4f32 model_matrix = rotations * uniform_scale_matrix(scale);
