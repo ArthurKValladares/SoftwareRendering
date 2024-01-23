@@ -621,14 +621,15 @@ int main(int argc, char *argv[]) {
     const float depth_min = 0.0;
     const float x_span = mesh.bb.maxX - mesh.bb.minX;
     const float y_span = mesh.bb.maxY - mesh.bb.minY;
-    const float span_padding = 2.1f;
+    const float z_span = mesh.bb.maxZ - mesh.bb.minZ;
+    const float span_padding = 1.0f;
     const Camera camera = Camera{OrtographicData{
         mesh.bb.minX - x_span * span_padding,
         mesh.bb.maxX + x_span * span_padding,
         mesh.bb.minY - y_span * span_padding,
         mesh.bb.maxY + y_span * span_padding,
-        -10.0,
-        10.0
+        -z_span,
+        z_span
     }};
 
     // TODO: This will need to be re-done when resizing
