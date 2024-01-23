@@ -218,7 +218,7 @@ void FillBottomFlatTriangle(SDL_Surface* surface, DepthBuffer& depth_buffer, Ove
     const float start_x_min = v0->p.x;
     const float start_x_max = v0->p.x;
 
-    const int x_min = MIN3(v0->p.x, v1->p.x, v2->p.x);
+    const int x_min = MAX(MIN3(v0->p.x, v1->p.x, v2->p.x), 0);
 
     const int y_min = MAX(v0->p.y, bounding_box.minY);
     const int y_max = MIN(v2->p.y, bounding_box.maxY - 1);
@@ -292,7 +292,7 @@ void FillTopFlatTriangle(SDL_Surface* surface, DepthBuffer& depth_buffer, Overdr
     const float start_x_min = v2->p.x;
     const float start_x_max = v2->p.x;
 
-    const int x_min = MIN3(v0->p.x, v1->p.x, v2->p.x);
+    const int x_min = MAX(MIN3(v0->p.x, v1->p.x, v2->p.x), 0);
 
     const int y_min = MAX(v0->p.y, bounding_box.minY);
     const int y_max = MIN(v2->p.y, bounding_box.maxY - 1);
