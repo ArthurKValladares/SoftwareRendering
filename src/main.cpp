@@ -54,7 +54,7 @@ namespace {
     const float cutoff_area_delta = 2.5;
     float cuttof_area = 10.0;
 
-    const float scale_delta = 0.5;
+    const float scale_delta = 0.1;
     float scale = 1.0;
 
     float edge_function(const Point2D& a, const Point2D& b, const Point2D& c) {
@@ -621,7 +621,7 @@ int main(int argc, char *argv[]) {
     const float depth_min = 0.0;
     const float x_span = mesh.bb.maxX - mesh.bb.minX;
     const float y_span = mesh.bb.maxY - mesh.bb.minY;
-    const float span_padding = 0.1f;
+    const float span_padding = 2.1f;
     const Camera camera = Camera{OrtographicData{
         mesh.bb.minX - x_span * span_padding,
         mesh.bb.maxX + x_span * span_padding,
@@ -707,20 +707,23 @@ int main(int argc, char *argv[]) {
             return 0;
         }
         
-        const Mat4f32 proj_matrix = camera.GetProjMatrix();
         // TODO: Can optimize this with a single matrix, will do later
-        const Mat4f32 rotations = 
+        const Mat4f32 rotation_matrix = 
             rotate_matrix(Vec3D_f{ 1.0, 0.0, 0.0 }, rotate_angle_x) *
             rotate_matrix(Vec3D_f{ 0.0, 1.0, 0.0 }, rotate_angle_y) *
             rotate_matrix(Vec3D_f{ 0.0, 0.0, 1.0 }, rotate_angle_z);
-        const Mat4f32 model_matrix = rotations * uniform_scale_matrix(scale);
-        const Mat4f32 proj_model = proj_matrix * model_matrix;
+        const Mat4f32 scale_matrix = uniform_scale_matrix(scale);
+        const Mat4f32 model_matrix = rotation_matrix * scale_matrix;
+
+        const Mat4f32 proj_matrix = camera.GetProjMatrix();
+
+        const Mat4f32 transform_matrix = proj_matrix * model_matrix;
 
         const std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
         
         ClearSurface(surface, thread_pool, Color{100, 100, 100});
         depth_buffer.Set(depth_min);
-        DrawMesh(surface, proj_model, thread_pool, tile_data, depth_buffer, overdraw_buffer, mesh);
+        DrawMesh(surface, transform_matrix, thread_pool, tile_data, depth_buffer, overdraw_buffer, mesh);
         overdraw_buffer.Clear();
 
         const std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
