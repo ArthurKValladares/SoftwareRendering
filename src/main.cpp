@@ -624,10 +624,10 @@ int main(int argc, char *argv[]) {
     const float z_span = mesh.bb.maxZ - mesh.bb.minZ;
     const float span_padding = 1.0f;
     const Camera camera = Camera{OrtographicData{
-        mesh.bb.minX - x_span * span_padding,
-        mesh.bb.maxX + x_span * span_padding,
-        mesh.bb.minY - y_span * span_padding,
-        mesh.bb.maxY + y_span * span_padding,
+        - x_span * span_padding,
+        x_span * span_padding,
+        - y_span * span_padding,
+        y_span * span_padding,
         -z_span,
         z_span
     }};
@@ -714,7 +714,8 @@ int main(int argc, char *argv[]) {
             rotate_matrix(Vec3D_f{ 0.0, 1.0, 0.0 }, rotate_angle_y) *
             rotate_matrix(Vec3D_f{ 0.0, 0.0, 1.0 }, rotate_angle_z);
         const Mat4f32 scale_matrix = uniform_scale_matrix(scale);
-        const Mat4f32 model_matrix = rotation_matrix * scale_matrix;
+        const Mat4f32 translate_m = translation_matrix(0.0, -y_span / 2.0, 0.0);
+        const Mat4f32 model_matrix = rotation_matrix * scale_matrix * translate_m;
 
         const Mat4f32 proj_matrix = camera.GetProjMatrix();
 
