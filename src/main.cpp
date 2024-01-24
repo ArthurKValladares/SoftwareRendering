@@ -28,8 +28,6 @@
 #include "math/vec4i32.h"
 #include "cmake_defs.h"
 
-// TODO: Will bring back non-SIMD versions
-#define SIMD true
 #define SCREEN_WIDTH  1200
 #define SCREEN_HEIGHT 800
 
@@ -391,13 +389,7 @@ void DrawTriangle(SDL_Surface* surface, Rect2D tile_rect, Rect2D bounding_box, D
     DrawTriangleScanline(surface, tile_rect, bounding_box, depth_buffer, overdraw_buffer, st, mesh, material);
 }
 
-// NOTE: I don't think this SIMD version is really worth it tbh,
-// but I wanted to do it for completeness sake
 void DrawLine(SDL_Surface* surface, const Line2D& line, const Uint32 mapped_color) {
-    // TODO: This is very sloppy, will write something real later
-    // Since we know the slope, we can be smarter about breaking out early when we go out of bounds
-    // Maybe the testing can be SIMD too
-
     const auto is_in_bounds = [=](i32 x, i32 y) {
         return x > 0 && x < surface->w && y > 0 && y < surface->h;
     };
@@ -416,22 +408,11 @@ void DrawLine(SDL_Surface* surface, const Line2D& line, const Uint32 mapped_colo
 
         const i32 x_start = MAX(p0.x, 0);
         const i32 x_end = MIN(p1.x, surface->w);
-        for (i32 x = x_start; x <= x_end; x += 4) {
+        for (i32 x = x_start; x <= x_end; ++x) {
             const i32 x_delta = x - p0.x;
-
-            const Vec4i32 xs = Vec4i32(x) + Vec4i32(0, 1, 2, 3);
-            const Vec4i32 ys = (Vec4f32(p0.y) + Vec4f32(slope) * Vec4f32(x_delta, x_delta + 1, x_delta + 2, x_delta + 3)).to_int_nearest();
-            if (is_in_bounds(xs.x(), ys.x())) {
-                *GetPixel(surface, Point2D(xs.x(), ys.x())) = mapped_color;
-            }
-            if (is_in_bounds(xs.y(), ys.y())) {
-                *GetPixel(surface, Point2D(xs.y(), ys.y())) = mapped_color;
-            }
-            if (is_in_bounds(xs.z(), ys.z())) {
-                *GetPixel(surface, Point2D(xs.z(), ys.z())) = mapped_color;
-            }
-            if (is_in_bounds(xs.w(), ys.w())) {
-                *GetPixel(surface, Point2D(xs.w(), ys.w())) = mapped_color;
+            const i32 y = p0.y + slope * x_delta;
+            if (is_in_bounds(x, y)) {
+                *GetPixel(surface, Point2D(x, y)) = mapped_color;
             }
         }
     }
@@ -443,22 +424,11 @@ void DrawLine(SDL_Surface* surface, const Line2D& line, const Uint32 mapped_colo
 
         const i32 y_start = MAX(p0.y, 0);
         const i32 y_end = MIN(p1.y, surface->h);
-        for (i32 y = y_start; y <= y_end; y += 4) {
+        for (i32 y = y_start; y <= y_end; ++y) {
             const i32 y_delta = y - p0.y;
-
-            const Vec4i32 ys = Vec4i32(y) + Vec4i32(0, 1, 2, 3);
-            const Vec4i32 xs = (Vec4f32(p0.x) + Vec4f32(slope) * Vec4f32(y_delta, y_delta + 1, y_delta + 2, y_delta + 3)).to_int_nearest();
-            if (is_in_bounds(xs.x(), ys.x())) {
-                *GetPixel(surface, Point2D(xs.x(), ys.x())) = mapped_color;
-            }
-            if (is_in_bounds(xs.y(), ys.y())) {
-                *GetPixel(surface, Point2D(xs.y(), ys.y())) = mapped_color;
-            }
-            if (is_in_bounds(xs.z(), ys.z())) {
-                *GetPixel(surface, Point2D(xs.z(), ys.z())) = mapped_color;
-            }
-            if (is_in_bounds(xs.w(), ys.w())) {
-                *GetPixel(surface, Point2D(xs.w(), ys.w())) = mapped_color;
+            const i32 x = p0.x + slope * y_delta;
+            if (is_in_bounds(x, y)) {
+                *GetPixel(surface, Point2D(x, y)) = mapped_color;
             }
         }
     }
@@ -542,7 +512,6 @@ int main(int argc, char *argv[]) {
         z_span
     }};
 
-    // TODO: This will need to be re-done when resizing
     const ScreenTileData tile_data = partition_screen_into_tiles(surface);
 
     // Render loop
