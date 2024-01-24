@@ -35,15 +35,16 @@ struct Vec4i32 {
     void operator-=(const Vec4i32& rhs);
     void operator*=(const Vec4i32& rhs);
     
+    Vec4i32 operator&(const Vec4i32& rhs) const;
     Vec4i32 operator|(const Vec4i32& rhs) const;
     Vec4i32 operator^(const Vec4i32& rhs) const;
     Vec4i32 operator!() const;
     
-    bool operator==(const Vec4i32& rhs) const;
-    bool operator>(const Vec4i32& rhs) const;
-    bool operator<(const Vec4i32& rhs) const;
-    bool operator>=(const Vec4i32& rhs) const;
-    bool operator<=(const Vec4i32& rhs) const;
+    Vec4i32 operator==(const Vec4i32& rhs) const;
+    Vec4i32 operator>(const Vec4i32& rhs) const;
+    Vec4i32 operator<(const Vec4i32& rhs) const;
+    Vec4i32 operator>=(const Vec4i32& rhs) const;
+    Vec4i32 operator<=(const Vec4i32& rhs) const;
 private:
     union {
         __m128i _mi;

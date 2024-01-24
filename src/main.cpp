@@ -38,7 +38,6 @@ namespace {
     enum class RenderingMethod : u8 {
         Standard,
         Wireframe,
-        RasterMethod,
         Uv,
         Overdraw,
         Depth,
@@ -50,9 +49,6 @@ namespace {
     float rotate_angle_x = 0.0;
     float rotate_angle_y = 0.0;
     float rotate_angle_z = 0.0;
-
-    const float cutoff_area_delta = 2.5;
-    float cuttof_area = 10.0;
 
     const float scale_delta = 0.1;
     float scale = 1.0;
@@ -140,7 +136,7 @@ void ClearSurface(SDL_Surface *surface, ThreadPool& thread_pool, Color color) {
     thread_pool.Wait();
 }
 
-void RenderPixels(SDL_Surface *surface, DepthBuffer& depth_buffer,  OverdrawBuffer& overdraw_buffer, Point2D &origin_point, Vec4i32 mask, Vec4f32 u, Vec4f32 v, Vec4f32 d, const Mesh& mesh, const Mesh::Material& material, bool barrycentric) {
+void RenderPixels(SDL_Surface *surface, DepthBuffer& depth_buffer,  OverdrawBuffer& overdraw_buffer, Point2D &origin_point, int x_min, int x_max, Vec4f32 u, Vec4f32 v, Vec4f32 d, const Mesh& mesh, const Mesh::Material& material) {
     const auto get_overdraw_color = [&](u8 draw_count) {
         if (draw_count == 0) {
             return SDL_MapRGB(surface->format, 0, 255, 0);
@@ -161,11 +157,13 @@ void RenderPixels(SDL_Surface *surface, DepthBuffer& depth_buffer,  OverdrawBuff
 
     const auto diffuse = SDL_MapRGB(surface->format, material.diffuse[0] * 255.0, material.diffuse[1] * 255.0, material.diffuse[2] * 255.0);
 
+    const Vec4i32 mask = (xs >= Vec4i32(x_min)) & (xs <= Vec4i32(x_max));
     for (int index = 0; index < 4; ++index) {
-        const auto curr_depth = d[index];
-        if (mask[index] && 
-            xs[index] >= 0 && ys[index] >= 0 && 
-            curr_depth > depth_buffer.ValueAt(xs[index], ys[index])) 
+        const auto c_depth = d[index];
+        const auto c_x     = xs[index];
+        const auto c_y     = ys[index];
+        if (mask[index] != 0 &&
+            c_depth > depth_buffer.ValueAt(c_x, c_y)) 
         {
             switch (render_method) {
                 case RenderingMethod::Standard: {
@@ -180,21 +178,13 @@ void RenderPixels(SDL_Surface *surface, DepthBuffer& depth_buffer,  OverdrawBuff
                     *GetPixel(surface, pixel_offsets[index]) = SDL_MapRGB(surface->format, (u8)(u[index]* 255.0), (u8)(v[index] * 255.0), 0);
                     break;
                 }
-                case RenderingMethod::RasterMethod: {
-                    // Note: The invariants for debug drawing methods are not calculated in advance to save on compute time for the main path
-                    const auto red = SDL_MapRGB(surface->format, 255, 0, 0);
-                    const auto green = SDL_MapRGB(surface->format, 0, 255, 0);
-
-                    *GetPixel(surface, pixel_offsets[index]) = barrycentric ? red : green;
-                    break;
-                }
                 case RenderingMethod::Overdraw: {
-                    *GetPixel(surface, pixel_offsets[index]) = get_overdraw_color(overdraw_buffer.ValueAt(xs[index], ys[index]));
-                    overdraw_buffer.Increase(xs[index], ys[index]);
+                    *GetPixel(surface, pixel_offsets[index]) = get_overdraw_color(overdraw_buffer.ValueAt(c_x, c_y));
+                    overdraw_buffer.Increase(c_x, c_y);
                     break;
                 }
                 case RenderingMethod::Depth: {
-                    const u8 depth_greyscale = (u8) std::min(255.0, curr_depth * 255.0);
+                    const u8 depth_greyscale = (u8) std::min(255.0, c_depth * 255.0);
                     *GetPixel(surface, pixel_offsets[index]) = SDL_MapRGB(surface->format, depth_greyscale, depth_greyscale, depth_greyscale);
                     break;
                 }
@@ -203,7 +193,7 @@ void RenderPixels(SDL_Surface *surface, DepthBuffer& depth_buffer,  OverdrawBuff
                     break;
                 }
             }
-            depth_buffer.Write(xs[index], ys[index], d[index]);
+            depth_buffer.Write(c_x, c_y, c_depth);
         }
     }
 }
@@ -245,11 +235,9 @@ void FillBottomFlatTriangle(SDL_Surface* surface, DepthBuffer& depth_buffer, Ove
         Vec4i32 w1 = w1_row + e20.step_size_x * delta_x;
         Vec4i32 w2 = w2_row + e01.step_size_x * delta_x;
 
-        for (p.x = x_min + delta_x * EdgeFunction::step_increment_x; p.x <= MIN(curr_x_max, bounding_box.maxX - 1); p.x += EdgeFunction::step_increment_x) {
+        for (p.x = x_min + (delta_x * EdgeFunction::step_increment_x); p.x <= MIN(curr_x_max, bounding_box.maxX - 1); p.x += EdgeFunction::step_increment_x) {
             // TODO: Maybe a way to optimize draws on the bounds
             if (p.x + EdgeFunction::step_increment_x >= 0) {
-                const Vec4i32 mask = w0 | w1 | w2;
-
                 const Vec4f32 sum = (w0 + w1 + w2).to_float();
 
                 const Vec4f32 b0 = w0.to_float() / sum;
@@ -268,7 +256,7 @@ void FillBottomFlatTriangle(SDL_Surface* surface, DepthBuffer& depth_buffer, Ove
                 const Vec4f32 d_2 = Vec4f32(v2->depth) * b2;
                 const Vec4f32 d = d_0 + d_1 + d_2;
 
-                RenderPixels(surface, depth_buffer, overdraw_buffer, p, mask, u, v, d, mesh, material, false);
+                RenderPixels(surface, depth_buffer, overdraw_buffer, p, curr_x_min, curr_x_max, u, v, d, mesh, material);
             }
             w0 += e12.step_size_x;
             w1 += e20.step_size_x;
@@ -323,8 +311,6 @@ void FillTopFlatTriangle(SDL_Surface* surface, DepthBuffer& depth_buffer, Overdr
 
         for (p.x = x_min + delta_x * EdgeFunction::step_increment_x; p.x <= MIN(curr_x_max, bounding_box.maxX - 1); p.x += EdgeFunction::step_increment_x) {
             if (p.x + EdgeFunction::step_increment_x >= 0) {
-                const Vec4i32 mask = w0 | w1 | w2;
-
                 const Vec4f32 sum = (w0 + w1 + w2).to_float();
 
                 const Vec4f32 b0 = w0.to_float() / sum;
@@ -343,7 +329,7 @@ void FillTopFlatTriangle(SDL_Surface* surface, DepthBuffer& depth_buffer, Overdr
                 const Vec4f32 d_2 = Vec4f32(v2->depth) * b2;
                 const Vec4f32 d = d_0 + d_1 + d_2;
 
-                RenderPixels(surface, depth_buffer, overdraw_buffer, p, mask, u, v, d, mesh, material, false);
+                RenderPixels(surface, depth_buffer, overdraw_buffer, p, curr_x_min, curr_x_max, u, v, d, mesh, material);
             }
             w0 += e12.step_size_x;
             w1 += e20.step_size_x;
@@ -356,74 +342,6 @@ void FillTopFlatTriangle(SDL_Surface* surface, DepthBuffer& depth_buffer, Overdr
         w0_row -= e12.step_size_y;
         w1_row -= e20.step_size_y;
         w2_row -= e01.step_size_y;
-    }
-}
-
-void DrawTriangleBarycentric(SDL_Surface* surface, Rect2D tile_rect, Rect2D bounding_box, DepthBuffer& depth_buffer, OverdrawBuffer& overdraw_buffer, const ScreenTriangle& st, const Mesh& mesh, const Mesh::Material& material) {
-    const Point2D min_point = Point2D{ bounding_box.minX, bounding_box.minY };
-
-    const float c0_u = st.v0.uv.u, c0_v = st.v0.uv.v;
-    const float c1_u = st.v1.uv.u, c1_v = st.v1.uv.v;
-    const float c2_u = st.v2.uv.u, c2_v = st.v2.uv.v;
-
-    const float c0_d = st.v0.depth;
-    const float c1_d = st.v1.depth;
-    const float c2_d = st.v2.depth;
-
-    EdgeFunction e01, e12, e20;
-    Vec4i32 w0_row = e12.Init(st.v1.p, st.v2.p, min_point);
-    Vec4i32 w1_row = e20.Init(st.v2.p, st.v0.p, min_point);
-    Vec4i32 w2_row = e01.Init(st.v0.p, st.v1.p, min_point);
-
-    Point2D point = { 0, 0 };
-    for (point.y = bounding_box.minY; point.y <= MIN(bounding_box.maxY, surface->h - 1); point.y += EdgeFunction::step_increment_y) {
-        const Vec4i32 delta_y = Vec4i32(point.y - bounding_box.minY);
-
-        Vec4i32 w0 = w0_row;
-        Vec4i32 w1 = w1_row;
-        Vec4i32 w2 = w2_row;
-
-        bool is_in_triangle = false;
-        for (point.x = bounding_box.minX; point.x <= MIN(bounding_box.maxX, surface->w - 1); point.x += EdgeFunction::step_increment_x) {
-            const Vec4i32 mask = w0 | w1 | w2;
-
-            if (mask.any_gte(0)) {
-                is_in_triangle = true;
-
-                const Vec4f32 sum = (w0 + w1 + w2).to_float();
-
-                const Vec4f32 b0 = w0.to_float() / sum;
-                const Vec4f32 b1 = w1.to_float() / sum;
-                const Vec4f32 b2 = w2.to_float() / sum;
-
-                const Vec4f32 u_0 = Vec4f32(c0_u) * b0, v_0 = Vec4f32(c0_v) * b0;
-                const Vec4f32 u_1 = Vec4f32(c1_u) * b1, v_1 = Vec4f32(c1_v) * b1;
-                const Vec4f32 u_2 = Vec4f32(c2_u) * b2, v_2 = Vec4f32(c2_v) * b2;
-
-                const Vec4f32 u = u_0 + u_1 + u_2;
-                const Vec4f32 v = v_0 + v_1 + v_2;
-
-                // TODO: This is probably not right?
-                const Vec4f32 d_0 = Vec4f32(c0_d) * b0;
-                const Vec4f32 d_1 = Vec4f32(c1_d) * b1;
-                const Vec4f32 d_2 = Vec4f32(c2_d) * b2;
-                const Vec4f32 d = d_0 + d_1 + d_2;
-
-                RenderPixels(surface, depth_buffer, overdraw_buffer, point, mask, u, v, d, mesh, material, true);
-            }
-            else if (is_in_triangle) {
-                // Since we are drawing triangles, we can never go in and out of the shape in the same line
-                break;
-            }
-
-            w0 += e12.step_size_x;
-            w1 += e20.step_size_x;
-            w2 += e01.step_size_x;
-        }
-
-        w0_row += e12.step_size_y;
-        w1_row += e20.step_size_y;
-        w2_row += e01.step_size_y;
     }
 }
 
@@ -470,13 +388,7 @@ void DrawTriangle(SDL_Surface* surface, Rect2D tile_rect, Rect2D bounding_box, D
         return;
     }
 
-
-    if (double_area < cuttof_area) {
-        DrawTriangleBarycentric(surface, tile_rect, bounding_box, depth_buffer, overdraw_buffer, st, mesh, material);
-    }
-    else {
-        DrawTriangleScanline(surface, tile_rect, bounding_box, depth_buffer, overdraw_buffer, st, mesh, material);
-    }
+    DrawTriangleScanline(surface, tile_rect, bounding_box, depth_buffer, overdraw_buffer, st, mesh, material);
 }
 
 // NOTE: I don't think this SIMD version is really worth it tbh,
@@ -566,7 +478,6 @@ void DrawTriangleWireframe(SDL_Surface* surface, const ScreenTriangle& st) {
 }
 
 void DrawMesh(SDL_Surface *surface, const Mat4f32& proj_model, ThreadPool &thread_pool, ScreenTileData tile_data, DepthBuffer& depth_buffer, OverdrawBuffer& overdraw_buffer, Mesh &mesh) {
-    // TODO: Will need to modify this logic to take care of the material index stuff
     TriangleTileMap triangle_tile_map = mesh.SetupScreenTriangles(surface, tile_data, proj_model);
     const u32 num_tasks = tile_data.num_tasks();
     for (auto const& item : triangle_tile_map) {
@@ -575,7 +486,6 @@ void DrawMesh(SDL_Surface *surface, const Mat4f32& proj_model, ThreadPool &threa
         thread_pool.Schedule([=]() mutable {
             for (const TriangleTileValueInner& val : tile_value.values) {
                 if (render_method != RenderingMethod::Wireframe) {
-                    // TODO: Don' need to pass mesh and material
                     const int material_id = mesh.screen_triangles[val.index].material_id;
                     const Mesh::Material& material = mesh.materials[material_id];
                     DrawTriangle(surface, tile_value.tile_rect, val.bounding_box, depth_buffer, overdraw_buffer, mesh.screen_triangles[val.index], mesh, material);
@@ -654,15 +564,6 @@ int main(int argc, char *argv[]) {
                         }
                         case SDLK_MINUS: {
                             render_method = static_cast<RenderingMethod>((static_cast<u8>(render_method) - 1) % static_cast<u8>(RenderingMethod::Count));
-                            break;
-                        }
-                        //
-                        case SDLK_LEFTBRACKET: {
-                            cuttof_area -= cutoff_area_delta;
-                            break;
-                        }
-                        case SDLK_RIGHTBRACKET: {
-                            cuttof_area += cutoff_area_delta;
                             break;
                         }
                         //

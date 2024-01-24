@@ -67,6 +67,9 @@ void Vec4i32::operator*=(const Vec4i32& rhs) {
     _mi = (*this * rhs)._mi;
 }
 
+Vec4i32 Vec4i32::operator&(const Vec4i32& rhs) const {
+return Vec4i32(_mm_and_si128(_mi, rhs._mi));
+}
 Vec4i32 Vec4i32::operator|(const Vec4i32& rhs) const {
     return Vec4i32(_mm_or_si128(_mi, rhs._mi));
 }
@@ -77,21 +80,18 @@ Vec4i32 Vec4i32::operator!() const {
     return *this ^ Vec4i32(0xffff);
 }
 
-bool Vec4i32::operator==(const Vec4i32& rhs) const {
-    const __m128i i = _mm_cmpeq_epi32(_mi, rhs._mi);
-    return !_mm_testz_si128(i, i);
+Vec4i32 Vec4i32::operator==(const Vec4i32& rhs) const {
+    return Vec4i32(_mm_cmpeq_epi32(_mi, rhs._mi));
 }
-bool Vec4i32::operator>(const Vec4i32& rhs) const {
-    const __m128i i = _mm_cmpgt_epi32(_mi, rhs._mi);
-    return !_mm_testz_si128(i, i);
+Vec4i32 Vec4i32::operator>(const Vec4i32& rhs) const {
+    return Vec4i32(_mm_cmpgt_epi32(_mi, rhs._mi));
 }
-bool Vec4i32::operator<(const Vec4i32& rhs) const {
-    const __m128i i = _mm_cmplt_epi32(_mi, rhs._mi);
-    return !_mm_testz_si128(i, i);
+Vec4i32 Vec4i32::operator<(const Vec4i32& rhs) const {
+    return Vec4i32(_mm_cmplt_epi32(_mi, rhs._mi));
 }
-bool Vec4i32::operator>=(const Vec4i32& rhs) const {
+Vec4i32 Vec4i32::operator>=(const Vec4i32& rhs) const {
     return !(*this < rhs);
 }
-bool Vec4i32::operator<=(const Vec4i32& rhs) const {
+Vec4i32 Vec4i32::operator<=(const Vec4i32& rhs) const {
     return !(*this > rhs);
 }
