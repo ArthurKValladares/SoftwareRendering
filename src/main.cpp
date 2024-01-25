@@ -389,9 +389,23 @@ void DrawTriangle(SDL_Surface* surface, Rect2D tile_rect, Rect2D bounding_box, D
     DrawTriangleScanline(surface, tile_rect, bounding_box, depth_buffer, overdraw_buffer, st, mesh, material);
 }
 
+void IterateLine(i32 x_max, i32 x0, i32 x1, i32 y0, i32 y1, std::function<void(int, int)> func) {
+    const float slope = (y1 - y0) / (float)(x1 - x0);
+
+    const i32 x_start = MAX(x0, 0);
+    const i32 x_end = MIN(x1, x_max);
+    for (i32 x = x_start; x <= x_end; ++x) {
+        const i32 delta = x - x0;
+        const i32 y = y0 + slope * delta;
+        func(x, y);
+    }
+}
+
 void DrawLine(SDL_Surface* surface, const Line2D& line, const Uint32 mapped_color) {
-    const auto is_in_bounds = [=](i32 x, i32 y) {
-        return x > 0 && x < surface->w && y > 0 && y < surface->h;
+    const auto draw_at_point = [=](i32 x, i32 y) {
+        if (x > 0 && x < surface->w && y > 0 && y < surface->h) {
+            *GetPixel(surface, Point2D(x, y)) = mapped_color;
+        }
     };
 
     Point2D p0 = line.p0;
@@ -404,33 +418,13 @@ void DrawLine(SDL_Surface* surface, const Line2D& line, const Uint32 mapped_colo
         if (p0.x > p1.x) {
             std::swap(p0, p1);
         }
-        const float slope = dy / (float)dx;
-
-        const i32 x_start = MAX(p0.x, 0);
-        const i32 x_end = MIN(p1.x, surface->w);
-        for (i32 x = x_start; x <= x_end; ++x) {
-            const i32 x_delta = x - p0.x;
-            const i32 y = p0.y + slope * x_delta;
-            if (is_in_bounds(x, y)) {
-                *GetPixel(surface, Point2D(x, y)) = mapped_color;
-            }
-        }
+        IterateLine(surface->w, p0.x, p1.x, p0.y, p1.y, [&](int x, int y) { draw_at_point(x, y); });
     }
     else {
         if (p0.y > p1.y) {
             std::swap(p0, p1);
         }
-        const float slope = dx / (float)dy;
-
-        const i32 y_start = MAX(p0.y, 0);
-        const i32 y_end = MIN(p1.y, surface->h);
-        for (i32 y = y_start; y <= y_end; ++y) {
-            const i32 y_delta = y - p0.y;
-            const i32 x = p0.x + slope * y_delta;
-            if (is_in_bounds(x, y)) {
-                *GetPixel(surface, Point2D(x, y)) = mapped_color;
-            }
-        }
+        IterateLine(surface->w, p0.y, p1.y, p0.x, p1.x, [&](int y, int x) { draw_at_point(x, y); });
     }
 }
 
@@ -466,7 +460,6 @@ void DrawMesh(SDL_Surface *surface, const Mat4f32& proj_model, ThreadPool &threa
             }
         });
     }
-
     thread_pool.Wait();
 }
 
