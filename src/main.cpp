@@ -390,6 +390,11 @@ void DrawTriangle(SDL_Surface* surface, Rect2D tile_rect, Rect2D bounding_box, D
 }
 
 void IterateLine(i32 x_max, i32 x0, i32 x1, i32 y0, i32 y1, std::function<void(int, int)> func) {
+    if (x0 > x1) {
+        std::swap(x0, x1);
+        std::swap(y0, y1);
+    }
+
     const float slope = (y1 - y0) / (float)(x1 - x0);
 
     const i32 x_start = MAX(x0, 0);
@@ -415,15 +420,9 @@ void DrawLine(SDL_Surface* surface, const Line2D& line, const Uint32 mapped_colo
     const i32 dy = p1.y - p0.y;
 
     if (abs(dx) > abs(dy)) {
-        if (p0.x > p1.x) {
-            std::swap(p0, p1);
-        }
         IterateLine(surface->w, p0.x, p1.x, p0.y, p1.y, [&](int x, int y) { draw_at_point(x, y); });
     }
     else {
-        if (p0.y > p1.y) {
-            std::swap(p0, p1);
-        }
         IterateLine(surface->w, p0.y, p1.y, p0.x, p1.x, [&](int y, int x) { draw_at_point(x, y); });
     }
 }
