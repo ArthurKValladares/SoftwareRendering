@@ -207,9 +207,9 @@ void FillBottomFlatTriangle(SDL_Surface* surface, DepthBuffer& depth_buffer, Ove
         std::swap(v0, v1);
     }
 
-    const float _delta_y = v1->p.y - v2->p.y;
-    const float invslope_21 = (float) (v1->p.x - v2->p.x) / _delta_y;
-    const float invslope_20 = (float) (v0->p.x - v2->p.x) / _delta_y;
+    const float _delta_y = (v2->p.y - v0->p.y);
+    const float slope_20 = (float)(v2->p.x - v0->p.x) / _delta_y;
+    const float slope_21 = (float)(v2->p.x - v1->p.x) / _delta_y;
 
     const int x_min = MAX(MIN3(v0->p.x, v1->p.x, v2->p.x), 0);
     const int y_min = MAX(v2->p.y, bounding_box.minY);
@@ -217,8 +217,8 @@ void FillBottomFlatTriangle(SDL_Surface* surface, DepthBuffer& depth_buffer, Ove
 
     const float _start_x = v2->p.x;
     const float _start_y_offset = y_min - v2->p.y;
-    float curr_x_min = _start_x + invslope_20 * _start_y_offset;
-    float curr_x_max = _start_x + invslope_21 * _start_y_offset;
+    float curr_x_min = _start_x + slope_20 * _start_y_offset;
+    float curr_x_max = _start_x + slope_21 * _start_y_offset;
 
     EdgeFunction e01, e12, e20;
     const Point2D p_start = Point2D{ x_min, y_min };
@@ -261,8 +261,8 @@ void FillBottomFlatTriangle(SDL_Surface* surface, DepthBuffer& depth_buffer, Ove
             w2 += e01.step_size_x;
         }
 
-        curr_x_min += invslope_20;
-        curr_x_max += invslope_21;
+        curr_x_min += slope_20;
+        curr_x_max += slope_21;
 
         w0_row += e12.step_size_y;
         w1_row += e20.step_size_y;
