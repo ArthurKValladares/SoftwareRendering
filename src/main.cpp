@@ -196,24 +196,28 @@ void RenderPixels(SDL_Surface *surface, DepthBuffer& depth_buffer,  OverdrawBuff
     }
 }
 
+// TODO: I'm still trying to figure out how to factor this out into a single function.
+// Just track down exactly what we are doing here. 
+// Maybe try to think of a way to cheat a flat-bottom triangle into a flat-top triangle?
+
 void FillBottomFlatTriangle(SDL_Surface* surface, DepthBuffer& depth_buffer, OverdrawBuffer& overdraw_buffer, Rect2D bounding_box,  const ScreenVertex* v0, const ScreenVertex* v1, const ScreenVertex* v2, const Mesh& mesh, const Mesh::Material& material) {
     assert(v0->p.y == v1->p.y);
     assert(v2->p.y < v0->p.y);
 
-    const float delta_y = v1->p.y - v2->p.y;
-    const float invslope2 = (float) (v1->p.x - v2->p.x) / delta_y;
-    const float invslope1 = (float) (v0->p.x - v2->p.x) / delta_y;
-    const float min_slope = MIN(invslope1, invslope2);
-    const float max_slope = MAX(invslope1, invslope2);
+    const float _delta_y = v1->p.y - v2->p.y;
+    const float _invslope2 = (float) (v1->p.x - v2->p.x) / _delta_y;
+    const float _invslope1 = (float) (v0->p.x - v2->p.x) / _delta_y;
+    const float min_slope = MIN(_invslope1, _invslope2);
+    const float max_slope = MAX(_invslope1, _invslope2);
 
     const int x_min = MAX(MIN3(v0->p.x, v1->p.x, v2->p.x), 0);
     const int y_min = MAX(v2->p.y, bounding_box.minY);
     const int y_max = MIN3(v1->p.y, bounding_box.maxY, surface->h - 1);
 
-    const float start_x = v2->p.x;
-    const float start_y_offset = y_min - v2->p.y;
-    float curr_x_min = start_x + min_slope * start_y_offset;
-    float curr_x_max = start_x + max_slope * start_y_offset;
+    const float _start_x = v2->p.x;
+    const float _start_y_offset = y_min - v2->p.y;
+    float curr_x_min = _start_x + min_slope * _start_y_offset;
+    float curr_x_max = _start_x + max_slope * _start_y_offset;
 
     EdgeFunction e01, e12, e20;
     const Point2D p_start = Point2D{ x_min, y_min };
@@ -223,8 +227,6 @@ void FillBottomFlatTriangle(SDL_Surface* surface, DepthBuffer& depth_buffer, Ove
 
     Point2D p = {};
     for (p.y = y_min; p.y <= y_max; p.y++) {
-        const Vec4i32 ys = Vec4i32(p.y);
-
         const int delta_x = (curr_x_min - x_min) / EdgeFunction::step_increment_x;
         Vec4i32 w0 = w0_row + e12.step_size_x * delta_x;
         Vec4i32 w1 = w1_row + e20.step_size_x * delta_x;
@@ -271,20 +273,20 @@ void FillTopFlatTriangle(SDL_Surface* surface, DepthBuffer& depth_buffer, Overdr
     assert(v0->p.y == v1->p.y);
     assert(v2->p.y > v1->p.y);
 
-    const float delta_y = (v2->p.y - v0->p.y);
-    const float invslope1 = (float) (v2->p.x - v0->p.x) / delta_y;
-    const float invslope2 = (float) (v2->p.x - v1->p.x) / delta_y;
-    const float min_slope = MIN(invslope1, invslope2);
-    const float max_slope = MAX(invslope1, invslope2);
+    const float _delta_y = (v2->p.y - v0->p.y);
+    const float _invslope1 = (float) (v2->p.x - v0->p.x) / _delta_y;
+    const float _invslope2 = (float) (v2->p.x - v1->p.x) / _delta_y;
+    const float min_slope = MIN(_invslope1, _invslope2);
+    const float max_slope = MAX(_invslope1, _invslope2);
 
     const int x_min = MAX(MIN3(v0->p.x, v1->p.x, v2->p.x), 0);
     const int y_min = MAX(v0->p.y, bounding_box.minY);
     const int y_max = MIN3(v2->p.y, bounding_box.maxY, surface->h - 1);
 
-    const float start_x = v2->p.x;
-    const float start_y_offset = v2->p.y - y_max;
-    float curr_x_min = start_x - max_slope * start_y_offset;
-    float curr_x_max = start_x - min_slope * start_y_offset;
+    const float _start_x = v2->p.x;
+    const float _start_y_offset = v2->p.y - y_max;
+    float curr_x_min = _start_x - max_slope * _start_y_offset;
+    float curr_x_max = _start_x - min_slope * _start_y_offset;
 
     EdgeFunction e01, e12, e20;
     const Point2D p_start = Point2D{ x_min, y_max };
@@ -294,8 +296,6 @@ void FillTopFlatTriangle(SDL_Surface* surface, DepthBuffer& depth_buffer, Overdr
 
     Point2D p = {};
     for (p.y = y_max; p.y >= y_min; p.y--) {
-        const Vec4i32 ys = Vec4i32(p.y);
-
         const int delta_x = (curr_x_min - x_min) / EdgeFunction::step_increment_x;
         Vec4i32 w0 = w0_row + e12.step_size_x * delta_x;
         Vec4i32 w1 = w1_row + e20.step_size_x * delta_x;
