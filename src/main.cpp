@@ -202,21 +202,17 @@ void FillBottomFlatTriangle(SDL_Surface* surface, DepthBuffer& depth_buffer, Ove
 
     const float invslope2 = (float) (v2->p.x - v0->p.x) / (v2->p.y - v0->p.y);
     const float invslope1 = (float) (v1->p.x - v0->p.x) / (v1->p.y - v0->p.y);
-
     const float min_slope = MIN(invslope1, invslope2);
     const float max_slope = MAX(invslope1, invslope2);
 
-    const float start_x_min = v0->p.x;
-    const float start_x_max = v0->p.x;
-
     const int x_min = MAX(MIN3(v0->p.x, v1->p.x, v2->p.x), 0);
-
     const int y_min = MAX(v0->p.y, bounding_box.minY);
     const int y_max = MIN(v2->p.y, bounding_box.maxY - 1);
 
+    const float start_x = v0->p.x;
     float start_y_offset = y_min - v0->p.y;
-    float curr_x_min = start_x_min + min_slope * start_y_offset;
-    float curr_x_max = start_x_min + max_slope * start_y_offset;
+    float curr_x_min = start_x + min_slope * start_y_offset;
+    float curr_x_max = start_x + max_slope * start_y_offset;
 
     EdgeFunction e01, e12, e20;
     const Point2D p_start = Point2D{ x_min, y_min };
@@ -274,23 +270,19 @@ void FillTopFlatTriangle(SDL_Surface* surface, DepthBuffer& depth_buffer, Overdr
     assert(v0->p.y == v1->p.y);
     assert(v2->p.y > v1->p.y);
 
-    float invslope1 = (float) (v2->p.x - v0->p.x) / (v2->p.y - v0->p.y);
-    float invslope2 = (float) (v2->p.x - v1->p.x) / (v2->p.y - v1->p.y);
-
+    const float invslope1 = (float) (v2->p.x - v0->p.x) / (v2->p.y - v0->p.y);
+    const float invslope2 = (float) (v2->p.x - v1->p.x) / (v2->p.y - v1->p.y);
     const float min_slope = MIN(invslope1, invslope2);
     const float max_slope = MAX(invslope1, invslope2);
 
-    const float start_x_min = v2->p.x;
-    const float start_x_max = v2->p.x;
-
     const int x_min = MAX(MIN3(v0->p.x, v1->p.x, v2->p.x), 0);
-
     const int y_min = MAX(v0->p.y, bounding_box.minY);
     const int y_max = MIN(v2->p.y, bounding_box.maxY - 1);
 
-    float start_y_offset = v2->p.y - y_max;
-    float curr_x_min = start_x_min - max_slope * start_y_offset;
-    float curr_x_max = start_x_min - min_slope * start_y_offset;
+    const float start_x = v2->p.x;
+    const float start_y_offset = v2->p.y - y_max;
+    float curr_x_min = start_x - max_slope * start_y_offset;
+    float curr_x_max = start_x - min_slope * start_y_offset;
 
     EdgeFunction e01, e12, e20;
     const Point2D p_start = Point2D{ x_min, y_max };
