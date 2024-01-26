@@ -203,12 +203,13 @@ void RenderPixels(SDL_Surface *surface, DepthBuffer& depth_buffer,  OverdrawBuff
 void FillBottomFlatTriangle(SDL_Surface* surface, DepthBuffer& depth_buffer, OverdrawBuffer& overdraw_buffer, Rect2D bounding_box,  const ScreenVertex* v0, const ScreenVertex* v1, const ScreenVertex* v2, const Mesh& mesh, const Mesh::Material& material) {
     assert(v0->p.y == v1->p.y);
     assert(v2->p.y < v0->p.y);
+    if (v0->p.x > v1->p.x) {
+        std::swap(v0, v1);
+    }
 
     const float _delta_y = v1->p.y - v2->p.y;
-    const float _invslope2 = (float) (v1->p.x - v2->p.x) / _delta_y;
-    const float _invslope1 = (float) (v0->p.x - v2->p.x) / _delta_y;
-    const float min_slope = MIN(_invslope1, _invslope2);
-    const float max_slope = MAX(_invslope1, _invslope2);
+    const float invslope_21 = (float) (v1->p.x - v2->p.x) / _delta_y;
+    const float invslope_20 = (float) (v0->p.x - v2->p.x) / _delta_y;
 
     const int x_min = MAX(MIN3(v0->p.x, v1->p.x, v2->p.x), 0);
     const int y_min = MAX(v2->p.y, bounding_box.minY);
@@ -216,8 +217,8 @@ void FillBottomFlatTriangle(SDL_Surface* surface, DepthBuffer& depth_buffer, Ove
 
     const float _start_x = v2->p.x;
     const float _start_y_offset = y_min - v2->p.y;
-    float curr_x_min = _start_x + min_slope * _start_y_offset;
-    float curr_x_max = _start_x + max_slope * _start_y_offset;
+    float curr_x_min = _start_x + invslope_20 * _start_y_offset;
+    float curr_x_max = _start_x + invslope_21 * _start_y_offset;
 
     EdgeFunction e01, e12, e20;
     const Point2D p_start = Point2D{ x_min, y_min };
@@ -260,8 +261,8 @@ void FillBottomFlatTriangle(SDL_Surface* surface, DepthBuffer& depth_buffer, Ove
             w2 += e01.step_size_x;
         }
 
-        curr_x_min += min_slope;
-        curr_x_max += max_slope;
+        curr_x_min += invslope_20;
+        curr_x_max += invslope_21;
 
         w0_row += e12.step_size_y;
         w1_row += e20.step_size_y;
@@ -272,12 +273,13 @@ void FillBottomFlatTriangle(SDL_Surface* surface, DepthBuffer& depth_buffer, Ove
 void FillTopFlatTriangle(SDL_Surface* surface, DepthBuffer& depth_buffer, OverdrawBuffer& overdraw_buffer, Rect2D bounding_box, const ScreenVertex* v0, const ScreenVertex* v1, const ScreenVertex* v2, const Mesh& mesh, const Mesh::Material& material) {
     assert(v0->p.y == v1->p.y);
     assert(v2->p.y > v1->p.y);
+    if (v0->p.x > v1->p.x) {
+        std::swap(v0, v1);
+    }
 
     const float _delta_y = (v2->p.y - v0->p.y);
-    const float _invslope1 = (float) (v2->p.x - v0->p.x) / _delta_y;
-    const float _invslope2 = (float) (v2->p.x - v1->p.x) / _delta_y;
-    const float min_slope = MIN(_invslope1, _invslope2);
-    const float max_slope = MAX(_invslope1, _invslope2);
+    const float slope20 = (float) (v2->p.x - v0->p.x) / _delta_y;
+    const float slope21 = (float) (v2->p.x - v1->p.x) / _delta_y;
 
     const int x_min = MAX(MIN3(v0->p.x, v1->p.x, v2->p.x), 0);
     const int y_min = MAX(v0->p.y, bounding_box.minY);
@@ -285,8 +287,8 @@ void FillTopFlatTriangle(SDL_Surface* surface, DepthBuffer& depth_buffer, Overdr
 
     const float _start_x = v2->p.x;
     const float _start_y_offset = v2->p.y - y_max;
-    float curr_x_min = _start_x - max_slope * _start_y_offset;
-    float curr_x_max = _start_x - min_slope * _start_y_offset;
+    float curr_x_min = _start_x - slope20 * _start_y_offset;
+    float curr_x_max = _start_x - slope21 * _start_y_offset;
 
     EdgeFunction e01, e12, e20;
     const Point2D p_start = Point2D{ x_min, y_max };
@@ -328,8 +330,8 @@ void FillTopFlatTriangle(SDL_Surface* surface, DepthBuffer& depth_buffer, Overdr
             w2 += e01.step_size_x;
         }
 
-        curr_x_min -= max_slope;
-        curr_x_max -= min_slope;
+        curr_x_min -= slope20;
+        curr_x_max -= slope21;
 
         w0_row -= e12.step_size_y;
         w1_row -= e20.step_size_y;
