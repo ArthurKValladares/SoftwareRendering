@@ -200,8 +200,9 @@ void FillBottomFlatTriangle(SDL_Surface* surface, DepthBuffer& depth_buffer, Ove
     assert(v0->p.y == v1->p.y);
     assert(v2->p.y < v0->p.y);
 
-    const float invslope2 = (float) (v1->p.x - v2->p.x) / (v1->p.y - v2->p.y);
-    const float invslope1 = (float) (v0->p.x - v2->p.x) / (v0->p.y - v2->p.y);
+    const float delta_y = v1->p.y - v2->p.y;
+    const float invslope2 = (float) (v1->p.x - v2->p.x) / delta_y;
+    const float invslope1 = (float) (v0->p.x - v2->p.x) / delta_y;
     const float min_slope = MIN(invslope1, invslope2);
     const float max_slope = MAX(invslope1, invslope2);
 
@@ -270,8 +271,9 @@ void FillTopFlatTriangle(SDL_Surface* surface, DepthBuffer& depth_buffer, Overdr
     assert(v0->p.y == v1->p.y);
     assert(v2->p.y > v1->p.y);
 
-    const float invslope1 = (float) (v2->p.x - v0->p.x) / (v2->p.y - v0->p.y);
-    const float invslope2 = (float) (v2->p.x - v1->p.x) / (v2->p.y - v1->p.y);
+    const float delta_y = (v2->p.y - v0->p.y);
+    const float invslope1 = (float) (v2->p.x - v0->p.x) / delta_y;
+    const float invslope2 = (float) (v2->p.x - v1->p.x) / delta_y;
     const float min_slope = MIN(invslope1, invslope2);
     const float max_slope = MAX(invslope1, invslope2);
 
