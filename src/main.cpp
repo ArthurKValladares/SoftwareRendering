@@ -196,16 +196,14 @@ void RenderPixels(SDL_Surface *surface, DepthBuffer& depth_buffer,  OverdrawBuff
     }
 }
 
-// TODO: I'm still trying to figure out how to factor this out into a single function.
-// Just track down exactly what we are doing here. 
-// Maybe try to think of a way to cheat a flat-bottom triangle into a flat-top triangle?
-
-void FillBottomFlatTriangle(SDL_Surface* surface, DepthBuffer& depth_buffer, OverdrawBuffer& overdraw_buffer, Rect2D bounding_box,  const ScreenVertex* v0, const ScreenVertex* v1, const ScreenVertex* v2, const Mesh& mesh, const Mesh::Material& material) {
+void FillTriangle(SDL_Surface* surface, DepthBuffer& depth_buffer, OverdrawBuffer& overdraw_buffer, Rect2D bounding_box, const ScreenVertex* v0, const ScreenVertex* v1, const ScreenVertex* v2, const Mesh& mesh, const Mesh::Material& material) {
     assert(v0->p.y == v1->p.y);
-    assert(v2->p.y < v0->p.y);
     if (v0->p.x > v1->p.x) {
         std::swap(v0, v1);
     }
+
+    const auto descending = v2->p.y < v1->p.y;
+    const auto step = descending ? 1 : -1;
 
     const float _delta_y = (v2->p.y - v0->p.y);
     const float slope_20 = (float)(v2->p.x - v0->p.x) / _delta_y;
@@ -215,7 +213,7 @@ void FillBottomFlatTriangle(SDL_Surface* surface, DepthBuffer& depth_buffer, Ove
     const auto _y_min = MAX(0, bounding_box.minY);
     const auto _y_max = MIN(surface->h - 1, bounding_box.maxY);
     const int y_start = std::clamp(v2->p.y, _y_min, _y_max);
-    const int y_end = std::clamp(v1->p.y, _y_min, _y_max);
+    const int y_end = std::clamp(v1->p.y, _y_min, _y_max) + step;
 
     const float _start_x = v2->p.x;
     const float _start_y_offset = y_start - v2->p.y;
@@ -229,7 +227,7 @@ void FillBottomFlatTriangle(SDL_Surface* surface, DepthBuffer& depth_buffer, Ove
     Vec4i32 w2_row = e01.Init(v0->p, v1->p, p_start);
 
     Point2D p = {};
-    for (p.y = y_start; p.y <= y_end; p.y++) {
+    for (p.y = y_start; p.y != y_end; p.y += step) {
         const int delta_x = (curr_x_min - x_min) / EdgeFunction::step_increment_x;
         Vec4i32 w0 = w0_row + e12.step_size_x * delta_x;
         Vec4i32 w1 = w1_row + e20.step_size_x * delta_x;
@@ -263,83 +261,12 @@ void FillBottomFlatTriangle(SDL_Surface* surface, DepthBuffer& depth_buffer, Ove
             w2 += e01.step_size_x;
         }
 
-        curr_x_min += slope_20;
-        curr_x_max += slope_21;
+        curr_x_min += step * slope_20;
+        curr_x_max += step * slope_21;
 
-        w0_row += e12.step_size_y;
-        w1_row += e20.step_size_y;
-        w2_row += e01.step_size_y;
-    }
-}
-
-void FillTopFlatTriangle(SDL_Surface* surface, DepthBuffer& depth_buffer, OverdrawBuffer& overdraw_buffer, Rect2D bounding_box, const ScreenVertex* v0, const ScreenVertex* v1, const ScreenVertex* v2, const Mesh& mesh, const Mesh::Material& material) {
-    assert(v0->p.y == v1->p.y);
-    assert(v2->p.y > v1->p.y);
-    if (v0->p.x > v1->p.x) {
-        std::swap(v0, v1);
-    }
-
-    const float _delta_y = (v2->p.y - v0->p.y);
-    const float slope_20 = (float) (v2->p.x - v0->p.x) / _delta_y;
-    const float slope_21 = (float) (v2->p.x - v1->p.x) / _delta_y;
-
-    const int x_min = MAX(MIN(v0->p.x, v2->p.x), 0);
-    const auto _y_min = MAX(0, bounding_box.minY);
-    const auto _y_max = MIN(surface->h - 1, bounding_box.maxY);
-    const int y_start = std::clamp(v2->p.y, _y_min, _y_max);
-    const int y_end = std::clamp(v1->p.y, _y_min, _y_max);
-
-    const float _start_x = v2->p.x;
-    const float _start_y_offset = y_start - v2->p.y;
-    float curr_x_min = _start_x + slope_20 * _start_y_offset;
-    float curr_x_max = _start_x + slope_21 * _start_y_offset;
-
-    EdgeFunction e01, e12, e20;
-    const Point2D p_start = Point2D{ x_min, y_start };
-    Vec4i32 w0_row = e12.Init(v1->p, v2->p, p_start);
-    Vec4i32 w1_row = e20.Init(v2->p, v0->p, p_start);
-    Vec4i32 w2_row = e01.Init(v0->p, v1->p, p_start);
-
-    Point2D p = {};
-    for (p.y = y_start; p.y >= y_end; p.y--) {
-        const int delta_x = (curr_x_min - x_min) / EdgeFunction::step_increment_x;
-        Vec4i32 w0 = w0_row + e12.step_size_x * delta_x;
-        Vec4i32 w1 = w1_row + e20.step_size_x * delta_x;
-        Vec4i32 w2 = w2_row + e01.step_size_x * delta_x;
-
-        for (p.x = x_min + delta_x * EdgeFunction::step_increment_x; p.x <= MIN(curr_x_max, bounding_box.maxX - 1); p.x += EdgeFunction::step_increment_x) {
-            if (p.x + EdgeFunction::step_increment_x >= 0) {
-                const Vec4f32 sum = (w0 + w1 + w2).to_float();
-
-                const Vec4f32 b0 = w0.to_float() / sum;
-                const Vec4f32 b1 = w1.to_float() / sum;
-                const Vec4f32 b2 = w2.to_float() / sum;
-
-                const Vec4f32 u_0 = Vec4f32(v0->uv.u) * b0, v_0 = Vec4f32(v0->uv.v) * b0;
-                const Vec4f32 u_1 = Vec4f32(v1->uv.u) * b1, v_1 = Vec4f32(v1->uv.v) * b1;
-                const Vec4f32 u_2 = Vec4f32(v2->uv.u) * b2, v_2 = Vec4f32(v2->uv.v) * b2;
-
-                const Vec4f32 u = u_0 + u_1 + u_2;
-                const Vec4f32 v = v_0 + v_1 + v_2;
-
-                const Vec4f32 d_0 = Vec4f32(v0->depth) * b0;
-                const Vec4f32 d_1 = Vec4f32(v1->depth) * b1;
-                const Vec4f32 d_2 = Vec4f32(v2->depth) * b2;
-                const Vec4f32 d = d_0 + d_1 + d_2;
-
-                RenderPixels(surface, depth_buffer, overdraw_buffer, p, curr_x_min, curr_x_max, u, v, d, mesh, material);
-            }
-            w0 += e12.step_size_x;
-            w1 += e20.step_size_x;
-            w2 += e01.step_size_x;
-        }
-
-        curr_x_min -= slope_20;
-        curr_x_max -= slope_21;
-
-        w0_row -= e12.step_size_y;
-        w1_row -= e20.step_size_y;
-        w2_row -= e01.step_size_y;
+        w0_row += e12.step_size_y * step;
+        w1_row += e20.step_size_y * step;
+        w2_row += e01.step_size_y * step;
     }
 }
 
@@ -358,10 +285,10 @@ void DrawTriangleScanline(SDL_Surface* surface, Rect2D tile_rect, Rect2D boundin
     }
 
     if (sv2->p.y == sv1->p.y) {
-        FillBottomFlatTriangle(surface, depth_buffer, overdraw_buffer, bounding_box, sv1, sv2, sv0, mesh, material);
+        FillTriangle(surface, depth_buffer, overdraw_buffer, bounding_box, sv1, sv2, sv0, mesh, material);
     }
     else if (sv0->p.y == sv1->p.y) {
-        FillTopFlatTriangle(surface, depth_buffer, overdraw_buffer, bounding_box, sv0, sv1, sv2, mesh, material);
+        FillTriangle(surface, depth_buffer, overdraw_buffer, bounding_box, sv0, sv1, sv2, mesh, material);
     }
     else {
         const Point2D p3 = Point2D{
@@ -375,10 +302,10 @@ void DrawTriangleScanline(SDL_Surface* surface, Rect2D tile_rect, Rect2D boundin
             uv_for_weights(sv0, sv1, sv2, ws)
         };
         if (Intersection(BoundingBox(sv1->p, sv3.p, sv0->p), bounding_box).has_value()) {
-            FillBottomFlatTriangle(surface, depth_buffer, overdraw_buffer, bounding_box, sv1, &sv3, sv0, mesh, material);
+            FillTriangle(surface, depth_buffer, overdraw_buffer, bounding_box, sv1, &sv3, sv0, mesh, material);
         }
         if (Intersection(BoundingBox(sv1->p, sv3.p, sv2->p), bounding_box).has_value()) {
-            FillTopFlatTriangle(surface, depth_buffer, overdraw_buffer, bounding_box, sv1, &sv3, sv2, mesh, material);
+            FillTriangle(surface, depth_buffer, overdraw_buffer, bounding_box, sv1, &sv3, sv2, mesh, material);
         }
     }
 }
