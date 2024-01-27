@@ -34,7 +34,7 @@ TriangleTileMap Mesh::SetupScreenTriangles(SDL_Surface *surface, const ScreenTil
     for (u64 i = 0; i < triangles.size(); ++i) {
         // This is slow
         const ScreenTriangle st = project_triangle_to_screen(surface, proj_model, triangles[i]);
-        const Rect2D triangle_bb = bounding_box(st.v0.p, st.v1.p, st.v2.p);
+        const Rect2D triangle_bb = BoundingBox(st.v0.p, st.v1.p, st.v2.p);
         const IndexBounds index_bounds = tile_data.index_bounds_for_bb(triangle_bb);
         for (u32 row_index = index_bounds.min_row; row_index <= index_bounds.max_row; ++row_index) {
             for (u32 col_index = index_bounds.min_col; col_index <= index_bounds.max_col; ++col_index) {

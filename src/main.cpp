@@ -211,23 +211,25 @@ void FillBottomFlatTriangle(SDL_Surface* surface, DepthBuffer& depth_buffer, Ove
     const float slope_20 = (float)(v2->p.x - v0->p.x) / _delta_y;
     const float slope_21 = (float)(v2->p.x - v1->p.x) / _delta_y;
 
-    const int x_min = MAX(MIN3(v0->p.x, v1->p.x, v2->p.x), 0);
-    const int y_min = MAX(v2->p.y, bounding_box.minY);
-    const int y_max = MIN3(v1->p.y, bounding_box.maxY, surface->h - 1);
+    const int x_min = MAX(MIN(v0->p.x, v2->p.x), 0);
+    const auto y_min = MAX(0, bounding_box.minY);
+    const auto y_max = MIN(surface->h - 1, bounding_box.maxY);
+    const int y_start = std::clamp(v2->p.y, y_min, y_max);
+    const int y_end = std::clamp(v1->p.y, y_min, y_max);
 
     const float _start_x = v2->p.x;
-    const float _start_y_offset = y_min - v2->p.y;
+    const float _start_y_offset = y_start - v2->p.y;
     float curr_x_min = _start_x + slope_20 * _start_y_offset;
     float curr_x_max = _start_x + slope_21 * _start_y_offset;
 
     EdgeFunction e01, e12, e20;
-    const Point2D p_start = Point2D{ x_min, y_min };
+    const Point2D p_start = Point2D{ x_min, y_start };
     Vec4i32 w0_row = e12.Init(v1->p, v2->p, p_start);
     Vec4i32 w1_row = e20.Init(v2->p, v0->p, p_start);
     Vec4i32 w2_row = e01.Init(v0->p, v1->p, p_start);
 
     Point2D p = {};
-    for (p.y = y_min; p.y <= y_max; p.y++) {
+    for (p.y = y_start; p.y <= y_end; p.y++) {
         const int delta_x = (curr_x_min - x_min) / EdgeFunction::step_increment_x;
         Vec4i32 w0 = w0_row + e12.step_size_x * delta_x;
         Vec4i32 w1 = w1_row + e20.step_size_x * delta_x;
@@ -278,26 +280,28 @@ void FillTopFlatTriangle(SDL_Surface* surface, DepthBuffer& depth_buffer, Overdr
     }
 
     const float _delta_y = (v2->p.y - v0->p.y);
-    const float slope20 = (float) (v2->p.x - v0->p.x) / _delta_y;
-    const float slope21 = (float) (v2->p.x - v1->p.x) / _delta_y;
+    const float slope_20 = (float) (v2->p.x - v0->p.x) / _delta_y;
+    const float slope_21 = (float) (v2->p.x - v1->p.x) / _delta_y;
 
-    const int x_min = MAX(MIN3(v0->p.x, v1->p.x, v2->p.x), 0);
-    const int y_min = MAX(v0->p.y, bounding_box.minY);
-    const int y_max = MIN3(v2->p.y, bounding_box.maxY, surface->h - 1);
+    const int x_min = MAX(MIN(v0->p.x, v2->p.x), 0);
+    const auto _y_min = MAX(0, bounding_box.minY);
+    const auto _y_max = MIN(surface->h - 1, bounding_box.maxY);
+    const int y_start = std::clamp(v2->p.y, _y_min, _y_max);
+    const int y_end = std::clamp(v1->p.y, _y_min, _y_max);
 
     const float _start_x = v2->p.x;
-    const float _start_y_offset = v2->p.y - y_max;
-    float curr_x_min = _start_x - slope20 * _start_y_offset;
-    float curr_x_max = _start_x - slope21 * _start_y_offset;
+    const float _start_y_offset = v2->p.y - y_start;
+    float curr_x_min = _start_x - slope_20 * _start_y_offset;
+    float curr_x_max = _start_x - slope_21 * _start_y_offset;
 
     EdgeFunction e01, e12, e20;
-    const Point2D p_start = Point2D{ x_min, y_max };
+    const Point2D p_start = Point2D{ x_min, y_start };
     Vec4i32 w0_row = e12.Init(v1->p, v2->p, p_start);
     Vec4i32 w1_row = e20.Init(v2->p, v0->p, p_start);
     Vec4i32 w2_row = e01.Init(v0->p, v1->p, p_start);
 
     Point2D p = {};
-    for (p.y = y_max; p.y >= y_min; p.y--) {
+    for (p.y = y_start; p.y >= y_end; p.y--) {
         const int delta_x = (curr_x_min - x_min) / EdgeFunction::step_increment_x;
         Vec4i32 w0 = w0_row + e12.step_size_x * delta_x;
         Vec4i32 w1 = w1_row + e20.step_size_x * delta_x;
@@ -330,8 +334,8 @@ void FillTopFlatTriangle(SDL_Surface* surface, DepthBuffer& depth_buffer, Overdr
             w2 += e01.step_size_x;
         }
 
-        curr_x_min -= slope20;
-        curr_x_max -= slope21;
+        curr_x_min -= slope_20;
+        curr_x_max -= slope_21;
 
         w0_row -= e12.step_size_y;
         w1_row -= e20.step_size_y;
@@ -370,9 +374,12 @@ void DrawTriangleScanline(SDL_Surface* surface, Rect2D tile_rect, Rect2D boundin
             depth_for_weights(sv0, sv1, sv2, ws),
             uv_for_weights(sv0, sv1, sv2, ws)
         };
-
-        FillBottomFlatTriangle(surface, depth_buffer, overdraw_buffer, bounding_box, sv1, &sv3, sv0, mesh, material);
-        FillTopFlatTriangle(surface, depth_buffer, overdraw_buffer, bounding_box, sv1, &sv3, sv2, mesh, material);
+        if (Intersection(BoundingBox(sv1->p, sv3.p, sv0->p), bounding_box).has_value()) {
+            FillBottomFlatTriangle(surface, depth_buffer, overdraw_buffer, bounding_box, sv1, &sv3, sv0, mesh, material);
+        }
+        if (Intersection(BoundingBox(sv1->p, sv3.p, sv2->p), bounding_box).has_value()) {
+            FillTopFlatTriangle(surface, depth_buffer, overdraw_buffer, bounding_box, sv1, &sv3, sv2, mesh, material);
+        }
     }
 }
 
