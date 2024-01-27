@@ -290,9 +290,9 @@ void FillTopFlatTriangle(SDL_Surface* surface, DepthBuffer& depth_buffer, Overdr
     const int y_end = std::clamp(v1->p.y, _y_min, _y_max);
 
     const float _start_x = v2->p.x;
-    const float _start_y_offset = v2->p.y - y_start;
-    float curr_x_min = _start_x - slope_20 * _start_y_offset;
-    float curr_x_max = _start_x - slope_21 * _start_y_offset;
+    const float _start_y_offset = y_start - v2->p.y;
+    float curr_x_min = _start_x + slope_20 * _start_y_offset;
+    float curr_x_max = _start_x + slope_21 * _start_y_offset;
 
     EdgeFunction e01, e12, e20;
     const Point2D p_start = Point2D{ x_min, y_start };
