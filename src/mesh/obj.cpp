@@ -101,10 +101,12 @@ Mesh load_obj(const std::string& dir, const std::string& obj_file, SDL_Surface* 
             bb.minZ = MIN(bb.minZ, vertex.p.z);
             bb.maxZ = MAX(bb.maxZ, vertex.p.z);
 
-            vertex.uv = {
-                attrib.texcoords[2 * index.texcoord_index + 0],
-                1.0f - attrib.texcoords[2 * index.texcoord_index + 1]
-            };
+            if (!attrib.texcoords.empty()) {
+                vertex.uv = {
+                    attrib.texcoords[2 * index.texcoord_index + 0],
+                    1.0f - attrib.texcoords[2 * index.texcoord_index + 1]
+                };
+            }
 
             // TODO: Vertex color
             //vertex.color = { 1.0f, 1.0f, 1.0f };
