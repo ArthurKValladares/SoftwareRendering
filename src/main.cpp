@@ -212,10 +212,10 @@ void FillBottomFlatTriangle(SDL_Surface* surface, DepthBuffer& depth_buffer, Ove
     const float slope_21 = (float)(v2->p.x - v1->p.x) / _delta_y;
 
     const int x_min = MAX(MIN(v0->p.x, v2->p.x), 0);
-    const auto y_min = MAX(0, bounding_box.minY);
-    const auto y_max = MIN(surface->h - 1, bounding_box.maxY);
-    const int y_start = std::clamp(v2->p.y, y_min, y_max);
-    const int y_end = std::clamp(v1->p.y, y_min, y_max);
+    const auto _y_min = MAX(0, bounding_box.minY);
+    const auto _y_max = MIN(surface->h - 1, bounding_box.maxY);
+    const int y_start = std::clamp(v2->p.y, _y_min, _y_max);
+    const int y_end = std::clamp(v1->p.y, _y_min, _y_max);
 
     const float _start_x = v2->p.x;
     const float _start_y_offset = y_start - v2->p.y;
