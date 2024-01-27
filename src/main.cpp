@@ -234,7 +234,6 @@ void FillTriangle(SDL_Surface* surface, DepthBuffer& depth_buffer, OverdrawBuffe
         Vec4i32 w2 = w2_row + e01.step_size_x * delta_x;
 
         for (p.x = x_min + (delta_x * EdgeFunction::step_increment_x); p.x <= MIN(curr_x_max, bounding_box.maxX - 1); p.x += EdgeFunction::step_increment_x) {
-            // TODO: Maybe a way to optimize draws on the bounds
             if (p.x + EdgeFunction::step_increment_x >= 0) {
                 const Vec4f32 sum = (w0 + w1 + w2).to_float();
 
