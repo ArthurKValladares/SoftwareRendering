@@ -529,7 +529,7 @@ int main(int argc, char *argv[]) {
     // Cleanup
     SDL_DestroyWindow(window);
     SDL_Quit();
-    // TODO: Free Mesh
+    mesh.Free();
     
     return 0;
 }

@@ -13,10 +13,8 @@ void Mesh::SetupTriangles() {
             v2,
             material_ids[i / 3]
         };
-        
         triangles.push_back(triangle);
     }
-    screen_triangles.resize(indices.size() / 3);
 }
 
 TriangleTileMap Mesh::SetupScreenTriangles(SDL_Surface *surface, const ScreenTileData& tile_data, const Mat4f32& proj_model) {
@@ -31,6 +29,7 @@ TriangleTileMap Mesh::SetupScreenTriangles(SDL_Surface *surface, const ScreenTil
     }
 
     // TODO: Maybe this is worth multi-threading afterall
+    screen_triangles.resize(triangles.size());
     for (u64 i = 0; i < triangles.size(); ++i) {
         // This is slow
         const ScreenTriangle st = project_triangle_to_screen(surface, proj_model, triangles[i]);
@@ -58,4 +57,10 @@ TriangleTileMap Mesh::SetupScreenTriangles(SDL_Surface *surface, const ScreenTil
         screen_triangles[i] = st;
     }
     return triangle_map;
+}
+
+void Mesh::Free() {
+    for (auto &texture : texture_map) {
+        texture.free();
+    }
 }
