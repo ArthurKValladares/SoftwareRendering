@@ -15,3 +15,7 @@ Pixels in green were only written to once, pixels in red were written to more th
 
 ## Depth Buffer Rendering
 <img width="901" alt="teapot_d" src="https://github.com/ArthurKValladares/SoftwareRendering/assets/23410311/d6e7fe39-c6e6-4936-8fff-7e358eef9a59">
+
+## Building and Running
+
+We provide a `build.bat` script for building on Windows, and a `build.sh` file for building on MacOS. The output files are saved to `${project_dir}/build`.
