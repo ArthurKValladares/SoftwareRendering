@@ -31,7 +31,7 @@ struct ScreenTriangle {
 };
 
 
-Point2D hacky_project_to_surface(SDL_Surface* surface, Point3D_f point);
-ScreenTriangle project_triangle_to_screen(SDL_Surface* surface, const Mat4f32& proj_model, const Triangle& triangle);
+Point2D hacky_project_to_surface(int width, int height, Point3D_f point);
+ScreenTriangle project_triangle_to_screen(int width, int height, const Mat4f32& proj_model, const Triangle& triangle);
 
 #endif

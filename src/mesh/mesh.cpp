@@ -17,7 +17,7 @@ void Mesh::SetupTriangles() {
     }
 }
 
-TriangleTileMap Mesh::SetupScreenTriangles(SDL_Surface *surface, const ScreenTileData& tile_data, const Mat4f32& proj_model) {
+TriangleTileMap Mesh::SetupScreenTriangles(const ScreenTileData& tile_data, const Mat4f32& proj_model) {
     TriangleTileMap triangle_map;
     const u32 num_tasks = tile_data.num_tasks();
     triangle_map.resize(num_tasks);
@@ -25,14 +25,14 @@ TriangleTileMap Mesh::SetupScreenTriangles(SDL_Surface *surface, const ScreenTil
     std::vector<Rect2D> tile_rects;
     tile_rects.reserve(num_tasks);
     for (int tile_index = 0; tile_index < num_tasks; ++tile_index) {
-        tile_rects.push_back(tile_data.tile_for_index(surface, tile_index));
+        tile_rects.push_back(tile_data.tile_for_index(tile_index));
     }
 
     // TODO: Maybe this is worth multi-threading afterall
     screen_triangles.resize(triangles.size());
     for (u64 i = 0; i < triangles.size(); ++i) {
         // This is slow
-        const ScreenTriangle st = project_triangle_to_screen(surface, proj_model, triangles[i]);
+        const ScreenTriangle st = project_triangle_to_screen(tile_data.total_width, tile_data.total_height, proj_model, triangles[i]);
         const Rect2D triangle_bb = BoundingBox(st.v0.p, st.v1.p, st.v2.p);
         const IndexBounds index_bounds = tile_data.index_bounds_for_bb(triangle_bb);
         for (u32 row_index = index_bounds.min_row; row_index <= index_bounds.max_row; ++row_index) {

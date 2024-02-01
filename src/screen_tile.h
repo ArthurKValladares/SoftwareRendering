@@ -11,10 +11,12 @@ struct IndexBounds {
 };
 
 struct ScreenTileData {
-    Rect2D tile_for_index(SDL_Surface* surface, u32 index) const;
+    Rect2D tile_for_index(u32 index) const;
     u32 num_tasks() const;
     IndexBounds index_bounds_for_bb(Rect2D bounding_box) const;
 
+    int total_width;
+    int total_height;
     u32 rows;
     u32 cols;
     u32 tile_width;

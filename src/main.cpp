@@ -370,7 +370,7 @@ void DrawTriangleWireframe(SDL_Surface* surface, const ScreenTriangle& st) {
 }
 
 void DrawMesh(SDL_Surface *surface, const Mat4f32& proj_model, ThreadPool &thread_pool, ScreenTileData tile_data, DepthBuffer& depth_buffer, OverdrawBuffer& overdraw_buffer, Mesh &mesh) {
-    TriangleTileMap triangle_tile_map = mesh.SetupScreenTriangles(surface, tile_data, proj_model);
+    TriangleTileMap triangle_tile_map = mesh.SetupScreenTriangles(tile_data, proj_model);
     const u32 num_tasks = tile_data.num_tasks();
     for (auto const& tile_value : triangle_tile_map) {
         thread_pool.Schedule([=]() mutable {

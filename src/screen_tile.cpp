@@ -26,6 +26,8 @@ ScreenTileData partition_screen_into_tiles(SDL_Surface* surface) {
     const u32 tile_height = ceil(surface->h / rows);
 
     return ScreenTileData{
+        surface->w,
+        surface->h,
         rows,
         cols,
         tile_width,
@@ -33,7 +35,7 @@ ScreenTileData partition_screen_into_tiles(SDL_Surface* surface) {
     };
 }
 
-Rect2D ScreenTileData::tile_for_index(SDL_Surface* surface, u32 index) const {
+Rect2D ScreenTileData::tile_for_index(u32 index) const {
     const u32 row = index / cols;
     const u32 col = index % cols;
 

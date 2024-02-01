@@ -27,7 +27,7 @@ using TextureMap = std::vector<Texture>;
 
 struct Mesh {
     void SetupTriangles();
-    TriangleTileMap SetupScreenTriangles(SDL_Surface *surface, const ScreenTileData& tile_data, const Mat4f32& proj_model);
+    TriangleTileMap SetupScreenTriangles(const ScreenTileData& tile_data, const Mat4f32& proj_model);
     void Free();
     
     std::vector<Vertex> vertices;
