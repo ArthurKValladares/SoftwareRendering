@@ -19,8 +19,8 @@ void Mesh::SetupTriangles() {
 
 TriangleTileMap Mesh::SetupScreenTriangles(SDL_Surface *surface, const ScreenTileData& tile_data, const Mat4f32& proj_model) {
     TriangleTileMap triangle_map;
-
     const u32 num_tasks = tile_data.num_tasks();
+    triangle_map.resize(num_tasks);
 
     std::vector<Rect2D> tile_rects;
     tile_rects.reserve(num_tasks);
@@ -41,15 +41,7 @@ TriangleTileMap Mesh::SetupScreenTriangles(SDL_Surface *surface, const ScreenTil
                 const Rect2D& tile_rect = tile_rects[tile_index];
                 const std::optional<Rect2D> opt_bounding_box = Intersection(tile_rect, triangle_bb);
                 if (opt_bounding_box.has_value()) {
-                    if (!triangle_map.count(tile_index)) {
-                        triangle_map.insert({
-                            tile_index,
-                            TriangleTileValue {
-                                tile_rect,
-                                {}
-                            }
-                            });
-                    }
+                    triangle_map[tile_index].tile_rect = tile_rect;
                     triangle_map[tile_index].values.push_back({ opt_bounding_box.value(),i });
                 }
             }

@@ -13,6 +13,7 @@ include_directories(
     ${project_root}/vendor/tinyobjloader
     ${project_root}/vendor/thread-pool/include
     ${project_root}/vendor/ConcurrencyPrimitives/src
+    ${project_root}/vendor/BumpAllocator/src
 )
 
 add_executable(${PROJECT_NAME} 
@@ -41,6 +42,8 @@ add_executable(${PROJECT_NAME}
     ${project_root}/src/math/mat4f32.cpp
     # ConcurrencyPrimitives
     ${project_root}/vendor/ConcurrencyPrimitives/src/ThreadPool.cpp
+    # BumpAllocator
+    ${project_root}/vendor/BumpAllocator/src/bump.cpp
 )
 
 set_target_properties(${PROJECT_NAME} PROPERTIES

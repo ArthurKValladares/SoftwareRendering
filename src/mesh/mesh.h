@@ -22,7 +22,7 @@ struct TriangleTileValue {
     std::vector<TriangleTileValueInner> values;
 };
 
-using TriangleTileMap = std::unordered_map<u32, TriangleTileValue>;
+using TriangleTileMap = std::vector<TriangleTileValue>;
 using TextureMap = std::vector<Texture>;
 
 struct Mesh {
@@ -37,6 +37,7 @@ struct Mesh {
     std::vector<ScreenTriangle> screen_triangles;
 
     TextureMap texture_map;
+
     struct Material {
         int texture_id;
         float diffuse[3];

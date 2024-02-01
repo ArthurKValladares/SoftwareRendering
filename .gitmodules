@@ -7,3 +7,6 @@
 [submodule "vendor/ConcurrencyPrimitives"]
 	path = vendor/ConcurrencyPrimitives
 	url = https://github.com/ArthurKValladares/ConcurrencyPrimitives.git
+[submodule "vendor/BumpAllocator"]
+	path = vendor/BumpAllocator
+	url = https://github.com/ArthurKValladares/BumpAllocator
