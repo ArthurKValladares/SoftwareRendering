@@ -369,8 +369,8 @@ void DrawTriangleWireframe(SDL_Surface* surface, const ScreenTriangle& st) {
     DrawLine(surface, line2, mapped_color);
 }
 
-void DrawMesh(SDL_Surface *surface, const Mat4f32& proj_model, ThreadPool &thread_pool, ScreenTileData tile_data, DepthBuffer& depth_buffer, OverdrawBuffer& overdraw_buffer, Mesh &mesh) {
-    TriangleTileMap triangle_tile_map = mesh.SetupScreenTriangles(tile_data, proj_model);
+void DrawMesh(SDL_Surface *surface, const Mat4f32& proj_model, ThreadPool &thread_pool, ScreenTileData tile_data, DepthBuffer& depth_buffer, OverdrawBuffer& overdraw_buffer, const Mesh &mesh, TriangleTileMap& triangle_tile_map) {
+    triangle_tile_map.Update(mesh, tile_data, proj_model);
     const u32 num_tasks = tile_data.num_tasks();
     for (int tile_idx = 0; tile_idx < triangle_tile_map.values.size(); ++tile_idx) {
         thread_pool.Schedule([=]() mutable {
@@ -415,8 +415,10 @@ int main(int argc, char *argv[]) {
     DepthBuffer depth_buffer = DepthBuffer(surface->w, surface->h);
     OverdrawBuffer overdraw_buffer = OverdrawBuffer(surface->w, surface->h);
 
+    const ScreenTileData tile_data = partition_screen_into_tiles(surface);
     const std::string mesh_path = std::string(PROJECT_ROOT) + std::string("/assets/meshes/teapot");
     Mesh mesh = load_obj(mesh_path, "teapot.obj", surface);
+    TriangleTileMap triangle_tile_map = mesh.SetupScreenTriangles(tile_data, Mat4f32::identity());
 
     const float depth_min = 0.0;
     const float x_span = mesh.bb.maxX - mesh.bb.minX;
@@ -431,8 +433,6 @@ int main(int argc, char *argv[]) {
         -z_span,
         z_span
     }};
-
-    const ScreenTileData tile_data = partition_screen_into_tiles(surface);
 
     // Render loop
     bool quit = false;
@@ -506,16 +506,14 @@ int main(int argc, char *argv[]) {
         const Mat4f32 scale_matrix = uniform_scale_matrix(scale);
         const Mat4f32 translate_m = translation_matrix(0.0, -y_span / 2.0, 0.0);
         const Mat4f32 model_matrix = rotation_matrix * scale_matrix * translate_m;
-
         const Mat4f32 proj_matrix = camera.GetProjMatrix();
-
         const Mat4f32 transform_matrix = proj_matrix * model_matrix;
 
         const std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
         
         ClearSurface(surface, thread_pool, Color{100, 100, 100});
         depth_buffer.Set(depth_min);
-        DrawMesh(surface, transform_matrix, thread_pool, tile_data, depth_buffer, overdraw_buffer, mesh);
+        DrawMesh(surface, transform_matrix, thread_pool, tile_data, depth_buffer, overdraw_buffer, mesh, triangle_tile_map);
         overdraw_buffer.Clear();
 
         const std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
