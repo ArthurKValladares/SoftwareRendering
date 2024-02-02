@@ -103,6 +103,7 @@
         "variant": "cpp",
         "__nullptr": "cpp",
         "__string": "cpp",
-        "numeric": "cpp"
+        "numeric": "cpp",
+        "unordered_set": "cpp"
     }
 }

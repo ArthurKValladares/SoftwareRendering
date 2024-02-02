@@ -372,16 +372,17 @@ void DrawTriangleWireframe(SDL_Surface* surface, const ScreenTriangle& st) {
 void DrawMesh(SDL_Surface *surface, const Mat4f32& proj_model, ThreadPool &thread_pool, ScreenTileData tile_data, DepthBuffer& depth_buffer, OverdrawBuffer& overdraw_buffer, Mesh &mesh) {
     TriangleTileMap triangle_tile_map = mesh.SetupScreenTriangles(tile_data, proj_model);
     const u32 num_tasks = tile_data.num_tasks();
-    for (auto const& tile_value : triangle_tile_map) {
+    for (int tile_idx = 0; tile_idx < triangle_tile_map.values.size(); ++tile_idx) {
         thread_pool.Schedule([=]() mutable {
-            for (const TriangleTileValueInner& val : tile_value.values) {
+            const Rect2D tile_rect = triangle_tile_map.tile_rects[tile_idx];
+            for (const TriangleTileMap::InnerValue& val : triangle_tile_map.values[tile_idx]) {
                 if (render_method != RenderingMethod::Wireframe) {
-                    const int material_id = mesh.screen_triangles[val.index].material_id;
+                    const int material_id = triangle_tile_map.screen_triangles[val.index].material_id;
                     const Mesh::Material& material = mesh.materials[material_id];
-                    DrawTriangle(surface, tile_value.tile_rect, val.bounding_box, depth_buffer, overdraw_buffer, mesh.screen_triangles[val.index], mesh, material);
+                    DrawTriangle(surface, tile_rect, val.bounding_box, depth_buffer, overdraw_buffer, triangle_tile_map.screen_triangles[val.index], mesh, material);
                 }
                 else {
-                    DrawTriangleWireframe(surface, mesh.screen_triangles[val.index]);
+                    DrawTriangleWireframe(surface, triangle_tile_map.screen_triangles[val.index]);
                 }
             }
         });

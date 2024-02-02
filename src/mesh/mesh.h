@@ -12,17 +12,17 @@
 
 #include <unordered_map>
 
-struct TriangleTileValueInner {
-    Rect2D bounding_box;
-    u64 index;
-};
+struct TriangleTileMap {
+    struct InnerValue {
+        Rect2D bounding_box;
+        u64 index;
+    };
+    // TODO: These two can be fixed-size arrays
+    std::vector<Rect2D> tile_rects;
+    std::vector<std::vector<InnerValue>> values;
 
-struct TriangleTileValue {
-    Rect2D tile_rect;
-    std::vector<TriangleTileValueInner> values;
+    std::vector<ScreenTriangle> screen_triangles;
 };
-
-using TriangleTileMap = std::vector<TriangleTileValue>;
 using TextureMap = std::vector<Texture>;
 
 struct Mesh {
@@ -34,7 +34,6 @@ struct Mesh {
     std::vector<int> indices;
 
     std::vector<Triangle> triangles;
-    std::vector<ScreenTriangle> screen_triangles;
 
     TextureMap texture_map;
 

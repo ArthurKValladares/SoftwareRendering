@@ -20,33 +20,30 @@ void Mesh::SetupTriangles() {
 TriangleTileMap Mesh::SetupScreenTriangles(const ScreenTileData& tile_data, const Mat4f32& proj_model) {
     TriangleTileMap triangle_map;
     const u32 num_tasks = tile_data.num_tasks();
-    triangle_map.resize(num_tasks);
+    triangle_map.tile_rects.resize(num_tasks);
+    triangle_map.values.resize(num_tasks);
+    triangle_map.screen_triangles.resize(triangles.size());
 
-    std::vector<Rect2D> tile_rects;
-    tile_rects.reserve(num_tasks);
     for (int tile_index = 0; tile_index < num_tasks; ++tile_index) {
-        tile_rects.push_back(tile_data.tile_for_index(tile_index));
+        triangle_map.tile_rects[tile_index] = tile_data.tile_for_index(tile_index);
     }
 
     // TODO: Maybe this is worth multi-threading afterall
-    screen_triangles.resize(triangles.size());
     for (u64 i = 0; i < triangles.size(); ++i) {
-        // This is slow
         const ScreenTriangle st = project_triangle_to_screen(tile_data.total_width, tile_data.total_height, proj_model, triangles[i]);
         const Rect2D triangle_bb = BoundingBox(st.v0.p, st.v1.p, st.v2.p);
         const IndexBounds index_bounds = tile_data.index_bounds_for_bb(triangle_bb);
         for (u32 row_index = index_bounds.min_row; row_index <= index_bounds.max_row; ++row_index) {
             for (u32 col_index = index_bounds.min_col; col_index <= index_bounds.max_col; ++col_index) {
                 const u32 tile_index = row_index * (tile_data.cols) + col_index;
-                const Rect2D& tile_rect = tile_rects[tile_index];
+                const Rect2D& tile_rect = triangle_map.tile_rects[tile_index];
                 const std::optional<Rect2D> opt_bounding_box = Intersection(tile_rect, triangle_bb);
                 if (opt_bounding_box.has_value()) {
-                    triangle_map[tile_index].tile_rect = tile_rect;
-                    triangle_map[tile_index].values.push_back({ opt_bounding_box.value(),i });
+                    triangle_map.values[tile_index].push_back({ opt_bounding_box.value(),i });
                 }
             }
         }
-        screen_triangles[i] = st;
+        triangle_map.screen_triangles[i] = st;
     }
     return triangle_map;
 }
