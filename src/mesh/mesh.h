@@ -21,7 +21,6 @@ struct TriangleTileMap {
         u64 index;
     };
     
-    // TODO: These two can be fixed-size arrays
     std::vector<Rect2D> tile_rects;
     std::vector<std::vector<InnerValue>> values;
 
