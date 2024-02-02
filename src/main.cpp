@@ -498,7 +498,6 @@ int main(int argc, char *argv[]) {
             return 0;
         }
         
-        // TODO: Can optimize this with a single matrix, will do later
         const Mat4f32 rotation_matrix = 
             rotate_matrix(Vec3D_f{ 1.0, 0.0, 0.0 }, rotate_angle_x) *
             rotate_matrix(Vec3D_f{ 0.0, 1.0, 0.0 }, rotate_angle_y) *

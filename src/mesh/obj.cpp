@@ -125,6 +125,6 @@ Mesh load_obj(const std::string& dir, const std::string& obj_file, SDL_Surface* 
     mesh.texture_map = std::move(texture_map);
     mesh.material_ids = std::move(material_ids);
     mesh.materials = std::move(mesh_materials);
-    mesh.SetupTriangles();
+    
     return mesh;
 }

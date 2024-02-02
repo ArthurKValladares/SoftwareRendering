@@ -29,14 +29,11 @@ struct TriangleTileMap {
 using TextureMap = std::vector<Texture>;
 
 struct Mesh {
-    void SetupTriangles();
     TriangleTileMap SetupScreenTriangles(const ScreenTileData& tile_data, const Mat4f32& proj_model) const;
     void Free();
     
     std::vector<Vertex> vertices;
     std::vector<int> indices;
-
-    std::vector<Triangle> triangles;
 
     TextureMap texture_map;
 
