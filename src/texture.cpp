@@ -44,7 +44,6 @@ Uint32 Texture::get_pixel_xy(u32 x, u32 y) const {
 }
 
 Uint32 Texture::get_pixel_uv(float u, float v) const {
-    // TODO: Some `sampler` like stuff for different sampling methods when outside range
     float u_whole, u_fractional;
     u_fractional = std::modf(u, &u_whole);
 

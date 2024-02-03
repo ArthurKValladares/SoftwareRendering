@@ -65,7 +65,6 @@ float Vec4f32::w() const {
 }
 
 float Vec4f32::dot(const Vec4f32& rhs) const {
-    // TODO: can this be better?
     const Vec4f32 mul = *this * rhs;
     const __m128 hadd = _mm_hadd_ps(mul._mf, mul._mf);
     return Vec4f32(_mm_hadd_ps(hadd, hadd)).x();

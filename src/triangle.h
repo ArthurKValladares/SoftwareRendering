@@ -31,7 +31,7 @@ struct ScreenTriangle {
 };
 
 
-Point2D hacky_project_to_surface(int width, int height, Point3D_f point);
+Point2D project_to_surface(int width, int height, Point3D_f point);
 ScreenTriangle project_triangle_to_screen(int width, int height, const Mat4f32& proj_model, const Triangle& triangle);
 
 #endif
