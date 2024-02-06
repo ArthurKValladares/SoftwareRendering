@@ -14,6 +14,7 @@ include_directories(
     ${project_root}/vendor/thread-pool/include
     ${project_root}/vendor/ConcurrencyPrimitives/src
     ${project_root}/vendor/BumpAllocator/src
+    ${project_root}/vendor/SIMD-Types/src
 )
 
 add_executable(${PROJECT_NAME} 
@@ -36,10 +37,10 @@ add_executable(${PROJECT_NAME}
     ${project_root}/src/mesh/mesh.cpp
     ${project_root}/src/mesh/obj.cpp
     # math
-    ${project_root}/src/math/vec3f32.cpp
-    ${project_root}/src/math/vec4f32.cpp
-    ${project_root}/src/math/vec4i32.cpp
-    ${project_root}/src/math/mat4f32.cpp
+    ${project_root}/vendor/SIMD-Types/src/math/vec3f32.cpp
+    ${project_root}/vendor/SIMD-Types/src/math/vec4f32.cpp
+    ${project_root}/vendor/SIMD-Types/src/math/vec4i32.cpp
+    ${project_root}/vendor/SIMD-Types/src/math/mat4f32.cpp
     # ConcurrencyPrimitives
     ${project_root}/vendor/ConcurrencyPrimitives/src/ThreadPool.cpp
     # BumpAllocator

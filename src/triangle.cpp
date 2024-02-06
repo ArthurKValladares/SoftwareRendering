@@ -8,9 +8,9 @@ Point2D project_to_surface(int width, int height, Point3D_f point) {
 }
 
 ScreenTriangle project_triangle_to_screen(int width, int height, const Mat4f32& proj_model, const Triangle& triangle) {
-    const Vec4f32 pv0 = proj_model * Vec4f32(triangle.v0.p, 1.0);
-    const Vec4f32 pv1 = proj_model * Vec4f32(triangle.v1.p, 1.0);
-    const Vec4f32 pv2 = proj_model * Vec4f32(triangle.v2.p, 1.0);
+    const Vec4f32 pv0 = proj_model * Vec4f32(triangle.v0.p.x, triangle.v0.p.y, triangle.v0.p.z, 1.0);
+    const Vec4f32 pv1 = proj_model * Vec4f32(triangle.v1.p.x, triangle.v1.p.y, triangle.v1.p.z, 1.0);
+    const Vec4f32 pv2 = proj_model * Vec4f32(triangle.v2.p.x, triangle.v2.p.y, triangle.v2.p.z, 1.0);
 
     const Point2D sv0 = project_to_surface(width, height, Point3D_f(pv0.x(), pv0.y(), pv0.z()));
     const Point2D sv1 = project_to_surface(width, height, Point3D_f(pv1.x(), pv1.y(), pv1.z()));

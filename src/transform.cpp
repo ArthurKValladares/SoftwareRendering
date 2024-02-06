@@ -1,5 +1,7 @@
 #include "transform.h"
 
+#include<cmath>
+
 Mat4f32 rotate_matrix(Vec3D_f axis, float angle) {
     const Vec3D_f a = axis.normalized();
 

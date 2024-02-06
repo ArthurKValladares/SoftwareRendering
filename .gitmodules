@@ -10,3 +10,6 @@
 [submodule "vendor/BumpAllocator"]
 	path = vendor/BumpAllocator
 	url = https://github.com/ArthurKValladares/BumpAllocator
+[submodule "vendor/SIMD-Types"]
+	path = vendor/SIMD-Types
+	url = https://github.com/ArthurKValladares/SIMD-Types
