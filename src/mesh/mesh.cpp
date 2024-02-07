@@ -47,7 +47,7 @@ void TriangleTileMap::Update(const Mesh& mesh, const ScreenTileData& tile_data, 
                 const Rect2D& tile_rect = tile_rects[tile_index];
                 const std::optional<Rect2D> opt_bounding_box = Intersection(tile_rect, triangle_bb);
                 if (opt_bounding_box.has_value()) {
-                    values[tile_index].push_back({ opt_bounding_box.value(), st_i });
+                    values[tile_index].push_back({ st_i });
                 }
             }
         }

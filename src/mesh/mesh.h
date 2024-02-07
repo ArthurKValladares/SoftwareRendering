@@ -17,7 +17,6 @@ struct TriangleTileMap {
     void Update(const Mesh& mesh, const ScreenTileData& tile_data, const Mat4f32& proj_model);
 
     struct InnerValue {
-        Rect2D bounding_box;
         u64 index;
     };
     

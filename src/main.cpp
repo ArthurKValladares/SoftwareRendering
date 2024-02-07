@@ -269,7 +269,7 @@ void FillTriangle(SDL_Surface* surface, DepthBuffer& depth_buffer, OverdrawBuffe
     }
 }
 
-void DrawTriangleScanline(SDL_Surface* surface, Rect2D tile_rect, Rect2D bounding_box, DepthBuffer& depth_buffer, OverdrawBuffer& overdraw_buffer, const ScreenTriangle& st, const Mesh& mesh, const Mesh::Material& material) {
+void DrawTriangleScanline(SDL_Surface* surface, Rect2D tile_rect,  DepthBuffer& depth_buffer, OverdrawBuffer& overdraw_buffer, const ScreenTriangle& st, const Mesh& mesh, const Mesh::Material& material) {
     ScreenVertex const* sv0 = &st.v0;
     ScreenVertex const* sv1 = &st.v1;
     ScreenVertex const* sv2 = &st.v2;
@@ -282,6 +282,9 @@ void DrawTriangleScanline(SDL_Surface* surface, Rect2D tile_rect, Rect2D boundin
     if (sv2->p.y < sv1->p.y) {
         std::swap(sv2, sv1);
     }
+
+    const Rect2D triangle_bb = BoundingBox(sv0->p, sv1->p, sv2->p);
+    const Rect2D bounding_box = Intersection(tile_rect, triangle_bb).value();
 
     if (sv2->p.y == sv1->p.y) {
         FillTriangle(surface, depth_buffer, overdraw_buffer, bounding_box, sv1, sv2, sv0, mesh, material);
@@ -309,13 +312,13 @@ void DrawTriangleScanline(SDL_Surface* surface, Rect2D tile_rect, Rect2D boundin
     }
 }
 
-void DrawTriangle(SDL_Surface* surface, Rect2D tile_rect, Rect2D bounding_box, DepthBuffer& depth_buffer, OverdrawBuffer& overdraw_buffer, const ScreenTriangle& st, const Mesh& mesh, const Mesh::Material& material) {
+void DrawTriangle(SDL_Surface* surface, Rect2D tile_rect, DepthBuffer& depth_buffer, OverdrawBuffer& overdraw_buffer, const ScreenTriangle& st, const Mesh& mesh, const Mesh::Material& material) {
     const float double_area = edge_function(st.v0.p, st.v1.p, st.v2.p);
     if (double_area <= 0.0) {
         return;
     }
 
-    DrawTriangleScanline(surface, tile_rect, bounding_box, depth_buffer, overdraw_buffer, st, mesh, material);
+    DrawTriangleScanline(surface, tile_rect, depth_buffer, overdraw_buffer, st, mesh, material);
 }
 
 void IterateLine(i32 x_max, i32 x0, i32 x1, i32 y0, i32 y1, std::function<void(int, int)> func) {
@@ -379,7 +382,7 @@ void DrawMesh(SDL_Surface *surface, const Mat4f32& proj_model, ThreadPool &threa
                 if (render_method != RenderingMethod::Wireframe) {
                     const int material_id = triangle_tile_map.screen_triangles[val.index].material_id;
                     const Mesh::Material& material = mesh.materials[material_id];
-                    DrawTriangle(surface, tile_rect, val.bounding_box, depth_buffer, overdraw_buffer, triangle_tile_map.screen_triangles[val.index], mesh, material);
+                    DrawTriangle(surface, tile_rect, depth_buffer, overdraw_buffer, triangle_tile_map.screen_triangles[val.index], mesh, material);
                 }
                 else {
                     DrawTriangleWireframe(surface, triangle_tile_map.screen_triangles[val.index]);
