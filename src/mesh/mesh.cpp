@@ -1,11 +1,11 @@
 #include "mesh/mesh.h"
 
-TriangleTileMap Mesh::SetupScreenTriangles(const ScreenTileData& tile_data, const Mat4f32& proj_model) const {
+TriangleTileMap Mesh::SetupScreenTriangles(BumpAllocator &bump, const ScreenTileData& tile_data, const Mat4f32& proj_model) const {
     TriangleTileMap triangle_map;
     const u32 num_tasks = tile_data.num_tasks();
-    triangle_map.tile_rects.resize(num_tasks);
+    triangle_map.tile_rects = bump.AllocateArray<Rect2D>(num_tasks);
     triangle_map.values.resize(num_tasks);
-    triangle_map.screen_triangles.resize(indices.size() / 3);
+    triangle_map.screen_triangles = bump.AllocateArray<ScreenTriangle>(indices.size() / 3);
 
     for (int tile_index = 0; tile_index < num_tasks; ++tile_index) {
         triangle_map.tile_rects[tile_index] = tile_data.tile_for_index(tile_index);

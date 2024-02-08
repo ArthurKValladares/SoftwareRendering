@@ -412,6 +412,8 @@ int main(int argc, char *argv[]) {
     }
     ThreadPool thread_pool;
 
+    BumpAllocator bump = BumpAllocator::CreateWithCapacity(6400000);
+    
     SDL_Surface *surface = SDL_GetWindowSurface(window);
     // Not supporting non-32-bit pixel formats
     assert(surface->format->BytesPerPixel == 4);
@@ -421,7 +423,7 @@ int main(int argc, char *argv[]) {
     const ScreenTileData tile_data = partition_screen_into_tiles(surface);
     const std::string mesh_path = std::string(PROJECT_ROOT) + std::string("/assets/meshes/teapot");
     Mesh mesh = load_obj(mesh_path, "teapot.obj", surface);
-    TriangleTileMap triangle_tile_map = mesh.SetupScreenTriangles(tile_data, Mat4f32::identity());
+    TriangleTileMap triangle_tile_map = mesh.SetupScreenTriangles(bump, tile_data, Mat4f32::identity());
 
     const float depth_min = 0.0;
     const float x_span = mesh.bb.maxX - mesh.bb.minX;

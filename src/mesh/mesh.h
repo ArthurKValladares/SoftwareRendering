@@ -9,6 +9,7 @@
 #include "math/mat4f32.h"
 #include "vertex.h"
 #include "screen_tile.h"
+#include "bump.h"
 
 #include <unordered_map>
 
@@ -20,15 +21,15 @@ struct TriangleTileMap {
         u64 index;
     };
     
-    std::vector<Rect2D> tile_rects;
+    BumpArray<Rect2D> tile_rects;
     std::vector<std::vector<InnerValue>> values;
 
-    std::vector<ScreenTriangle> screen_triangles;
+    BumpArray<ScreenTriangle> screen_triangles;
 };
 using TextureMap = std::vector<Texture>;
 
 struct Mesh {
-    TriangleTileMap SetupScreenTriangles(const ScreenTileData& tile_data, const Mat4f32& proj_model) const;
+    TriangleTileMap SetupScreenTriangles(BumpAllocator &bump, const ScreenTileData& tile_data, const Mat4f32& proj_model) const;
     void Free();
     
     std::vector<Vertex> vertices;
