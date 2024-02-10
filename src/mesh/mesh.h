@@ -13,21 +13,18 @@
 
 #include <unordered_map>
 
-struct Mesh;
 struct TriangleTileMap {
-    void Update(const Mesh& mesh, const ScreenTileData& tile_data, const Mat4f32& proj_model);
-
     struct InnerValue {
         u64 index;
     };
     
     BumpArray<Rect2D> tile_rects;
-    std::vector<std::vector<InnerValue>> values;
+    BumpArray<BumpVec<InnerValue>> values;
 
     BumpArray<ScreenTriangle> screen_triangles;
 };
-using TextureMap = std::vector<Texture>;
 
+using TextureMap = std::vector<Texture>;
 struct Mesh {
     TriangleTileMap SetupScreenTriangles(BumpAllocator &bump, const ScreenTileData& tile_data, const Mat4f32& proj_model) const;
     void Free();

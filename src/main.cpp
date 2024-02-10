@@ -372,13 +372,15 @@ void DrawTriangleWireframe(SDL_Surface* surface, const ScreenTriangle& st) {
     DrawLine(surface, line2, mapped_color);
 }
 
-void DrawMesh(SDL_Surface *surface, const Mat4f32& proj_model, ThreadPool &thread_pool, ScreenTileData tile_data, DepthBuffer& depth_buffer, OverdrawBuffer& overdraw_buffer, const Mesh &mesh, TriangleTileMap& triangle_tile_map) {
-    triangle_tile_map.Update(mesh, tile_data, proj_model);
+void DrawMesh(SDL_Surface *surface, const Mat4f32& proj_model, ThreadPool &thread_pool, ScreenTileData tile_data, DepthBuffer& depth_buffer, OverdrawBuffer& overdraw_buffer, const Mesh &mesh, BumpAllocator& bump) {
+    TriangleTileMap triangle_tile_map = mesh.SetupScreenTriangles(bump, tile_data, proj_model);
+
     const u32 num_tasks = tile_data.num_tasks();
-    for (int tile_idx = 0; tile_idx < triangle_tile_map.values.size(); ++tile_idx) {
+    for (int tile_idx = 0; tile_idx < triangle_tile_map.values.capacity; ++tile_idx) {
         thread_pool.Schedule([=]() mutable {
             const Rect2D tile_rect = triangle_tile_map.tile_rects[tile_idx];
-            for (const TriangleTileMap::InnerValue& val : triangle_tile_map.values[tile_idx]) {
+            for (auto i = 0; i < triangle_tile_map.values[tile_idx].size; ++i) {
+                const TriangleTileMap::InnerValue& val = triangle_tile_map.values[tile_idx][i];
                 if (render_method != RenderingMethod::Wireframe) {
                     const int material_id = triangle_tile_map.screen_triangles[val.index].material_id;
                     const Mesh::Material& material = mesh.materials[material_id];
@@ -423,7 +425,6 @@ int main(int argc, char *argv[]) {
     const ScreenTileData tile_data = partition_screen_into_tiles(surface);
     const std::string mesh_path = std::string(PROJECT_ROOT) + std::string("/assets/meshes/teapot");
     Mesh mesh = load_obj(mesh_path, "teapot.obj", surface);
-    TriangleTileMap triangle_tile_map = mesh.SetupScreenTriangles(bump, tile_data, Mat4f32::identity());
 
     const float depth_min = 0.0;
     const float x_span = mesh.bb.maxX - mesh.bb.minX;
@@ -517,12 +518,13 @@ int main(int argc, char *argv[]) {
         
         ClearSurface(surface, thread_pool, Color{100, 100, 100});
         depth_buffer.Set(depth_min);
-        DrawMesh(surface, transform_matrix, thread_pool, tile_data, depth_buffer, overdraw_buffer, mesh, triangle_tile_map);
+        DrawMesh(surface, transform_matrix, thread_pool, tile_data, depth_buffer, overdraw_buffer, mesh, bump);
         overdraw_buffer.Clear();
 
         const std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
         printf("dt: %ld ms\n", (long) std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count());
 
+        bump.Reset();
         SDL_UnlockSurface(surface);
         SDL_UpdateWindowSurface(window);
     }
