@@ -1,5 +1,16 @@
 #include "mesh/mesh.h"
 
+size_t Mesh::RequiredMemory(const ScreenTileData& tile_data) const {
+    const size_t num_tasks = tile_data.num_tasks();
+    const size_t num_tris = indices.size() / 3;
+
+    const size_t tile_rect_mem = num_tasks * sizeof(Rect2D);
+    const size_t screen_triangle_mem = num_tris * sizeof(ScreenTriangle);
+    const size_t values_mem = num_tasks * sizeof(BumpVec<TriangleTileMap::InnerValue>) + num_tasks * (num_tris * sizeof(TriangleTileMap::InnerValue));
+
+    return tile_rect_mem + screen_triangle_mem + values_mem;
+}
+
 TriangleTileMap Mesh::SetupScreenTriangles(BumpAllocator &bump, const ScreenTileData& tile_data, const Mat4f32& proj_model) const {
     const u32 num_tasks = tile_data.num_tasks();
     const u32 num_tris = indices.size() / 3;

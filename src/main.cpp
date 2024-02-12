@@ -413,8 +413,6 @@ int main(int argc, char *argv[]) {
         return 0;
     }
     ThreadPool thread_pool;
-
-    BumpAllocator bump = BumpAllocator::CreateWithCapacity(6400000);
     
     SDL_Surface *surface = SDL_GetWindowSurface(window);
     // Not supporting non-32-bit pixel formats
@@ -425,6 +423,8 @@ int main(int argc, char *argv[]) {
     const ScreenTileData tile_data = partition_screen_into_tiles(surface);
     const std::string mesh_path = std::string(PROJECT_ROOT) + std::string("/assets/meshes/teapot");
     Mesh mesh = load_obj(mesh_path, "teapot.obj", surface);
+
+    BumpAllocator bump = BumpAllocator::CreateWithCapacity(mesh.RequiredMemory(tile_data));
 
     const float depth_min = 0.0;
     const float x_span = mesh.bb.maxX - mesh.bb.minX;
@@ -533,6 +533,7 @@ int main(int argc, char *argv[]) {
     SDL_DestroyWindow(window);
     SDL_Quit();
     mesh.Free();
+    bump.Free();
     
     return 0;
 }

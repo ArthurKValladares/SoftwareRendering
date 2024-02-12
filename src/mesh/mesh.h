@@ -26,6 +26,7 @@ struct TriangleTileMap {
 
 using TextureMap = std::vector<Texture>;
 struct Mesh {
+    size_t RequiredMemory(const ScreenTileData& tile_data) const;
     TriangleTileMap SetupScreenTriangles(BumpAllocator &bump, const ScreenTileData& tile_data, const Mat4f32& proj_model) const;
     void Free();
     
